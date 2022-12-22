@@ -1,0 +1,3 @@
+@init
+    print [bold]Hello[/] world
+@!
