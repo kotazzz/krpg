@@ -1,3 +1,18 @@
 @init
     print [bold]Hello[/] world
 @!
+
+@map
+    @location "start" "Старт"
+        @action "hi"
+            print [green]Вы сказали "Привет"[/]
+        @!
+    @!
+    
+    @location "end" "Конец"
+        @action "bye"
+            print [red]Вы сказали "Пока"[/]
+        @!
+    @!
+    link "start" "end"
+@!
