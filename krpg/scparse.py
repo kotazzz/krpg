@@ -3,27 +3,6 @@ from __future__ import annotations
 import shlex
 from dataclasses import dataclass, field
 
-test = """
-@sect arg1 arg2 arg3
-    subcmd arg1 arg2 arg3
-    @sub arg1 arg2 arg3
-        subcmd \
-            arg1 arg2 arg3
-        subcmd arg1 arg2 arg3
-    @!
-    subcmd arg1 arg2 arg3
-@!
-
-@sect arg1 arg2 arg3
-    subcmd arg1 arg2 arg3
-@!
-
-# comment
-
-test arg1 arg2 arg3
-"""
-
-
 @dataclass
 class Command:
     text: str
@@ -53,10 +32,6 @@ class Section:
         if isinstance(self.head, str):
             self.head = Command(self.head)
 
-
-from rich import print
-
-
 def parse(text):
     text = text.replace("\\\n", "").splitlines()
     text = [x for x in map(str.strip, text) if x and not x.startswith("#")]
@@ -73,6 +48,3 @@ def parse(text):
         else:
             stack[-1].body.append(Command(line))
     return data.body
-
-
-print(parse(test))

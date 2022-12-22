@@ -1,5 +1,2 @@
-ignore
 .vscode
-launcher/a.exe
-launcher/a.out
-launcher/res.ke
+__pycache__
