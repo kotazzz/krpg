@@ -21,10 +21,10 @@ class Command:
 
     def __repr__(self):
         return f"Command({self.command!r})"
-    
+
     def save(self):
         return self.text
-    
+
     @classmethod
     def load(cls, data):
         return cls(data)
@@ -38,49 +38,57 @@ class Section:
     def save(self):
         data = [self.head.text, [x.save() for x in self.body]]
         return data
-    
+
     @classmethod
     def load(cls, data):
         head, body = data
-        return cls(Command(head), [Command.load(x) if isinstance(x, bytes) else Section.load(x) for x in body])
-        
-    
+        return cls(
+            Command(head),
+            [
+                Command.load(x) if isinstance(x, bytes) else Section.load(x)
+                for x in body
+            ],
+        )
+
     def __post_init__(self):
         if isinstance(self.head, str):
             self.head = Command(self.head)
-    
+
     def get_section(self, name):
         for item in self.body:
             if isinstance(item, Section) and item.head.command == name:
                 return item
-    
+
     def get_sections(self, name):
         for item in self.body:
             if isinstance(item, Section) and item.head.command == name:
                 yield item
-    
+
     def get_command(self, name):
         for item in self.body:
             if isinstance(item, Command) and item.command == name:
                 return item
-    
+
     def get_commands(self, name):
         for item in self.body:
             if isinstance(item, Command) and item.command == name:
                 yield item
+
     def get_items(self, name):
         for item in self.body:
             if isinstance(item, (Section, Command)):
                 yield item
+
     def get_all_commands(self):
         for item in self.body:
             if isinstance(item, Command):
                 yield item
+
     def get_all_sections(self):
         for item in self.body:
             if isinstance(item, Section):
                 yield item
-    
+
     def __getitem__(self, key) -> list[Section | Command] | Section | Command:
         if isinstance(key, slice):
             # 1 - name
@@ -105,8 +113,10 @@ class Section:
                     "all": lambda: self.get_items(),
                 }
                 return list(funcs[type]())
-            
+
         return list(self.get_items(key))
+
+
 def parse(text):
     text = text.replace("\\\n", "").splitlines()
     text = [x for x in map(str.strip, text) if x and not x.startswith("#")]
@@ -124,14 +134,14 @@ def parse(text):
             stack[-1].body.append(Command(line))
     return data
 
+
 def build(data, indent=0):
     text = ""
     for item in data.body:
         if isinstance(item, Command):
-            text += " " * (indent*4) + item.text + "\n"
+            text += " " * (indent * 4) + item.text + "\n"
         else:
-            text += " " * (indent*4) + "@" + item.head.text + "\n"
-            text += build(item, indent+1)
-            text += " " * (indent*4) + "@!\n\n"
+            text += " " * (indent * 4) + "@" + item.head.text + "\n"
+            text += build(item, indent + 1)
+            text += " " * (indent * 4) + "@!\n\n"
     return text
-

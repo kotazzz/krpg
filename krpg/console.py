@@ -380,5 +380,3 @@ class Console:
 
     def __repr__(self):
         return "<Console>"
-
-
