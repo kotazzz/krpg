@@ -370,6 +370,8 @@ class Console:
             )
 
     def log(self, text, level=1):
+        if not level:
+            return
         # 1 - debug, 2 - info, 3 - warning, 4 - error, 5 - critical
         color = ["[magenta]", "[blue]", "[green]", "[yellow]", "[red]"][level - 1]
         level = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"][level - 1]
