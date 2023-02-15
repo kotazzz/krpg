@@ -1,14 +1,20 @@
 from __future__ import annotations
 from .module import Module
-
+from .resolver import resolve_dependencies
+from .events import EventHandler
+from .actions import ActionManager, Action
+from .console import Console
+from .encryptor import Encryptor
+from .logger import Logger
 class Game:
     def __init__(self):
-        self.modules = []
+        self.modules: list[Module] = []
+        self.eh = EventHandler()
+        self.manager = ActionManager()
+        self.console = Console(self)
+        self.encryptor = Encryptor()
+        self.logger = Logger(file=False)
         
-    def get_modules(self):
-        return {
-            module.__class__.__name__: module for module in self.modules
-        }
     def add_module(self, module: Module):
         self.modules.append(module)
     
@@ -17,27 +23,26 @@ class Game:
         
     
     def main(self):
-        mod = {
-            m: m.requires for m in self.modules
+        names = {
+            m.__class__.__name__: m for m in self.modules
         }
-        resolved = []
-        #FIXME: This is a terrible way to do this
-        while len(mod) > 0:
-            for module, requires in mod.copy().items():
-                if len(requires) == 0:
-                    resolved.append(module)
-                    del mod[module]
-                    continue
-                for requirement in requires:
-                    if requirement in mod:
-                        break
-                else:
-                    resolved.append(module)
-                    del mod[module]
+        deptree = {
+            m.__class__.__name__: m.requires for m in self.modules
+        }
+        resolved = resolve_dependencies(deptree)
+        modsorted = [names[name] for name in resolved]
+        for module in modsorted:
+            for name in dir(module):
+                attr = getattr(module, name)
+                if name.startswith("on_") and callable(attr):
+                    self.eh.listen(name[3:], attr)
+                elif name.startswith("on_") and  not callable(attr):
+                    raise Exception(f"Invalid attribute {name} in module {module}")
                     
+                if isinstance(attr, Action):
+                    self.manager.register(attr)
+        for module in modsorted:
+            module.main()
         
-        for module in resolved:
-            module.load()
-            
-        
-    
+        self.eh.dispatch("post_init")
+                

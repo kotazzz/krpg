@@ -8,9 +8,9 @@ class Action:
         self.category = category
         self.callback = callback
     
-def action(name: str, description: str, category: str, ):
+def action(name: str, description: str="No description", category: str=""):
     def decorator(callback: Callable):
-        return Action(name, description, callback)
+        return Action(name, description, category, callback)
     return decorator
 
 class ActionManager:
@@ -28,6 +28,13 @@ class ActionManager:
         for category, actions in actionmanager.actions.items():
             for name, action in actions.items():
                 self.register(action)
+
+    def get_all(self):
+        r = {}
+        for category, actions in self.actions.items():
+            for name, action in actions.items():
+                r[name] = action
+        return r    
 
     def get_list(self, category: str = None):
         if category is None:
