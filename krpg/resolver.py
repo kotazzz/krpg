@@ -1,9 +1,8 @@
-
 class DependObject:
     name = "name"
     version = "0.0.0"
     requires = []
-    
+
     @staticmethod
     def from_dict(data: dict):
         obj = DependObject()
@@ -11,6 +10,7 @@ class DependObject:
         obj.version = data["version"]
         obj.requires = data["requires"]
         return obj
+
 
 def compare_versions(v1, v2) -> int:
     """
@@ -35,6 +35,7 @@ def compare_versions(v1, v2) -> int:
             return -1
     return 0
 
+
 def parse_require(require):
     # module_name>=0.1.0 -> ("module_name", ">=", "0.1.0")
     ops = [">=", "<=", ">", "<", "="]
@@ -45,16 +46,17 @@ def parse_require(require):
     else:
         raise Exception(f"Invalid require: {require}")
 
+
 def check_versions(v1, v2, op):
     ops = {
         ">=": lambda c: c >= 0,
         "<=": lambda c: c <= 0,
-        ">": lambda c: c  > 0,
-        "<": lambda c: c  < 0,
+        ">": lambda c: c > 0,
+        "<": lambda c: c < 0,
         "=": lambda c: c == 0,
     }
     return ops[op](compare_versions(v1, v2))
-    
+
 
 def resolve_dependencies(modules: list[DependObject]) -> list[DependObject]:
     # resolved: list[DependObject] = []
@@ -64,17 +66,20 @@ def resolve_dependencies(modules: list[DependObject]) -> list[DependObject]:
                 return module
         else:
             raise Exception(f"Module {name} not found")
-    # checking for versions 
+
+    # checking for versions
     for resolving_module in modules:
         for require in resolving_module.requires:
             required_name, r_version, op = parse_require(require)
             required_module = find_by_name(required_name)
             if not check_versions(required_module.version, r_version, op):
-                raise Exception(f"Module {required_module.name} version {required_module.version} does not match {require} for module {resolving_module.name}")
+                raise Exception(
+                    f"Module {required_module.name} version {required_module.version} does not match {require} for module {resolving_module.name}"
+                )
     # resolving dependencies
     # need to build a dependency tree
     # then resolve it
-    
+
     # building a dependency tree
     deptree = {}
     for module in modules:
@@ -86,6 +91,7 @@ def resolve_dependencies(modules: list[DependObject]) -> list[DependObject]:
         for dependency in deptree[module]:
             yield from resolve(dependency)
         yield module
+
     seq = list([module for module in deptree for module in resolve(module)])
     res = []
     for module in seq:

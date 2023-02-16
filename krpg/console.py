@@ -209,9 +209,6 @@ class Console:
                 string,
             )
         )
-        
-    
-        
 
     def prompt(self, prompt=1, checker=None, factory=None):
         checker = checker or (lambda x: True)

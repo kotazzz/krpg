@@ -51,6 +51,7 @@ class Environment(dict):
     def extracts(self, *objs):
         return [self.extract(i) for i in objs]
 
+
 class EvalProcessor:
     def __init__(self, environment_master):
         self.avaliable_operators = {
@@ -147,7 +148,7 @@ class KotazyTransformer(lark.Transformer):
     number = lambda s, items: {"t": "n", "v": items[0].value}
     estring = lambda s, items: {"t": "e", "v": items[0].value}
 
-    
+
 class KotazyParser:
     def __init__(self):
         grammar = r"""
@@ -255,6 +256,7 @@ class KotazyRunner:
         self.build_environment(tree["i"])
         return self.execute_module(tree["b"])
 
+
 class StandartLib(Lib):
     @register("out")
     def out(env, *texts):
@@ -314,13 +316,13 @@ class StandartLib(Lib):
         for i in iterable:
             env[name] = i
             body()
-    
+
     @register("try")
-    def try_(env, body, catch, else_stmt = None, finally_stmt = None):
+    def try_(env, body, catch, else_stmt=None, finally_stmt=None):
         body = env.extract(body)
         catch = env.extract(catch)
-        else_stmt = env.extract(else_stmt) if else_stmt else lambda:0
-        finally_stmt = env.extract(finally_stmt) if finally_stmt else lambda:0
+        else_stmt = env.extract(else_stmt) if else_stmt else lambda: 0
+        finally_stmt = env.extract(finally_stmt) if finally_stmt else lambda: 0
         try:
             body()
         except Exception as e:
@@ -361,23 +363,24 @@ class StandartLib(Lib):
         x = lambda e, v: e.extract(v)
         xs = lambda e, *vs: e.extracts(*vs)
         return {
-            'int': lambda e, a, b=10: int(x(e, a), x(e, b)),
-            'oct': lambda e, a: oct(x(e, a)),
-            'hex': lambda e, a: hex(x(e, a)),
-            'bin': lambda e, a: bin(x(e, a)),
-            'chr': lambda e, a: chr(x(e, a)),
-            'ord': lambda e, a: ord(x(e, a)),
-            'float': lambda e, a: float(x(e, a)),
-            'str': lambda e, a: str(x(e, a)),
-            'bool': lambda e, a: bool(x(e, a)),
-            'len': lambda e, a: len(x(e, a)),
-            'type': lambda e, a: type(x(e, a)),
-            'sum': lambda e, *a: sum(xs(e, *a)),
-            'min': lambda e, *a: min(xs(e, *a)),
-            'max': lambda e, *a: max(xs(e, *a)),
-            'abs': lambda e, a: abs(x(e, a)),
-            'round': lambda e, a: round(x(e, a)),
+            "int": lambda e, a, b=10: int(x(e, a), x(e, b)),
+            "oct": lambda e, a: oct(x(e, a)),
+            "hex": lambda e, a: hex(x(e, a)),
+            "bin": lambda e, a: bin(x(e, a)),
+            "chr": lambda e, a: chr(x(e, a)),
+            "ord": lambda e, a: ord(x(e, a)),
+            "float": lambda e, a: float(x(e, a)),
+            "str": lambda e, a: str(x(e, a)),
+            "bool": lambda e, a: bool(x(e, a)),
+            "len": lambda e, a: len(x(e, a)),
+            "type": lambda e, a: type(x(e, a)),
+            "sum": lambda e, *a: sum(xs(e, *a)),
+            "min": lambda e, *a: min(xs(e, *a)),
+            "max": lambda e, *a: max(xs(e, *a)),
+            "abs": lambda e, a: abs(x(e, a)),
+            "round": lambda e, a: round(x(e, a)),
         }
+
 
 class MathLib(Lib):
     def other_data(self):
@@ -385,141 +388,188 @@ class MathLib(Lib):
         xs = lambda e, *vs: e.extracts(*vs)
 
         return {
-            'pow': lambda e, a, b: x(e, a) ** x(e, b),
-            'mod': lambda e, a, b: x(e, a) % x(e, b),
-            'sqrt': lambda e, a: x(e, a) ** 0.5,
-            'log': lambda e, a, b: math.log(x(e, a), x(e, b)),
-            'ln': lambda e, a: math.log(x(e, a)),
-            'lg': lambda e, a: math.log(x(e, a), 10),
-            'exp': lambda e, a: math.exp(x(e, a)),
-            'sin': lambda e, a: math.sin(x(e, a)),
-            'cos': lambda e, a: math.cos(x(e, a)),
-            'tan': lambda e, a: math.tan(x(e, a)),
-            'asin': lambda e, a: math.asin(x(e, a)),
-            'acos': lambda e, a: math.acos(x(e, a)),
-            'atan': lambda e, a: math.atan(x(e, a)),
-            'atan2': lambda e, a, b: math.atan2(x(e, a), x(e, b)),
-            'sinh': lambda e, a: math.sinh(x(e, a)),
-            'cosh': lambda e, a: math.cosh(x(e, a)),
-            'tanh': lambda e, a: math.tanh(x(e, a)),
-            'asinh': lambda e, a: math.asinh(x(e, a)),
-            'acosh': lambda e, a: math.acosh(x(e, a)),
-            'atanh': lambda e, a: math.atanh(x(e, a)),
-            'hypot': lambda e, a, b: math.hypot(x(e, a), x(e, b)),
-            'degrees': lambda e, a: math.degrees(x(e, a)),
-            'radians': lambda e, a: math.radians(x(e, a)),
-            'pi': math.pi,
-            'e': math.e,
-            'tau': math.tau,
-            'ceil': lambda e, a: math.ceil(x(e, a)),
-            'floor': lambda e, a: math.floor(x(e, a)),
-            'trunc': lambda e, a: math.trunc(x(e, a)),
-            'copysign': lambda e, a, b: math.copysign(x(e, a), x(e, b)),
-            'factorial': lambda e, a: math.factorial(x(e, a)),
-            'gamma': lambda e, a: math.gamma(x(e, a)),
-            'lgamma': lambda e, a: math.lgamma(x(e, a)),
-            'isfinite': lambda e, a: math.isfinite(x(e, a)),
-            'isinf': lambda e, a: math.isinf(x(e, a)),
-            'isnan': lambda e, a: math.isnan(x(e, a)),
+            "pow": lambda e, a, b: x(e, a) ** x(e, b),
+            "mod": lambda e, a, b: x(e, a) % x(e, b),
+            "sqrt": lambda e, a: x(e, a) ** 0.5,
+            "log": lambda e, a, b: math.log(x(e, a), x(e, b)),
+            "ln": lambda e, a: math.log(x(e, a)),
+            "lg": lambda e, a: math.log(x(e, a), 10),
+            "exp": lambda e, a: math.exp(x(e, a)),
+            "sin": lambda e, a: math.sin(x(e, a)),
+            "cos": lambda e, a: math.cos(x(e, a)),
+            "tan": lambda e, a: math.tan(x(e, a)),
+            "asin": lambda e, a: math.asin(x(e, a)),
+            "acos": lambda e, a: math.acos(x(e, a)),
+            "atan": lambda e, a: math.atan(x(e, a)),
+            "atan2": lambda e, a, b: math.atan2(x(e, a), x(e, b)),
+            "sinh": lambda e, a: math.sinh(x(e, a)),
+            "cosh": lambda e, a: math.cosh(x(e, a)),
+            "tanh": lambda e, a: math.tanh(x(e, a)),
+            "asinh": lambda e, a: math.asinh(x(e, a)),
+            "acosh": lambda e, a: math.acosh(x(e, a)),
+            "atanh": lambda e, a: math.atanh(x(e, a)),
+            "hypot": lambda e, a, b: math.hypot(x(e, a), x(e, b)),
+            "degrees": lambda e, a: math.degrees(x(e, a)),
+            "radians": lambda e, a: math.radians(x(e, a)),
+            "pi": math.pi,
+            "e": math.e,
+            "tau": math.tau,
+            "ceil": lambda e, a: math.ceil(x(e, a)),
+            "floor": lambda e, a: math.floor(x(e, a)),
+            "trunc": lambda e, a: math.trunc(x(e, a)),
+            "copysign": lambda e, a, b: math.copysign(x(e, a), x(e, b)),
+            "factorial": lambda e, a: math.factorial(x(e, a)),
+            "gamma": lambda e, a: math.gamma(x(e, a)),
+            "lgamma": lambda e, a: math.lgamma(x(e, a)),
+            "isfinite": lambda e, a: math.isfinite(x(e, a)),
+            "isinf": lambda e, a: math.isinf(x(e, a)),
+            "isnan": lambda e, a: math.isnan(x(e, a)),
         }
+
 
 class RandomLib(Lib):
     def other_data(self):
         x = lambda e, v: e.extract(v)
         xs = lambda e, *vs: e.extracts(*vs)
         return {
-            'randint': lambda e, a, b: random.randint(x(e, a), x(e, b)),
-            'choice': lambda e, a: random.choice(x(e, a)),
-            'choices': lambda e, a, k: random.choices(x(e, a), k=x(e, k)),
-            'sample': lambda e, a, k: random.sample(x(e, a), k=x(e, k)),
-            'shuffle': lambda e, a: random.shuffle(x(e, a)),
-            'random': lambda e: random.random(),
-            'uniform': lambda e, a, b: random.uniform(x(e, a), x(e, b)),
-            'triangular': lambda e, a, b, c: random.triangular(x(e, a), x(e, b), x(e, c)),
-            'betavariate': lambda e, a, b: random.betavariate(x(e, a), x(e, b)),
-            'expovariate': lambda e, a: random.expovariate(x(e, a)),
-            'gammavariate': lambda e, a, b: random.gammavariate(x(e, a), x(e, b)),
-            'gauss': lambda e, a, b: random.gauss(x(e, a), x(e, b)),
-            'lognormvariate': lambda e, a, b: random.lognormvariate(x(e, a), x(e, b)),
-            'normalvariate': lambda e, a, b: random.normalvariate(x(e, a), x(e, b)),
-            'vonmisesvariate': lambda e, a, b: random.vonmisesvariate(x(e, a), x(e, b)),
-            'paretovariate': lambda e, a: random.paretovariate(x(e, a)),
-            'weibullvariate': lambda e, a, b: random.weibullvariate(x(e, a), x(e, b)),
-            'seed': lambda e, a: random.seed(x(e, a)),
+            "randint": lambda e, a, b: random.randint(x(e, a), x(e, b)),
+            "choice": lambda e, a: random.choice(x(e, a)),
+            "choices": lambda e, a, k: random.choices(x(e, a), k=x(e, k)),
+            "sample": lambda e, a, k: random.sample(x(e, a), k=x(e, k)),
+            "shuffle": lambda e, a: random.shuffle(x(e, a)),
+            "random": lambda e: random.random(),
+            "uniform": lambda e, a, b: random.uniform(x(e, a), x(e, b)),
+            "triangular": lambda e, a, b, c: random.triangular(
+                x(e, a), x(e, b), x(e, c)
+            ),
+            "betavariate": lambda e, a, b: random.betavariate(x(e, a), x(e, b)),
+            "expovariate": lambda e, a: random.expovariate(x(e, a)),
+            "gammavariate": lambda e, a, b: random.gammavariate(x(e, a), x(e, b)),
+            "gauss": lambda e, a, b: random.gauss(x(e, a), x(e, b)),
+            "lognormvariate": lambda e, a, b: random.lognormvariate(x(e, a), x(e, b)),
+            "normalvariate": lambda e, a, b: random.normalvariate(x(e, a), x(e, b)),
+            "vonmisesvariate": lambda e, a, b: random.vonmisesvariate(x(e, a), x(e, b)),
+            "paretovariate": lambda e, a: random.paretovariate(x(e, a)),
+            "weibullvariate": lambda e, a, b: random.weibullvariate(x(e, a), x(e, b)),
+            "seed": lambda e, a: random.seed(x(e, a)),
         }
+
 
 class TimeLib(Lib):
     def other_data(self):
         x = lambda e, v: e.extract(v)
         xs = lambda e, *vs: e.extracts(*vs)
         return {
-            'time': lambda e: time.time(),
-            'ctime': lambda e, a: time.ctime(x(e, a)),
-            'gmtime': lambda e, a: time.gmtime(x(e, a)),
-            'localtime': lambda e, a: time.localtime(x(e, a)),
-            'asctime': lambda e, a: time.asctime(x(e, a)),
-            'mktime': lambda e, a: time.mktime(x(e, a)),
-            'sleep': lambda e, a: time.sleep(x(e, a)),
-            'strftime': lambda e, a, b: time.strftime(x(e, a), x(e, b)),
-            'strptime': lambda e, a, b: time.strptime(x(e, a), x(e, b)),
-            'clock': lambda e: time.clock(),
-            'perf_counter': lambda e: time.perf_counter(),
-            'process_time': lambda e: time.process_time(),
-            'time_ns': lambda e: time.time_ns(),
-            'monotonic': lambda e: time.monotonic(),
-            'monotonic_ns': lambda e: time.monotonic_ns(),
-            'thread_time': lambda e: time.thread_time(),
-            'thread_time_ns': lambda e: time.thread_time_ns(),
+            "time": lambda e: time.time(),
+            "ctime": lambda e, a: time.ctime(x(e, a)),
+            "gmtime": lambda e, a: time.gmtime(x(e, a)),
+            "localtime": lambda e, a: time.localtime(x(e, a)),
+            "asctime": lambda e, a: time.asctime(x(e, a)),
+            "mktime": lambda e, a: time.mktime(x(e, a)),
+            "sleep": lambda e, a: time.sleep(x(e, a)),
+            "strftime": lambda e, a, b: time.strftime(x(e, a), x(e, b)),
+            "strptime": lambda e, a, b: time.strptime(x(e, a), x(e, b)),
+            "clock": lambda e: time.clock(),
+            "perf_counter": lambda e: time.perf_counter(),
+            "process_time": lambda e: time.process_time(),
+            "time_ns": lambda e: time.time_ns(),
+            "monotonic": lambda e: time.monotonic(),
+            "monotonic_ns": lambda e: time.monotonic_ns(),
+            "thread_time": lambda e: time.thread_time(),
+            "thread_time_ns": lambda e: time.thread_time_ns(),
         }
+
 
 class DatetimeLib(Lib):
     def other_data(self):
         x = lambda e, v: e.extract(v)
         xs = lambda e, *vs: e.extracts(*vs)
         return {
-            'date': lambda e, a, b, c: datetime.date(x(e, a), x(e, b), x(e, c)),
-            'datetime': lambda e, a, b, c, d, e2, f: datetime.datetime(x(e, a), x(e, b), x(e, c), x(e, d), x(e, e2), x(e, f)),
-            'time': lambda e, a, b, c, d: datetime.time(x(e, a), x(e, b), x(e, c), x(e, d)),
-            'timedelta': lambda e, a, b, c, d, e2, f: datetime.timedelta(x(e, a), x(e, b), x(e, c), x(e, d), x(e, e2), x(e, f)),
-            'timezone': lambda e, a, b: datetime.timezone(x(e, a), x(e, b)),
-            'tzinfo': lambda e, a, b, c, d, e2, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z: datetime.tzinfo(x(e, a), x(e, b), x(e, c), x(e, d), x(e, e2), x(e, f), x(e, g), x(e, h), x(e, i), x(e, j), x(e, k), x(e, l), x(e, m), x(e, n), x(e, o), x(e, p), x(e, q), x(e, r), x(e, s), x(e, t), x(e, u), x(e, v), x(e, w), x(e, x), x(e, y), x(e, z)),
+            "date": lambda e, a, b, c: datetime.date(x(e, a), x(e, b), x(e, c)),
+            "datetime": lambda e, a, b, c, d, e2, f: datetime.datetime(
+                x(e, a), x(e, b), x(e, c), x(e, d), x(e, e2), x(e, f)
+            ),
+            "time": lambda e, a, b, c, d: datetime.time(
+                x(e, a), x(e, b), x(e, c), x(e, d)
+            ),
+            "timedelta": lambda e, a, b, c, d, e2, f: datetime.timedelta(
+                x(e, a), x(e, b), x(e, c), x(e, d), x(e, e2), x(e, f)
+            ),
+            "timezone": lambda e, a, b: datetime.timezone(x(e, a), x(e, b)),
+            "tzinfo": lambda e, a, b, c, d, e2, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z: datetime.tzinfo(
+                x(e, a),
+                x(e, b),
+                x(e, c),
+                x(e, d),
+                x(e, e2),
+                x(e, f),
+                x(e, g),
+                x(e, h),
+                x(e, i),
+                x(e, j),
+                x(e, k),
+                x(e, l),
+                x(e, m),
+                x(e, n),
+                x(e, o),
+                x(e, p),
+                x(e, q),
+                x(e, r),
+                x(e, s),
+                x(e, t),
+                x(e, u),
+                x(e, v),
+                x(e, w),
+                x(e, x),
+                x(e, y),
+                x(e, z),
+            ),
         }
+
 
 class PrintLib(Lib):
     def other_data(self):
         x = lambda e, v: e.extract(v)
         xs = lambda e, *vs: e.extracts(*vs)
         return {
-            'print': lambda e, *text, sep, end, file, flush: print(*xs(e, *text), sep=x(e, sep), end=x(e, end), file=x(e, file), flush=x(e, flush)),
-            'fmt': lambda e, text, *args: text.format(*xs(e, *args)),
+            "print": lambda e, *text, sep, end, file, flush: print(
+                *xs(e, *text),
+                sep=x(e, sep),
+                end=x(e, end),
+                file=x(e, file),
+                flush=x(e, flush),
+            ),
+            "fmt": lambda e, text, *args: text.format(*xs(e, *args)),
         }
 
 
-    
 def get_runner():
     runner = KotazyRunner()
     runner.libs = {
-        "std" : StandartLib, 
-        "math" : MathLib, 
-        "rnd" : RandomLib, 
-        "time" : TimeLib, 
-        "dt" : DatetimeLib, 
-        "print" : PrintLib, 
+        "std": StandartLib,
+        "math": MathLib,
+        "rnd": RandomLib,
+        "time": TimeLib,
+        "dt": DatetimeLib,
+        "print": PrintLib,
     }
     return runner
 
+
 if __name__ == "__main__":
     runner = get_runner()
-    funcount = len(reduce(lambda a, b: a | b, [x().export() for x in runner.libs.values()]))
+    funcount = len(
+        reduce(lambda a, b: a | b, [x().export() for x in runner.libs.values()])
+    )
     stdcount = len(StandartLib().export())
     text = [
-        f'Functions: {funcount} ({stdcount} from std)',
-        f'Libs: {len(runner.libs)} - {", ".join(runner.libs.keys())}'
+        f"Functions: {funcount} ({stdcount} from std)",
+        f'Libs: {len(runner.libs)} - {", ".join(runner.libs.keys())}',
     ]
-    print(*text, sep='\n')
-    print('-'*len(max(text, key=len)))
+    print(*text, sep="\n")
+    print("-" * len(max(text, key=len)))
 
-    program = open(input('File: '), 'r').read()
+    program = open(input("File: "), "r").read()
     """
     std{
         / factorial(n) /

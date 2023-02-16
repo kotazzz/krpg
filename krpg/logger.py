@@ -21,8 +21,10 @@ class Logger:
         self.filename = filename
         self.file = file
         self.colors = {
-            "red": "\033[91m", "yellow": "\033[93m",
-            "red_bg": "\033[41m", "green": "\033[32m",
+            "red": "\033[91m",
+            "yellow": "\033[93m",
+            "red_bg": "\033[41m",
+            "green": "\033[32m",
             "blue": "\033[34m",
         }
         self.critical = lambda msg: level > 0 and self.send(
@@ -48,9 +50,12 @@ class Logger:
         time = ts.strftime(self.time)
         full = ts.strftime(self.full_time)
         formatmap = {
-            "time": time, "full": full,
-            "tag": tag, "text": text,
-            "color": self.colors[color], "c": "\033[0m",
+            "time": time,
+            "full": full,
+            "tag": tag,
+            "text": text,
+            "color": self.colors[color],
+            "c": "\033[0m",
         }
         s = sys.stderr if err else sys.stdout
         s.write(self.message.format(**formatmap) + "\n")
