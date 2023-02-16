@@ -210,18 +210,6 @@ class Console:
             )
         )
         
-    def len_no_cc(self, string):
-        print(
-            string,
-            # WITH - WITHOUT = CSI
-            # CSI + CLEAR
-            len(self.format(string)) - Console.len_no_ansi(self.format(string)) + len(
-            re.sub(r"(\[([a-zB0-9 -]+)\])|(\[\/\])|(\[#([0-9a-fA-F]{6})\])", "", string)
-        ),
-            
-        )
-        
-        return len(self.format(string))
     
         
 

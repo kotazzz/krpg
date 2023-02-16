@@ -25,7 +25,7 @@ class BaseModule(Module):
     
     def load_save_data(self, data):
         # check if module list is the same
-        table = [("Причина", "Игра", "Сохранение")]
+        table = []
         errors = []
         # mismatch = set(data.keys()) ^ set(map(lambda x: x.name, self.game.modules))
         in_save = set(data.keys())
@@ -33,10 +33,10 @@ class BaseModule(Module):
         
         
         for not_loaded in in_save - in_game:
-            table.append(("Mismatch", "[red]---[/]", f"{not_loaded}"))
+            table.append(("Mismatch", "[red]-Not in game-[/]", f"{not_loaded}"))
             errors.append(f"Module {not_loaded} not loaded in game")
         for not_saved in in_game - in_save:
-            table.append(("Mismatch", f"{not_saved}", "[red]---[/]"))
+            table.append(("Mismatch", f"{not_saved}", "[red]-Not in save-[/]"))
             errors.append(f"Module {not_saved} not found in save")
             
         
@@ -51,14 +51,11 @@ class BaseModule(Module):
                 errors.append(f"Module {module} version mismatch: {v1} != {v2}")
         
         c = self.game.console
-        sizes = list(map(lambda column: max(map(c.len_no_cc, column)), list(zip(*table[::-1]))))
         for row in table:
-            c.print(end="| ")
-            for i, column in  enumerate(row):
-                c.print(column.center(sizes[i]), end=" | ")
-            c.print()
-        # UГ7az:Kh*YTy*!Я>Е0
-        raise Exception("\n"+"\n".join(errors))
+            c.print(f"{row[0]}: {row[1]} {row[2]}")
+        
+        if errors and  not c.confirm("Вы уверены, что хотите продолжить загрузку? (yn): "):
+            raise Exception("\n"+"\n".join(errors))
     
     
     def init(self):
