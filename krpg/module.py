@@ -1,11 +1,11 @@
 from __future__ import annotations
-class Module:
-    requires = []
+from .resolver import DependObject
+class Module(DependObject):
     
     def __init__(self):
         self._commands = {}
     
-    def main(self):
+    def init(self):
         raise NotImplementedError
     
     def __repr__(self):

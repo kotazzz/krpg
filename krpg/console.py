@@ -200,7 +200,8 @@ class Console:
         sys.stdout.write("\033[u")
         sys.stdout.write("\033[J")
 
-    def len_no_ansi(self, string):
+    @staticmethod
+    def len_no_ansi(string):
         return len(
             re.sub(
                 r"[\u001B\u009B][\[\]()#;?]*((([a-zA-Z\d]*(;[-a-zA-Z\d\/#&.:=?%@~_]*)*)?\u0007)|((\d{1,4}(?:;\d{0,4})*)?[\dA-PR-TZcf-ntqry=><~]))",
@@ -208,6 +209,21 @@ class Console:
                 string,
             )
         )
+        
+    def len_no_cc(self, string):
+        print(
+            string,
+            # WITH - WITHOUT = CSI
+            # CSI + CLEAR
+            len(self.format(string)) - Console.len_no_ansi(self.format(string)) + len(
+            re.sub(r"(\[([a-zB0-9 -]+)\])|(\[\/\])|(\[#([0-9a-fA-F]{6})\])", "", string)
+        ),
+            
+        )
+        
+        return len(self.format(string))
+    
+        
 
     def prompt(self, prompt=1, checker=None, factory=None):
         checker = checker or (lambda x: True)

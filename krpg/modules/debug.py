@@ -6,14 +6,16 @@ from ..scenario import parse
 
 
 class DebugModule(Module):
-    requires = ["BaseModule"]
+    name = "debug"
+    version = "0.0.0"
+    requires = ["base>=0.1"]
     
     def __init__(self, game: Game):
         super().__init__()
         self.game = game
     
-    def main(self):
-        self.game.logger.debug(f"Modules: {' '.join(m.__class__.__name__ for m in self.game.modules)}")
+    def init(self):
+        self.game.logger.debug(f"Modules: {' '.join(f'{m.name}-{m.version}' for m in self.game.modules)}")
         
     def on_event(self, event, *args, **kwargs):
         self.game.logger.debug(f"New event: {event} {args} {kwargs}")

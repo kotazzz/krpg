@@ -4,15 +4,15 @@ from .resolver import resolve_dependencies
 from .events import EventHandler
 from .actions import ActionManager, Action
 from .console import Console
-from .encryptor import Encryptor
+from .encoder import Encoder
 from .logger import Logger
 class Game:
     def __init__(self):
         self.modules: list[Module] = []
-        self.eh = EventHandler()
+        self.eh = EventHandler(locked=True)
         self.manager = ActionManager()
         self.console = Console(self)
-        self.encryptor = Encryptor()
+        self.encoder = Encoder()
         self.logger = Logger(file=False)
         
     def add_module(self, module: Module):
@@ -21,28 +21,30 @@ class Game:
     def expand_modules(self, sequence: list):
         self.modules.extend(sequence)
         
+    def get_modules(self):
+        return {m.name : m for m in self.modules}
     
     def main(self):
-        names = {
-            m.__class__.__name__: m for m in self.modules
-        }
-        deptree = {
-            m.__class__.__name__: m.requires for m in self.modules
-        }
-        resolved = resolve_dependencies(deptree)
-        modsorted = [names[name] for name in resolved]
-        for module in modsorted:
+        
+        self.modules: list[Module] = resolve_dependencies(self.modules)
+        
+        for module in self.modules:
+            self.eh.dispatch("pre_init", module=module)
             for name in dir(module):
                 attr = getattr(module, name)
                 if name.startswith("on_") and callable(attr):
                     self.eh.listen(name[3:], attr)
+                    self.eh.dispatch("add_listener", name=name[3:], callback=attr)
                 elif name.startswith("on_") and  not callable(attr):
                     raise Exception(f"Invalid attribute {name} in module {module}")
-                    
                 if isinstance(attr, Action):
                     self.manager.register(attr)
-        for module in modsorted:
-            module.main()
+                    self.eh.dispatch("add_action", action=attr)
+                    
+        for module in self.modules:
+            module.init()
+        
         
         self.eh.dispatch("post_init")
+        self.eh.unlock()
                 

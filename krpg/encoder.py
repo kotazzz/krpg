@@ -1,7 +1,7 @@
 from math import ceil
 
 
-class Encryptor:
+class Encoder:
     abc = [
         (
             "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ["
