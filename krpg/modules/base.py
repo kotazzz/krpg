@@ -21,10 +21,9 @@ class BaseModule(Module):
         self.running = True
         self.scenario = self.load_scenario()
         self.executer = Executer(game)
-        
-    
+
     def load_scenario(self):
-        with open('scenario.krpg') as f:
+        with open("scenario.krpg") as f:
             content = f.read()
             return parse(content)
 
@@ -69,10 +68,9 @@ class BaseModule(Module):
             raise Exception("\n" + "\n".join(errors))
 
     def init(self):
-        sec = self.scenario.first('init')
+        sec = self.scenario.first("init")
         for command in sec.children:
             self.executer.execute(command)
-            
 
     def on_post_init(self):
         c = self.game.console
@@ -109,14 +107,14 @@ class BaseModule(Module):
         zdata = zlib.compress(bdata, level=9)
         encoded = game.encoder.encode(zdata, type=0)
         game.console.print(f"[green]Код сохранения: [yellow]{encoded}[/]")
-    
+
     def on_load(self, game: Game):
         while True:
             game.console.print("[green]Введите код сохранения: [yellow]")
             encoded = input()
             game.console.print("[/]")
             try:
-                
+
                 zdata = game.encoder.decode(encoded, type=0)
                 bdata = zlib.decompress(zdata)
                 data = msgpack.unpackb(bdata)
@@ -133,21 +131,19 @@ class BaseModule(Module):
                 game.console.print("Игра загружена")
                 break
 
-
     @action("exit", "Выйти из игры", "Основное")
     def exit(game: Game, base, **kwargs):
         game.console.print("Выход из игры")
         game.eh.dispatch("exit")
-    
+
     @action("save", "Сохранить игру", "Основное")
     def save(game: Game, **kwargs):
         game.eh.dispatch("save", game=game)
 
-
     @action("load", "Загрузить игру", "Основное")
     def load(game: Game, **kwargs):
         game.eh.dispatch("load", game=game)
-        
+
     @action("help", "Помощь", "Основное")
     def helps(game: Game, **kwargs):
         c = game.console

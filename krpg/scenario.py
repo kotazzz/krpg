@@ -6,17 +6,18 @@ ALLOW_KWARGS = True
 MULOPEN = "[["
 MULCLOSE = "]]"
 
+
 class Section:
     def __init__(self, name, args=None, parent=None):
         self.name = name
-        self.children: list[Section|Command]= []
+        self.children: list[Section | Command] = []
         self.args = args or []
         self.parent = parent
-    
+
     @property
     def as_command(self):
         return Command(self.name, self.args)
-    
+
     def first(self, name, section=True, command=True):
         for child in self.children:
             if child.name == name:
@@ -24,7 +25,7 @@ class Section:
                     return child
                 if isinstance(child, Command) and command:
                     return child
-    
+
     def all(self, name, section=True, command=True):
         r = []
         for child in self.children:
@@ -34,7 +35,6 @@ class Section:
                 if isinstance(child, Command) and command:
                     return child
         return r
-        
 
     def __repr__(self):
         return f"Section({self.name!r}, {self.args}, {self.children})"
@@ -45,38 +45,39 @@ class Command:
         self.name = name
         self.args = args or []
         self.kwargs = kwargs or {}
-    
+
     @staticmethod
     def from_raw(string):
         cmd, *args = shlex.split(string)
         kwargs = {}
         if ALLOW_KWARGS:
             for i, arg in enumerate(args):
-                if arg.startswith('--'):
-                    a, b = arg[2:].split('=')
+                if arg.startswith("--"):
+                    a, b = arg[2:].split("=")
                     args.pop(i)
                     kwargs[a] = b
         return Command(cmd, args, kwargs)
-        
 
     def __repr__(self) -> str:
         return f"Command({self.name!r}, {self.args})"
 
+
 class Multiline(Command):
     def from_raw(string):
-            return Multiline(string[len(MULOPEN):-len(MULCLOSE)])
+        return Multiline(string[len(MULOPEN) : -len(MULCLOSE)])
+
     def __repr__(self) -> str:
         return f"Multiline('{self.name[:10]+'...'}', {self.args})"
-        
+
 
 def parse(text):
-    regex = re.escape(MULOPEN)+r'[^"|.]*'+re.escape(MULCLOSE)
-    text = re.sub(regex, lambda m: m.group(0).strip().replace("\n","\\n"), text)
+    regex = re.escape(MULOPEN) + r'[^"|.]*' + re.escape(MULCLOSE)
+    text = re.sub(regex, lambda m: m.group(0).strip().replace("\n", "\\n"), text)
     # print(text)
-    text = text.replace("\n\n", "\n").replace("\\\n", '')
-    
+    text = text.replace("\n\n", "\n").replace("\\\n", "")
+
     lines = text.split("\n")
-    
+
     lines = [r for line in lines if (r := line.split("#", 1)[0].strip())]
     curr = Section("root")
     for line in lines:
@@ -90,7 +91,7 @@ def parse(text):
 
         else:
             if line.startswith(MULOPEN):
-                
+
                 curr.children.append(Multiline.from_raw(line))
             else:
                 curr.children.append(Command.from_raw(line))

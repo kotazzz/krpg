@@ -19,7 +19,7 @@ def action(name: str, description: str = "No description", category: str = ""):
 
 class ActionManager:
     def __init__(self):
-        self.actions: dict[str, list[Action]]= {}
+        self.actions: dict[str, list[Action]] = {}
 
     def register(self, action: Action):
         if action.name in self.get_all():
