@@ -11,6 +11,7 @@ class PlayerModule(Module):
     def __init__(self, game: Game):
         super().__init__()
         self.game = game
+        self.username = 'Игрок'
     
     def init(self):
         c = self.game.console
@@ -18,4 +19,4 @@ class PlayerModule(Module):
         if user:
             self.game.eh.dispatch("load", game=self.game)
         else:
-            pass
+            self.username = c.prompt('[green]Введите имя: [/]')

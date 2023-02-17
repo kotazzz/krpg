@@ -1,7 +1,10 @@
 from __future__ import annotations
 import shlex
+import re
 
 ALLOW_KWARGS = True
+MULOPEN = "[["
+MULCLOSE = "]]"
 
 class Section:
     def __init__(self, name, args=None, parent=None):
@@ -59,10 +62,21 @@ class Command:
     def __repr__(self) -> str:
         return f"Command({self.name!r}, {self.args})"
 
+class Multiline(Command):
+    def from_raw(string):
+            return Multiline(string[len(MULOPEN):-len(MULCLOSE)])
+    def __repr__(self) -> str:
+        return f"Multiline('{self.name[:10]+'...'}', {self.args})"
+        
 
 def parse(text):
+    regex = re.escape(MULOPEN)+r'[^"|.]*'+re.escape(MULCLOSE)
+    text = re.sub(regex, lambda m: m.group(0).strip().replace("\n","\\n"), text)
+    # print(text)
     text = text.replace("\n\n", "\n").replace("\\\n", '')
+    
     lines = text.split("\n")
+    
     lines = [r for line in lines if (r := line.split("#", 1)[0].strip())]
     curr = Section("root")
     for line in lines:
@@ -75,5 +89,9 @@ def parse(text):
             curr = new
 
         else:
-            curr.children.append(Command.from_raw(line))
+            if line.startswith(MULOPEN):
+                
+                curr.children.append(Multiline.from_raw(line))
+            else:
+                curr.children.append(Command.from_raw(line))
     return curr
