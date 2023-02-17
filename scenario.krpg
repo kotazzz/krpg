@@ -1,5 +1,5 @@
 init {
-    print "\
+    Уprint "\
 [bold magenta]╭───╮ ╭─╮[bold red]       [bold blue]╭──────╮  [bold yellow]╭───────╮[bold green]╭───────╮\n\
 [bold magenta]│   │ │ │[bold red]       [bold blue]│   ╭─╮│  [bold yellow]│       │[bold green]│       │\n\
 [bold magenta]│   ╰─╯ │[bold red]╭────╮ [bold blue]│   │ ││  [bold yellow]│   ╭─╮ │[bold green]│   ╭───╯\n\
@@ -13,9 +13,7 @@ init {
 Сохранения доступны [red]только[/] в этой локации\n\
 Задать имя персонажу можно [red]только один раз[/]!\n\
   [blue]help[/] - Показать список команд\n\
-  [blue]guide[/] - Справка и помощь, как начать\n\
-  [blue]bestiary[/] - Показать информацию о здешних монстрах\n"
-
+[red]Игра находится на стадии тестирования![/]"
 
 }
 
