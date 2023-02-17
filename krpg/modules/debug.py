@@ -7,7 +7,7 @@ from ..scenario import parse
 
 class DebugModule(Module):
     name = "debug"
-    version = "0.0.0"
+    version = "0"
     requires = ["base>=0.1"]
 
     def __init__(self, game: Game):

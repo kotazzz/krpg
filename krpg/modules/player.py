@@ -3,7 +3,7 @@ from ..module import Module
 from ..actions import action
 
 class PlayerModule(Module):
-    requires = ["base>=0.1"]
+    requires = ["base>=7"]
     name = "player"
     version = "0.1"
     
@@ -13,6 +13,12 @@ class PlayerModule(Module):
         self.game = game
         self.username = 'Игрок'
     
+    def generate_save_data(self):
+        return self.username
+    
+    def load_save_data(self, data):
+        self.username = data
+        
     def init(self):
         c = self.game.console
         user = c.confirm("[green]Желаете загрузить сохранение? (yn): [/]")
@@ -20,3 +26,4 @@ class PlayerModule(Module):
             self.game.eh.dispatch("load", game=self.game)
         else:
             self.username = c.prompt('[green]Введите имя: [/]')
+            

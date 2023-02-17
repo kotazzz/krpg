@@ -1,5 +1,6 @@
 from __future__ import annotations
 from functools import reduce
+import zlib
 from ..game import Game
 from ..scenario import parse
 from ..module import Module
@@ -12,13 +13,12 @@ from ..resolver import compare_versions
 class BaseModule(Module):
     requires = []
     name = "base"
-    version = "0.1"
+    version = "7"
 
     def __init__(self, game: Game):
         super().__init__()
         self.game = game
         self.running = True
-        self.storage = {}
         self.scenario = self.load_scenario()
         self.executer = Executer(game)
         
@@ -106,7 +106,8 @@ class BaseModule(Module):
         )
         print(data)
         bdata = msgpack.packb(data)
-        encoded = game.encoder.encode(bdata, type=0)
+        zdata = zlib.compress(bdata, level=9)
+        encoded = game.encoder.encode(zdata, type=0)
         game.console.print(f"[green]Код сохранения: [yellow]{encoded}[/]")
     
     def on_load(self, game: Game):
@@ -115,7 +116,9 @@ class BaseModule(Module):
             encoded = input()
             game.console.print("[/]")
             try:
-                bdata = game.encoder.decode(encoded, type=0)
+                
+                zdata = game.encoder.decode(encoded, type=0)
+                bdata = zlib.decompress(zdata)
                 data = msgpack.unpackb(bdata)
                 methods = [
                     (m.name, m.load_save_data)
