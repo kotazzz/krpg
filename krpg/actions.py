@@ -19,10 +19,10 @@ def action(name: str, description: str = "No description", category: str = ""):
 
 class ActionManager:
     def __init__(self):
-        self.actions = {}
+        self.actions: dict[str, list[Action]]= {}
 
     def register(self, action: Action):
-        if action.name in self.actions:
+        if action.name in self.get_all():
             raise Exception(f"Action {action.name} already exists.")
         if action.category not in self.actions:
             self.actions[action.category] = {}
@@ -33,15 +33,9 @@ class ActionManager:
             for name, action in actions.items():
                 self.register(action)
 
-    def get_all(self):
+    def get_all(self) -> list[Action]:
         r = {}
         for category, actions in self.actions.items():
             for name, action in actions.items():
                 r[name] = action
         return r
-
-    def get_list(self, category: str = None):
-        if category is None:
-            return self.actions
-        else:
-            return self.actions[category]

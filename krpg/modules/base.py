@@ -1,9 +1,10 @@
 from __future__ import annotations
 from functools import reduce
-import shlex
 from ..game import Game
+from ..scenario import parse
 from ..module import Module
 from ..actions import action
+from ..executer import Executer
 import msgpack
 from ..resolver import compare_versions
 
@@ -18,6 +19,14 @@ class BaseModule(Module):
         self.game = game
         self.running = True
         self.storage = {}
+        self.scenario = self.load_scenario()
+        self.executer = Executer(game)
+        
+    
+    def load_scenario(self):
+        with open('scenario.krpg') as f:
+            content = f.read()
+            return parse(content)
 
     def generate_save_data(self):
         # module: version for all loaded modules
@@ -60,7 +69,10 @@ class BaseModule(Module):
             raise Exception("\n" + "\n".join(errors))
 
     def init(self):
-        pass
+        sec = self.scenario.first('init')
+        for command in sec.children:
+            self.executer.execute(command)
+            
 
     def on_post_init(self):
         c = self.game.console
@@ -82,13 +94,7 @@ class BaseModule(Module):
                 f"[green]Доступные команды: {' '.join(cmds.keys())}[/]"
             )
 
-    @action("exit", "Exit game", "main")
-    def exit(game: Game, base, **kwargs):
-        game.console.print("Выход из игры")
-        game.eh.dispatch("exit")
-
-    @action("save", "Save game", "main")
-    def save(game: Game, base, **kwargs):
+    def on_save(self, game: Game):
         game.console.print("Сохранение игры")
         methods = [
             (m.name, m.generate_save_data)
@@ -102,23 +108,47 @@ class BaseModule(Module):
         bdata = msgpack.packb(data)
         encoded = game.encoder.encode(bdata, type=0)
         game.console.print(f"[green]Код сохранения: [yellow]{encoded}[/]")
+    
+    def on_load(self, game: Game):
+        while True:
+            game.console.print("[green]Введите код сохранения: [yellow]")
+            encoded = input()
+            game.console.print("[/]")
+            try:
+                bdata = game.encoder.decode(encoded, type=0)
+                data = msgpack.unpackb(bdata)
+                methods = [
+                    (m.name, m.load_save_data)
+                    for m in game.modules
+                    if hasattr(m, "load_save_data")
+                ]
+                for mod, method in methods:
+                    method(data[mod])
+            except Exception as e:
+                game.console.print(f"[red]Ошибка при загрузке игры: {e}[/]")
+            else:
+                game.console.print("Игра загружена")
+                break
 
-    @action("load", "Load game", "main")
-    def load(game: Game, base, **kwargs):
-        game.console.print("[green]Введите код сохранения: [yellow]")
-        encoded = input()
-        game.console.print("[/]")
-        try:
-            bdata = game.encoder.decode(encoded, type=0)
-            data = msgpack.unpackb(bdata)
-            methods = [
-                (m.name, m.load_save_data)
-                for m in game.modules
-                if hasattr(m, "load_save_data")
-            ]
-            for mod, method in methods:
-                method(data[mod])
-        except Exception as e:
-            game.console.print(f"[red]Ошибка при загрузке игры: {e}[/]")
-        else:
-            game.console.print("Игра загружена")
+
+    @action("exit", "Выйти из игры", "Основное")
+    def exit(game: Game, base, **kwargs):
+        game.console.print("Выход из игры")
+        game.eh.dispatch("exit")
+    
+    @action("save", "Сохранить игру", "Основное")
+    def save(game: Game, **kwargs):
+        game.eh.dispatch("save", game=game)
+
+
+    @action("load", "Загрузить игру", "Основное")
+    def load(game: Game, **kwargs):
+        game.eh.dispatch("load", game=game)
+        
+    @action("help", "Помощь", "Основное")
+    def helps(game: Game, **kwargs):
+        c = game.console
+        for cat, cmds in game.manager.actions.items():
+            c.print(f"[red]{cat}[/]")
+            for name, cmd in cmds.items():
+                c.print(f"  [green]{name}[/] - {cmd.description}")

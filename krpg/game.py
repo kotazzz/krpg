@@ -26,6 +26,11 @@ class Game:
     def get_modules(self):
         return {m.name: m for m in self.modules}
 
+    def get_module(self, name):
+        for m in self.modules:
+            if name == m.name:
+                return m
+
     def main(self):
 
         self.modules: list[Module] = resolve_dependencies(self.modules)
