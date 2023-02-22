@@ -32,7 +32,6 @@ class Game:
                 return m
 
     def main(self):
-
         self.modules: list[Module] = resolve_dependencies(self.modules)
 
         for module in self.modules:
@@ -47,9 +46,10 @@ class Game:
                 if isinstance(attr, Action):
                     self.manager.register(attr)
                     self.eh.dispatch("add_action", action=attr)
-
+        
+        self.eh.unlock()
+        
         for module in self.modules:
             module.init()
 
         self.eh.dispatch("post_init")
-        self.eh.unlock()
