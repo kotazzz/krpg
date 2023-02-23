@@ -1,12 +1,18 @@
 init {
-  print "Новая игра"
+  print "Сценрий: Новая игра"
 }
 
 map {
-  location start {
+  location start "Тестовая локация" {
+    action test "Тестовое действие" {
+      print тестовое действие
+    }
+  }
+  location another "Тестовая локация 2" {
 
   }
   start start
+  link start another
 }
 
 

@@ -139,7 +139,7 @@ class Console:
             "[/]",
         )
 
-    def number_menu(self, prompt, variants, exit_cmd=None):
+    def number_menu(self, prompt, variants: int, exit_cmd: str=None) -> int | str:
         def checker(text):
             if text.isdigit():
                 if int(text) in range(1, variants + 1):
@@ -347,28 +347,28 @@ class Console:
             text = sep.join(text) + end
             sys.stdout.write(text)
 
-    def presense(self, e, minimal=False):
-        def bar(value, maximum, color="green", width=15):
-            symlen = int(value / maximum * width) if maximum else 0
-            return f"[white][[{color}]{'|'*symlen}{' '*(width-symlen)}[white]][/]"
-
-        if minimal:
-            self.print(
-                f"[bold white]{e.name}[0 white]:"
-                f" [red]A={e.attack:.2f} [blue]D={e.defense:.2f}[/] "
-                f"{bar(e.hp, e.max_hp)} [cyan]HP={e.hp:.2f}/{e.max_hp:.2f}\n"
-            )
-        else:
-            sp = " " * 4
-            self.print(
-                f"[bold white]{e.name}[/]\n"
-                f"{sp}[cyan]HP={e.hp:.2f}/{e.max_hp:.2f} {bar(e.hp, e.max_hp, 'green')}\n"
-                f"{sp}[cyan]MP={e.mp:.2f}/{e.max_mp:.2f} {bar(e.mp, e.max_mp, 'blue')}\n"
-                f"{sp}[red]A={e.attack:.2f} [blue]D={e.defense:.2f}\n"
-                f"{sp}[bold red]S={e.strength} [bold blue]D={e.dexterity}"
-                f" [bold yellow]W={e.wisdom} [bold green]E={e.endurance}"
-                f" [bold white]F={e.free_points}[/]"
-            )
+    # def presense(self, e, minimal=False):
+    #     def bar(value, maximum, color="green", width=15):
+    #         symlen = int(value / maximum * width) if maximum else 0
+    #         return f"[white][[{color}]{'|'*symlen}{' '*(width-symlen)}[white]][/]"
+    # 
+    #     if minimal:
+    #         self.print(
+    #             f"[bold white]{e.name}[0 white]:"
+    #             f" [red]A={e.attack:.2f} [blue]D={e.defense:.2f}[/] "
+    #             f"{bar(e.hp, e.max_hp)} [cyan]HP={e.hp:.2f}/{e.max_hp:.2f}\n"
+    #         )
+    #     else:
+    #         sp = " " * 4
+    #         self.print(
+    #             f"[bold white]{e.name}[/]\n"
+    #             f"{sp}[cyan]HP={e.hp:.2f}/{e.max_hp:.2f} {bar(e.hp, e.max_hp, 'green')}\n"
+    #             f"{sp}[cyan]MP={e.mp:.2f}/{e.max_mp:.2f} {bar(e.mp, e.max_mp, 'blue')}\n"
+    #             f"{sp}[red]A={e.attack:.2f} [blue]D={e.defense:.2f}\n"
+    #             f"{sp}[bold red]S={e.strength} [bold blue]D={e.dexterity}"
+    #             f" [bold yellow]W={e.wisdom} [bold green]E={e.endurance}"
+    #             f" [bold white]F={e.free_points}[/]"
+    #         )
 
     def log(self, text, level=1):
         if not level:
