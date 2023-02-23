@@ -20,4 +20,4 @@ class DebugModule(Module):
         )
 
     def on_event(self, event, *args, **kwargs):
-        self.game.logger.debug(f"New event: {event} {args} {kwargs}")
+        self.game.logger.debug(f"{event} {args} {kwargs}")

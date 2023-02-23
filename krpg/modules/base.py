@@ -3,14 +3,14 @@ from dataclasses import dataclass
 from functools import reduce
 import zlib
 from ..game import Game
-from ..scenario import parse
+from ..scenario import Section, parse
 from ..module import Module
 from ..actions import action
 from ..executer import Executer
 import msgpack
 from ..resolver import compare_versions
 
-__version__ = "7"
+__version__ = "8"
 @dataclass
 class EntityInfo:
     s: int
@@ -91,7 +91,7 @@ class Entity:
         self.current_mana     = data[8]
         
 class PlayerModule(Module):
-    requires = []
+    requires = ["base>=0"]
     name = "player"
     version = __version__
 
@@ -120,20 +120,77 @@ class PlayerModule(Module):
             else:
                 self.e.name = c.prompt("[green]Введите имя: [/]")
                 Flag.v = None
+        
+        if Flag.v == None:
+            base = self.game.get_module("base")
+            sc: Section = base.scenario
+            executer: Executer = base.executer
+            
+            self.game.eh.dispatch("new_game")
+            sec = sc.first("init")
+            for command in sec.children:
+                executer.execute(command)
+            
+        
 
+    @action("me", "Информация о себе", "Игрок")    
+    def me(game: Game, player: PlayerModule, **kwargs):
+        s, d, w, e = player.e.s, player.e.d, player.e.w, player.e.e
+        print("sdwe: ", s, d, w, e)
+
+class Location:
+    def __init__(self, name):
+        self.name = name
+        
+    
+
+class MapModule(Module):
+    requires = ["base>=0"]
+    name = "map"
+    version = __version__
+
+    def __init__(self, game: Game):
+        super().__init__()
+        self.game = game
+        self.locations: list[Location] = []
+        self.current = None
+    
+    def get_location(self, name):
+        for loc in self.locations:
+            if loc.name == name:
+                return loc
+
+    def generate_save_data(self):
+        return [self.current]
+
+    def load_save_data(self, data):
+        self.current = data[0]
+
+    def init(self):
+        base = self.game.get_module("base")
+        sc: Section = base.scenario
+        map = sc.first("map")
+        for loc in map.all("location"):
+            location = Location(loc.args[0])
+            self.locations.append(location)
+        self.current = map.first("start").args[0]
+    
+    
+        
+        
     
 
 
 class BaseModule(Module):
     
-    requires = ["player>=7"]
+    requires = []
     name = "base"
     version = __version__
 
     def __init__(self, game: Game):
         super().__init__()
         self.game = game
-        game.expand_modules([PlayerModule(game)])
+        game.expand_modules([PlayerModule(game), MapModule(game)])
         self.running = True
         self.scenario = self.load_scenario()
         self.executer = Executer(game)
@@ -184,13 +241,27 @@ class BaseModule(Module):
             raise Exception("\n" + "\n".join(errors))
 
     def init(self):
-        sec = self.scenario.first("init")
-        for command in sec.children:
-            self.executer.execute(command)
+        c = self.game.console
+        c.print(
+            "[bold magenta]╭───╮ ╭─╮[bold red]       [bold blue]╭──────╮  [bold yellow]╭───────╮[bold green]╭───────╮\n"
+            "[bold magenta]│   │ │ │[bold red]       [bold blue]│   ╭─╮│  [bold yellow]│       │[bold green]│       │\n"
+            "[bold magenta]│   ╰─╯ │[bold red]╭────╮ [bold blue]│   │ ││  [bold yellow]│   ╭─╮ │[bold green]│   ╭───╯\n"
+            "[bold magenta]│     ╭─╯[bold red]╰────╯ [bold blue]│   ╰─╯╰─╮[bold yellow]│   ╰─╯ │[bold green]│   │╭──╮\n"
+            "[bold magenta]│     ╰─╮[bold red]       [bold blue]│   ╭──╮ │[bold yellow]│   ╭───╯[bold green]│   ││  │\n"
+            "[bold magenta]│   ╭─╮ │[bold red]       [bold blue]│   │  │ │[bold yellow]│   │    [bold green]│   ╰╯  │\n"
+            "[bold magenta]╰───╯ ╰─╯[bold red]       [bold blue]╰───╯  ╰─╯[bold yellow]╰───╯    [bold green]╰───────╯\n[/]"
+        )
+
+        c.print( 
+            "[magenta]K[red]-[blue]R[yellow]P[green]G[/] - Рпг игра, где вы изучаете мир и совершенствуетесь\n"
+            "Сохранения доступны [red]только[/] в этой локации\n"
+            "Задать имя персонажу можно [red]только один раз[/]!\n"
+            "[blue]help[/] - Показать список команд\n"
+            "[red]Игра находится на стадии тестирования![/]", min=0.002
+        )
 
     def on_post_init(self):
         c = self.game.console
-        c.print("Добро пожаловать в игру!")
         while self.running:
             cmd = c.prompt()
             self.game.eh.dispatch("command", command=cmd)
@@ -249,6 +320,7 @@ class BaseModule(Module):
                 game.console.print("Игра загружена")
                 if successcb:
                     successcb()
+                    game.eh.dispatch("load_done")
                 return
         
         if failcb:

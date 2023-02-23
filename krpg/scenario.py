@@ -26,14 +26,14 @@ class Section:
                 if isinstance(child, Command) and command:
                     return child
 
-    def all(self, name, section=True, command=True):
+    def all(self, name, section=True, command=True) -> list[Section | Command]:
         r = []
         for child in self.children:
             if child.name == name:
                 if isinstance(child, Section) and section:
-                    return child
+                    r.append(child)
                 if isinstance(child, Command) and command:
-                    return child
+                    r.append(child)
         return r
 
     def __repr__(self):
