@@ -1,6 +1,12 @@
-from .game import Game
-from .scenario import Command
+from __future__ import annotations
+
 import ast
+from typing import TYPE_CHECKING
+
+from .core.scenario import Command
+
+if TYPE_CHECKING:
+    from .game import Game  
 
 
 class Executer:

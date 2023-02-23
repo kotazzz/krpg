@@ -20,20 +20,26 @@ def action(name: str, description: str = "No description", category: str = ""):
 class ActionManager:
     def __init__(self):
         self.actions: dict[str, list[Action]] = {}
+        for name in dir(self):
+            attr = getattr(self, name)
+            if isinstance(attr, Action):
+                self.register(attr)
+                
+    
 
     def register(self, action: Action):
-        if action.name in self.get_all():
+        if action.name in self.get_all_actions():
             raise Exception(f"Action {action.name} already exists.")
         if action.category not in self.actions:
             self.actions[action.category] = {}
         self.actions[action.category][action.name] = action
 
-    def expand(self, actionmanager: ActionManager):
+    def expand_actions(self, actionmanager: ActionManager):
         for category, actions in actionmanager.actions.items():
             for name, action in actions.items():
                 self.register(action)
 
-    def get_all(self) -> list[Action]:
+    def get_all_actions(self) -> list[Action]:
         r = {}
         for category, actions in self.actions.items():
             for name, action in actions.items():
