@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -7,13 +6,16 @@ from typing import TYPE_CHECKING
 from .entity import Entity
 
 if TYPE_CHECKING:
-    from .game import Game  
+    from .game import Game
+
+
 class Presenter:
     def __init__(self, game: Game):
         self.game = game
-    
+
     def presense(self, e: Entity, minimal=False):
         console = self.game.console
+
         def bar(value, maximum, color="green", width=15):
             symlen = int(value / maximum * width) if maximum else 0
             return f"[white][[{color}]{'|'*symlen}{' '*(width-symlen)}[white]][/]"
@@ -38,6 +40,7 @@ class Presenter:
 
     def presenses(self, entities: list[Entity]):
         console = self.game.console
+
         def bar(value, maximum, color="green", width=15):
             symlen = int(value / maximum * width) if maximum else 0
             return f"[white][[{color}]{'|'*symlen}{' '*(width-symlen)}[white]][/]"

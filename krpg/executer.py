@@ -6,11 +6,13 @@ from typing import TYPE_CHECKING
 from .core.scenario import Command
 
 if TYPE_CHECKING:
-    from .game import Game  
+    from .game import Game
+
 
 def executer_command(name):
     def wrapper(callback):
         return ExecuterCommand(name, callback)
+
     return wrapper
 
 
@@ -18,7 +20,8 @@ class ExecuterCommand:
     def __init__(self, name, callback):
         self.name = name
         self.callback = callback
-        
+
+
 class ExecuterExtension:
     def get_executer_additions(self):
         cmds: list[ExecuterCommand] = []
@@ -27,6 +30,7 @@ class ExecuterExtension:
             if isinstance(attr, ExecuterCommand):
                 cmds.append(attr)
         return {cmd.name: cmd.callback for cmd in cmds}
+
 
 class Base(ExecuterExtension):
     @executer_command("print")
@@ -38,12 +42,11 @@ class Base(ExecuterExtension):
             if name in kwargs:
                 newkwargs[name] = func(kwargs[name])
         game.console.print(*args, **newkwargs)
-    
+
     @executer_command("exec")
     def builtin_exec(game: Game, code):
         exec(code, {"game": game})
 
-       
 
 class Executer:
     def __init__(self, game: Game):
@@ -53,13 +56,13 @@ class Executer:
     def add_extension(self, ext: ExecuterExtension):
         self.game.logger.debug(f"Added ExecuterExtension {ext}")
         self.extensions.append(ext)
-    
+
     def get_all_commands(self):
         commands = {}
         for ext in self.extensions:
             commands |= ext.get_executer_additions()
         return commands
-            
+
     def execute(self, command: Command):
         commands = self.get_all_commands()
         if command.name in commands:
@@ -67,6 +70,3 @@ class Executer:
             commands[command.name](self.game, *command.args, **command.kwargs)
         else:
             raise Exception(f"Unknown command: {command.name}")
-    
-
-    

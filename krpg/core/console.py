@@ -139,7 +139,7 @@ class Console:
             "[/]",
         )
 
-    def number_menu(self, prompt, variants: int, exit_cmd: str=None) -> int | str:
+    def number_menu(self, prompt, variants: int, exit_cmd: str = None) -> int | str:
         def checker(text):
             if text.isdigit():
                 if int(text) in range(1, variants + 1):
@@ -351,7 +351,7 @@ class Console:
     #     def bar(value, maximum, color="green", width=15):
     #         symlen = int(value / maximum * width) if maximum else 0
     #         return f"[white][[{color}]{'|'*symlen}{' '*(width-symlen)}[white]][/]"
-    # 
+    #
     #     if minimal:
     #         self.print(
     #             f"[bold white]{e.name}[0 white]:"
