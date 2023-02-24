@@ -24,14 +24,21 @@ def action(name: str, description: str = "No description", category: str = ""):
 class ActionManager:
     def __init__(self):
         self.actions: dict[str, dict[str, Action]] = {}
-        self.dynamic: list[callable] = []
+        self.dynamic: list[callable[dict[str, Action]]] = []
         self.submanagers: list[ActionManager] = []
         
         for name in dir(self):
             attr = getattr(self, name)
             if isinstance(attr, Action):
                 self.register(attr)
-                
+
+    @classmethod
+    def from_list(cls, actions: list[Action]):
+        obj = cls()
+        for act in actions:
+            obj.register(act)
+        return obj
+    
             
     def register(self, action: Action):
         if action.name in self.get_all_actions():

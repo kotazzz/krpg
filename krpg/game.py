@@ -8,6 +8,9 @@ from .core.scenario import parse
 from .executer import Executer
 from .player import Player
 from .world import World
+from .bestiary import Bestiary
+from .battle import BattleManager
+from .presenter import Presenter
 
 import msgpack
 import zlib
@@ -31,11 +34,12 @@ class Game(ActionManager):
             cb = getattr(self, attr)
             self.eh.listen(attr[3:], cb) 
             
-            
+        self.presenter = Presenter(self)
         self.executer = Executer(self)
         self.player = Player(self)
         self.world = World(self)
-        
+        self.bestiary = Bestiary(self)
+        self.battle = BattleManager(self)
         
     def on_save(self, game: Game):
         data = {name: funcs[0]() for name, funcs in self.savers.items()}
@@ -104,7 +108,12 @@ class Game(ActionManager):
             self.console.print(
                 f"[green]Доступные команды: {' '.join(cmds.keys())}[/]"
             )
-          
+    def on_player_death(self):
+        self.eh.dispatch('exit')
+    
+    def on_exit(self):
+        self.running = False
+    
     def main(self):
         c = self.console
         
@@ -162,3 +171,7 @@ class Game(ActionManager):
             c.print(f"[red]{cat}[/]")
             for name, cmd in cmds.items():
                 c.print(f"  [green]{name}[/] - {cmd.description}")
+    
+    def __repr__(self):
+        return f"<Game as {ActionManager.__repr__(self)}>"
+    __str__ = __repr__
