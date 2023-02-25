@@ -1,12 +1,12 @@
 from __future__ import annotations
-import random
 
+import random
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .game import Game
+    from krpg.game import Game
 
-from .executer import ExecuterExtension, executer_command
+from krpg.executer import ExecuterExtension, executer_command
 
 
 class BattleManager(ExecuterExtension):

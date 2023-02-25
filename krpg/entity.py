@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .game import Game
+    from krpg.game import Game
 
-from .inventory import Inventory
+from krpg.inventory import Inventory
 
 
 class Entity:

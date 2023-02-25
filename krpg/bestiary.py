@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .entity import Entity
+from krpg.entity import Entity
 
 if TYPE_CHECKING:
-    from .game import Game
+    from krpg.game import Game
 
 
 class Bestiary:

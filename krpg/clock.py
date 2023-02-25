@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-
 if TYPE_CHECKING:
-    from .game import Game
-from .executer import ExecuterExtension, executer_command
-from .core.actions import action, ActionManager
+    from krpg.game import Game
+
+from krpg.core.actions import ActionManager, action
+from krpg.executer import ExecuterExtension, executer_command
 
 
 class Clock(ExecuterExtension, ActionManager):

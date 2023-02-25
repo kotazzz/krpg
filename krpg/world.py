@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 from collections import defaultdict
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .game import Game
+    from krpg.game import Game
 
-from .core.actions import Action, ActionManager, action
+from krpg.core.actions import Action, ActionManager, action
 
 
 class Location:

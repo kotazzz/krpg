@@ -1,20 +1,22 @@
 from __future__ import annotations
-from .core.events import EventHandler
-from .core.actions import ActionManager, action
-from .core.console import Console
-from .core.encoder import Encoder
-from .core.logger import Logger
-from .core.scenario import parse
-from .executer import Executer
-from .player import Player
-from .world import World
-from .bestiary import Bestiary
-from .battle import BattleManager
-from .presenter import Presenter
-from .clock import Clock
+
+import zlib
 
 import msgpack
-import zlib
+
+from krpg.battle import BattleManager
+from krpg.bestiary import Bestiary
+from krpg.clock import Clock
+from krpg.core.actions import ActionManager, action
+from krpg.core.console import Console
+from krpg.core.encoder import Encoder
+from krpg.core.events import EventHandler
+from krpg.core.logger import Logger
+from krpg.core.scenario import parse
+from krpg.executer import Executer
+from krpg.player import Player
+from krpg.presenter import Presenter
+from krpg.world import World
 
 DEBUG = True
 __version__ = "8A"

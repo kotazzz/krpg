@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .core.actions import action, ActionManager
-from .entity import Entity
+from krpg.core.actions import ActionManager, action
+from krpg.entity import Entity
 
 if TYPE_CHECKING:
-    from .game import Game
+    from krpg.game import Game
 
 
 class Player(ActionManager):

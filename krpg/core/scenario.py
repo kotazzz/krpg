@@ -1,6 +1,7 @@
 from __future__ import annotations
-import shlex
+
 import re
+import shlex
 
 ALLOW_KWARGS = True
 MULOPEN = "[["

@@ -1,11 +1,12 @@
+import ast
 import datetime
-from functools import reduce
 import math
+import operator as op
 import random
 import time
+from functools import reduce
+
 import lark
-import ast
-import operator as op
 
 
 def register(name):

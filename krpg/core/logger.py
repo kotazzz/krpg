@@ -1,6 +1,6 @@
-from datetime import datetime as dt
-import sys
 import os
+import sys
+from datetime import datetime as dt
 
 
 class Logger:

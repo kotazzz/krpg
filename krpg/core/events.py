@@ -1,6 +1,6 @@
+from collections import defaultdict
 from queue import Queue
 from typing import Callable
-from collections import defaultdict
 
 
 class EventHandler:

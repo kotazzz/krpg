@@ -3,10 +3,10 @@ from __future__ import annotations
 import ast
 from typing import TYPE_CHECKING
 
-from .core.scenario import Command
+from krpg.core.scenario import Command
 
 if TYPE_CHECKING:
-    from .game import Game
+    from krpg.game import Game
 
 
 def executer_command(name):
