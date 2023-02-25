@@ -29,3 +29,6 @@ class Bestiary:
         if isinstance(entity_name, Entity):
             return entity_name
         return self.entities.get(entity_name, None)
+
+    def __repr__(self):
+        return f"<Bestiary e={len(self.entities)}>"

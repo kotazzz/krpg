@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .game import Game
 
+from .inventory import Inventory
 
 class Entity:
     def __init__(
@@ -28,6 +29,8 @@ class Entity:
         self.money = money
         self.hp = self.max_hp
         self.mp = self.max_mp
+        
+        self.inventory = Inventory(self.game)
 
     def save(self):
         return [
@@ -40,6 +43,7 @@ class Entity:
             self.money,
             self.hp,
             self.mp,
+            self.inventory.save()
         ]
 
     def load(self, data):
@@ -52,6 +56,7 @@ class Entity:
         self.money = data[6]
         self.hp = data[7]
         self.mp = data[8]
+        self.inventory.load(data[9])
 
     def upgrade(self, s: int = 0, d: int = 0, w: int = 0, e: int = 0):
 

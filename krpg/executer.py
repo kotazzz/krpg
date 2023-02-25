@@ -41,18 +41,32 @@ class Base(ExecuterExtension):
         for name, func in argtypes.items():
             if name in kwargs:
                 newkwargs[name] = func(kwargs[name])
-        game.console.print(*args, **newkwargs)
+        text = eval(f"f'''{' '.join(args)}'''", {"game": game, "env": game.executer.env})
+        game.console.print(text, **newkwargs)
 
     @executer_command("exec")
     def builtin_exec(game: Game, code):
-        exec(code, {"game": game})
+        exec(code, {"game": game, "env": game.executer.env})
+
+    @executer_command("set")
+    def builtin_exec(game: Game, name, expr):
+        env = game.executer.env 
+        env[name] = eval(expr, {"game": game, "env": env})
 
 
 class Executer:
     def __init__(self, game: Game):
         self.game = game
         self.extensions: list[ExecuterExtension] = [Base()]
+        self.env = {}
+        game.add_saver("env", self.save, self.load)
 
+    def save(self):
+        return self.env
+    
+    def load(self, data):
+        self.env = data
+    
     def add_extension(self, ext: ExecuterExtension):
         self.game.logger.debug(f"Added ExecuterExtension {ext}")
         self.extensions.append(ext)
@@ -70,3 +84,6 @@ class Executer:
             commands[command.name](self.game, *command.args, **command.kwargs)
         else:
             raise Exception(f"Unknown command: {command.name}")
+    
+    def __repr__(self):
+        return f"<Executer ext={len(self.extensions)} cmd={len(self.get_all_commands())}"

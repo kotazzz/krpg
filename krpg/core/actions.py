@@ -76,4 +76,5 @@ class ActionManager:
         return r
 
     def __repr__(self):
-        return f"<ActionManager act={len(self.actions)} dyn={len(self.dynamic)} sub={len(self.submanagers)}>"
+        count = len(sum([list(act.values()) for act in self.actions.values()], []))
+        return f"<ActionManager act={count} dyn={len(self.dynamic)} sub={len(self.submanagers)}>"

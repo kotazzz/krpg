@@ -36,7 +36,7 @@ class World(ActionManager):
     def __init__(self, game: Game):
         self._current: Location = Location("loc", "Локация", "Описание")
         self.game = game
-        self.game.savers["map"] = (self.save, self.load)
+        game.add_saver("map", self.save, self.load)
         self.locations: list[Location] = []
         self.edges: dict[str : list[str]] = defaultdict(list)
 
@@ -154,3 +154,8 @@ class World(ActionManager):
             world.set_current(locations[select])
             loc = world.get_location(locations[select])
             c.print(f"[green]Вы отправляетесь в {loc.name}[/]")
+    
+#     @action("go", "Пойти", "Действия")
+    
+    def __repr__(self):
+        return f"<World loc={len(self.locations)}>"

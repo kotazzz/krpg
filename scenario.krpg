@@ -1,6 +1,5 @@
 init {
-  print "Сценрий: Новая игра"
-  battle slime
+  
 }
 
 map {
@@ -26,6 +25,10 @@ enemies {
   enemy slime "Слайм" 1 0 0 0 10
 }
 
+items {
+ 
+
+}
 
 
 

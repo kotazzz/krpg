@@ -61,3 +61,6 @@ class Presenter:
                 f"{text} [bold white]{n:<{nl}}[0 white]: [red]A={a:<{al}.2f} [blue]D={d:<{dl}.2f}[/] "
                 f"{bar(h, mh)} [cyan]HP={h:<{hl}.2f} / {mh:<{ml}.2f}"
             )
+
+    def __repr__(self):
+        return "<Presenter>"

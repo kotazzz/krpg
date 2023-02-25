@@ -11,6 +11,7 @@ from .world import World
 from .bestiary import Bestiary
 from .battle import BattleManager
 from .presenter import Presenter
+from .clock import Clock
 
 import msgpack
 import zlib
@@ -23,25 +24,40 @@ class Game(ActionManager):
     def __init__(self):
         ActionManager.__init__(self)
         self.eh = EventHandler()
+        for attr in filter(lambda x: x.startswith("on_"), dir(self)):
+            cb = getattr(self, attr)
+            self.eh.listen(attr[3:], cb)
+            
+            
+        self.scenario = parse(open("scenario.krpg").read())
+        self.savers: dict[str, tuple[callable, callable]] = {}
+        self.running = True
+        
         self.console = Console()
         self.encoder = Encoder()
         self.logger = Logger(file=False, level=DEBUG * 5)
 
-        self.scenario = parse(open("scenario.krpg").read())
-        self.savers: dict[str, tuple[callable, callable]] = {}
-        self.running = True
-
-        for attr in filter(lambda x: x.startswith("on_"), dir(self)):
-            cb = getattr(self, attr)
-            self.eh.listen(attr[3:], cb)
-
-        self.presenter = Presenter(self)
         self.executer = Executer(self)
+        self.clock = Clock(self)
+        self.presenter = Presenter(self)
         self.player = Player(self)
         self.world = World(self)
         self.bestiary = Bestiary(self)
         self.battle = BattleManager(self)
 
+    def expand_actions(self, actionmanager: ActionManager):
+        self.logger.debug(f"Added ActionManager {actionmanager}")
+        return super().expand_actions(actionmanager)
+    
+    def add_saver(self, name: str, save: callable, load: callable):
+        def add_message(func, message):
+            def deco(*args, **kwargs):
+                self.logger.debug(message)
+                return func(*args, **kwargs)
+            return deco
+        self.logger.debug(f"Added Savers {name!r}")
+        self.savers[name] = (add_message(save, f"Saving {name}"), add_message(load, f"Loading {name}"))
+    
     def on_save(self, game: Game):
         data = {name: funcs[0]() for name, funcs in self.savers.items()}
 
@@ -62,18 +78,12 @@ class Game(ActionManager):
                 zdata = game.encoder.decode(encoded, type=0)
                 bdata = zlib.decompress(zdata)
                 data = msgpack.unpackb(bdata)
-                methods = [
-                    (m.name, m.load_save_data)
-                    for m in game.modules
-                    if hasattr(m, "load_save_data")
-                ]
-                for mod, method in methods:
-                    method(data[mod])
-
+                for name, funcs in self.savers.items():
+                    funcs[1](data[name])
             except Exception as e:
                 game.console.print(f"[red]Ошибка при загрузке игры: {e}[/]")
             else:
-                game.console.print("Игра загружена")
+                game.console.print("[green]Игра загружена[/]")
                 if successcb:
                     successcb()
                     game.eh.dispatch("load_done")
@@ -118,6 +128,13 @@ class Game(ActionManager):
         c = self.console
 
         self.logger.debug(f"Version: {__version__}")
+        self.logger.debug(f"Version: {__version__}")
+        self.logger.debug(f"Executer: {self.executer}")
+        self.logger.debug(f"Clock: {self.clock}")
+        self.logger.debug(f"Player: {self.player}")
+        self.logger.debug(f"World: {self.world}")
+        self.logger.debug(f"Bestiary: {self.bestiary}")
+        self.logger.debug(f"Game: {self}")
 
         class Flag:
             v = True

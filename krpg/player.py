@@ -14,7 +14,7 @@ class Player(ActionManager):
         super().__init__()
         self.game = game
         self.entity = Entity(game, "Игрок", 0, 0, 0, 0, 4, 100)
-        game.savers["player"] = (self.save, self.load)
+        game.add_saver("player", self.save, self.load)
         game.expand_actions(self)
 
     def save(self):
@@ -25,11 +25,7 @@ class Player(ActionManager):
 
     @action("me", "Информация о себе", "Игрок")
     def me(game: Game):
-        p = game.player
-        s, d, w, e = (
-            p.entity.strength,
-            p.entity.dexterity,
-            p.entity.wisdom,
-            p.entity.endurance,
-        )
-        print("sdwe: ", s, d, w, e)
+        game.presenter.presense(game.player.entity)
+
+    def __repr__(self):
+        return self.entity.__repr__()
