@@ -7,6 +7,7 @@ if TYPE_CHECKING:
 
 from .inventory import Inventory
 
+
 class Entity:
     def __init__(
         self,
@@ -29,7 +30,7 @@ class Entity:
         self.money = money
         self.hp = self.max_hp
         self.mp = self.max_mp
-        
+
         self.inventory = Inventory(self.game)
 
     def save(self):
@@ -43,7 +44,7 @@ class Entity:
             self.money,
             self.hp,
             self.mp,
-            self.inventory.save()
+            self.inventory.save(),
         ]
 
     def load(self, data):

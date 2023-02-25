@@ -27,12 +27,11 @@ class Game(ActionManager):
         for attr in filter(lambda x: x.startswith("on_"), dir(self)):
             cb = getattr(self, attr)
             self.eh.listen(attr[3:], cb)
-            
-            
+
         self.scenario = parse(open("scenario.krpg").read())
         self.savers: dict[str, tuple[callable, callable]] = {}
         self.running = True
-        
+
         self.console = Console()
         self.encoder = Encoder()
         self.logger = Logger(file=False, level=DEBUG * 5)
@@ -48,16 +47,21 @@ class Game(ActionManager):
     def expand_actions(self, actionmanager: ActionManager):
         self.logger.debug(f"Added ActionManager {actionmanager}")
         return super().expand_actions(actionmanager)
-    
+
     def add_saver(self, name: str, save: callable, load: callable):
         def add_message(func, message):
             def deco(*args, **kwargs):
                 self.logger.debug(message)
                 return func(*args, **kwargs)
+
             return deco
+
         self.logger.debug(f"Added Savers {name!r}")
-        self.savers[name] = (add_message(save, f"Saving {name}"), add_message(load, f"Loading {name}"))
-    
+        self.savers[name] = (
+            add_message(save, f"Saving {name}"),
+            add_message(load, f"Loading {name}"),
+        )
+
     def on_save(self, game: Game):
         data = {name: funcs[0]() for name, funcs in self.savers.items()}
 

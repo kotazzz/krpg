@@ -76,5 +76,6 @@ class BattleManager(ExecuterExtension):
                 game.console.print(f"[red]Вы победили!")
                 game.eh.dispatch(f"player_kill", entity=entity)
                 break
+
     def __repr__(self):
         return "<BattleManager>"

@@ -154,8 +154,8 @@ class World(ActionManager):
             world.set_current(locations[select])
             loc = world.get_location(locations[select])
             c.print(f"[green]Вы отправляетесь в {loc.name}[/]")
-    
-#     @action("go", "Пойти", "Действия")
-    
+
+    #     @action("go", "Пойти", "Действия")
+
     def __repr__(self):
         return f"<World loc={len(self.locations)}>"
