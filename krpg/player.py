@@ -26,6 +26,10 @@ class Player(ActionManager):
     @action("me", "Информация о себе", "Игрок")
     def me(game: Game):
         game.presenter.presense(game.player.entity)
+    @action("inventory", "Управление инвентарем", "Игрок")
+    def inventory(game: Game):
+        print(game.player.entity.inventory)
+
 
     def __repr__(self):
         return self.entity.__repr__()

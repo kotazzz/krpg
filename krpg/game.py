@@ -148,7 +148,7 @@ class Game(ActionManager):
         while Flag.v:
             user = c.confirm("[green]Желаете загрузить сохранение? (yn): [/]")
             if user:
-                self.eh.dispatch("load", successcb=lambda: setattr(Flag, "v", False))
+                self.eh.dispatch("load", self, successcb=lambda: setattr(Flag, "v", False))
             else:
                 Flag.v = None
 
