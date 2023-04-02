@@ -1,0 +1,28 @@
+
+@startuml diagram
+class Game {
++ Scenario
++ EventHandler
++ ActionManager
++ Console
++ Encoder
++ Clock
++ Presenter
++ World
++ Bestiary
++ BattleManager
++ Player
+
++ play()
+}
+Game::Player --> Player
+
+class Player{
+}
+class Entity {
+
+}
+
+Player --> Entity
+Player --> Savable
+@enduml
