@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 def executer_command(name):
     def wrapper(callback):
         return ExecuterCommand(name, callback)
+
     return wrapper
 
 
@@ -19,7 +20,7 @@ class ExecuterCommand:
     def __init__(self, name, callback):
         self.name = name
         self.callback = callback
-        
+
 
 class Base:
     @executer_command("print")
@@ -27,7 +28,7 @@ class Base:
         args = [ast.literal_eval('"""' + arg + '"""') for arg in args]
         newkwargs = {}
         argtypes = {"min": float}
-        
+
         for name, func in argtypes.items():
             if name in kwargs:
                 newkwargs[name] = func(kwargs[name])
@@ -59,7 +60,6 @@ class Executer:
     def load(self, data):
         self.env = data
 
-    
     def get_executer_additions(self, obj):
         cmds: dict[str, ExecuterCommand] = []
         for i in dir(obj):
@@ -67,7 +67,7 @@ class Executer:
             if isinstance(attr, ExecuterCommand):
                 cmds[attr.name] = attr
         return cmds
-    
+
     def add_extension(self, ext: object):
         self.game.log.debug(f"Added ExecuterExtension {ext}")
         self.extensions.append(ext)

@@ -10,7 +10,7 @@ class Action:
         self.description = description
         self.category = category
         self.callback = callback
-        
+
     def __repr__(self):
         return f"<Action {self.name} from {self.category}>"
 
@@ -18,6 +18,7 @@ class Action:
 def action(name: str, description: str = "No description", category: str = ""):
     def decorator(callback: Callable):
         return Action(name, description, category, callback)
+
     return decorator
 
 
@@ -26,7 +27,7 @@ class ActionManager:
         self.submanagers: list[object | ActionManager] = {}
         self.actions: list[Action] = {}
         self.actions = self.extract(self)
-        
+
     def extract(self, item: object) -> list[Action]:
         if isinstance(item, ActionManager):
             return item.get_actions()
@@ -36,7 +37,7 @@ class ActionManager:
             if isinstance(attr, Action):
                 actions.append(attr)
         return actions
-    
+
     def get_actions(self) -> list[Action]:
         actions: list[Action] = []
         for submanager in self.submanagers:
@@ -47,7 +48,7 @@ class ActionManager:
             if action.name not in names:
                 names[action.name] = action
             else:
-                raise Exception(f'Same names: {names[action.name]} and {action}')
+                raise Exception(f"Same names: {names[action.name]} and {action}")
         return actions
 
     def __repr__(self):
