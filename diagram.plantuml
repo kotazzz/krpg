@@ -1,28 +1,123 @@
-
-@startuml diagram
-class Game {
-+ Scenario
-+ EventHandler
-+ ActionManager
-+ Console
-+ Encoder
-+ Clock
-+ Presenter
-+ World
-+ Bestiary
-+ BattleManager
-+ Player
-
-+ play()
+@startuml Game
+package game {
+    () __version__
+    () DEBUG
+    class Game{
+        + __init__()
+        + console
+        + log
+        + actions
+        + encoder
+        + events
+        + scenario
+        + savers
+        + executer
+        + add_saver()
+        + on_save()
+        + on_load()
+        + on_command()
+        + main()
+    }
+    Game::console --> console.Console
+    Game::log --> console.Console:.log
+    Game::actions --> actions.ActionManager
+    Game::encoder --> encoder.Encoder
+    Game::events --> events.EventHandler
+    Game::scenario--> scenario.Scenario
+    Game::executer --> executer.Executer
 }
-Game::Player --> Player
 
-class Player{
+
+package console {
+    () rich
+    class Console {
+        + __init__()
+        + log
+        + console
+        + session
+        + queue
+        + levels
+        + print()
+        + raw_prompt()
+        + prompt()
+    }
 }
-class Entity {
 
+
+package actions {
+    class Action {
+        + __init__()
+        + name
+        + description
+        + category
+        + callback
+    }
+    () action
+    class ActionManager {
+        + submanagers
+        + actions
+        + extract()
+        + get_actions()
+    }
+    ActionManager::actions --> Action : list of
+    ActionManager::submanagers --> ActionManager : list of
 }
 
-Player --> Entity
-Player --> Savable
+package encoder {
+    class Encoder {
+        + encode()
+        + decode()
+    }
+}
+
+package events {
+    class EventHandler {
+        + __init__()
+        + listeners
+        + queue
+        + unlock()
+        + lock()
+        + listen()
+        + dispatch()
+    }
+}
+
+package executer {
+    class ExecuterCommand {
+        + name
+        + callback
+    }
+    class Base {
+        + ...commands
+    }
+    class Executer {
+        + game
+        + extensions
+        + env
+        + save()
+        + load()
+        + add_extension()
+        + get_all_commands()
+        + execute()
+    }
+}
+
+package scenario {
+    class Section {
+        + name
+        + args
+        + parent
+        + children
+    }
+    class Command {
+        + name
+        + args
+        + kwargs
+        + from_raw()
+    }
+    class Multiline {
+        + string
+    }
+    () parse
+}
 @enduml
