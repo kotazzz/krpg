@@ -1,35 +1,14 @@
-init {
-  
-}
-
 map {
   location city Город "Точка появления" {
-    state none {
-
-    }
+  
   }
+  
   location forest Лес "Тут можно поискать приключений" {
-    state none {
-      action explore "Изучать местность" {
-        print Вы ничего не нашли
-      }
+    action explore "Изучать местность" {
+      print Вы ничего не нашли
     }
   }
 
   start city
   link city forest
-}
-
-enemies {
-  # id name s d w e money
-  enemy slime "Слайм" 1 0 0 0 10
-}
-
-items {
- 
-
-}
-
-
-
-
+}    

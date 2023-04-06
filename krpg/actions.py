@@ -24,7 +24,7 @@ def action(name: str, description: str = "No description", category: str = ""):
 
 class ActionManager:
     def __init__(self):
-        self.submanagers: list[object | ActionManager] = {}
+        self.submanagers: list[object | ActionManager] = []
         self.actions: list[Action] = {}
         self.actions = self.extract(self)
 

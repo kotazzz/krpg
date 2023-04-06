@@ -41,27 +41,42 @@ class KrpgConsole:
     def print(self, *args, **kwargs):
         return self.console.print(*args, **kwargs, highlight=False)
 
-    def raw_prompt(self, text, data={}):
+
+    def prompt(self, text, data=None, allow_empty=False):
+        text = (
+            rich(text, console=self.console)
+            if not isinstance(text, int)
+            else self.levels[text]
+        )
         kwargs = {}
         if data:
             kwargs["completer"] = WordCompleter(
                 list(data.keys()),
                 meta_dict=data,
             )
-        text = (
-            rich(text, console=self.console)
-            if not isinstance(text, int)
-            else self.levels[text]
-        )
-        return self.session.prompt(text, **kwargs)
-
-    def prompt(self, *args, **kwargs):
         if not self.queue:
-            text = self.raw_prompt(*args, **kwargs)
-            self.queue.extend(shlex.split(text))
-            return self.queue.pop(0)
+            while True:
+                text = self.session.prompt(text, **kwargs)
+                if not text and allow_empty:
+                    return ""
+                elif text:
+                    self.queue.extend(shlex.split(text))
+                    return self.queue.pop(0)
         else:
             cmd = self.queue.pop(0)
             cmdr = cmd.replace("[", "\[")
             self.console.print(f"[bold blue]\[AUTO][/] [blue]{cmdr}[/]")
             return cmd
+
+    def confirm(self, prompt, exit_cmd=None):
+        data = {'y': 'yes', 'n': 'no'}
+        if exit_cmd:
+            data[exit_cmd] = 'cancel'
+        while True:
+            res = self.prompt(prompt, data)
+            if res == 'y':
+                return True
+            elif res == 'n':
+                return False
+            elif res == exit_cmd:
+                return None
