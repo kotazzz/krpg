@@ -16,7 +16,7 @@ DEBUG = True
 class Game:
     def __init__(self):
         self.state = "none"
-        
+
         self.console = KrpgConsole()
         self.log = self.console.log
         self.log.setLevel(DEBUG * 5)
@@ -30,21 +30,19 @@ class Game:
         for attr in filter(lambda x: x.startswith("on_"), dir(self)):
             cb = getattr(self, attr)
             self.events.listen(attr[3:], cb)
-            self.log.debug(f'Added listener for {attr[3:]}')
+            self.log.debug(f"Added listener for {attr[3:]}")
 
         self.scenario = parse(open("scenario.krpg").read())
 
         self.savers: dict[str, set[callable, callable]] = {}
 
         self.executer = Executer(self)
-        self.player = Entity('Player')
-        
+        self.player = Entity("Player")
+
     @action("help", "Показать помощь", "Игра")
     def action_help(game: Game):
         print(game)
-        
-        
-    
+
     def add_saver(self, name: str, save: callable, load: callable):
         def add_message(func, message):
             def deco(*args, **kwargs):
@@ -58,8 +56,10 @@ class Game:
             add_message(save, f"Saving {name}"),
             add_message(load, f"Loading {name}"),
         )
+
     def on_state_change(self, state):
         self.state = state
+
     def on_save(self, game: Game):
         data = {name: funcs[0]() for name, funcs in self.savers.items()}
         bdata = msgpack.packb(data)
@@ -115,7 +115,7 @@ class Game:
         self.events.unlock()
         c = self.console
         success = lambda: self.events.dispatch("state_change", state="playing")
-        while self.state != 'playing':
+        while self.state != "playing":
             c.print(f"[yellow]Желаете загрузить сохранение? (yn)[/]")
             if c.confirm(1):
                 self.events.dispatch("load", successcb=success)

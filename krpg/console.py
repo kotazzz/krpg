@@ -41,7 +41,6 @@ class KrpgConsole:
     def print(self, *args, **kwargs):
         return self.console.print(*args, **kwargs, highlight=False)
 
-
     def prompt(self, text, data=None, allow_empty=False):
         text = (
             rich(text, console=self.console)
@@ -69,14 +68,14 @@ class KrpgConsole:
             return cmd
 
     def confirm(self, prompt, exit_cmd=None):
-        data = {'y': 'yes', 'n': 'no'}
+        data = {"y": "yes", "n": "no"}
         if exit_cmd:
-            data[exit_cmd] = 'cancel'
+            data[exit_cmd] = "cancel"
         while True:
             res = self.prompt(prompt, data)
-            if res == 'y':
+            if res == "y":
                 return True
-            elif res == 'n':
+            elif res == "n":
                 return False
             elif res == exit_cmd:
                 return None
