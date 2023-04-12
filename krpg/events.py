@@ -32,3 +32,6 @@ class EventHandler:
         if event not in ["*", "event"]:
             for listener in self.listeners[event]:
                 listener(*args, **kwargs)
+
+    def __repr__(self):
+        return f"<EventHandler listeners={len(self.listeners)}>"

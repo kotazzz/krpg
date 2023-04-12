@@ -31,6 +31,8 @@ class ActionManager:
     def extract(self, item: object) -> list[Action]:
         if isinstance(item, ActionManager):
             return item.get_actions()
+        if "extract" in dir(item):
+            return item.extract()
         actions = []
         for name in dir(item):
             attr = getattr(item, name)

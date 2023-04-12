@@ -61,7 +61,7 @@ class Executer:
         self.env = data
 
     def get_executer_additions(self, obj):
-        cmds: dict[str, ExecuterCommand] = []
+        cmds: dict[str, ExecuterCommand] = {}
         for i in dir(obj):
             attr = getattr(obj, i)
             if isinstance(attr, ExecuterCommand):
@@ -88,5 +88,5 @@ class Executer:
 
     def __repr__(self):
         return (
-            f"<Executer ext={len(self.extensions)} cmd={len(self.get_all_commands())}"
+            f"<Executer ext={len(self.extensions)} cmd={len(self.get_all_commands())}>"
         )

@@ -41,7 +41,7 @@ class KrpgConsole:
     def print(self, *args, **kwargs):
         return self.console.print(*args, **kwargs, highlight=False)
 
-    def prompt(self, text, data=None, allow_empty=False):
+    def prompt(self, text, data=None, allow_empty=False, raw=False) -> str:
         text = (
             rich(text, console=self.console)
             if not isinstance(text, int)
@@ -55,11 +55,17 @@ class KrpgConsole:
             )
         if not self.queue:
             while True:
-                text = self.session.prompt(text, **kwargs)
-                if not text and allow_empty:
+                user = self.session.prompt(text, **kwargs)
+                if raw:
+                    return user
+                if not user and allow_empty:
                     return ""
-                elif text:
-                    self.queue.extend(shlex.split(text))
+                elif user:
+                    try:
+                        split = shlex.split(user)
+                    except:
+                        continue
+                    self.queue.extend(split)
                     return self.queue.pop(0)
         else:
             cmd = self.queue.pop(0)
@@ -79,3 +85,23 @@ class KrpgConsole:
                 return False
             elif res == exit_cmd:
                 return None
+
+    def __repr__(self):
+        return "<Console>"
+
+    def menu(self, prompt, variants: list, exit_cmd=None, view:callable=None, display:bool=True):
+        view = view or str
+        data = {str(i):view(j) for i, j in enumerate(variants, 1)}
+        if exit_cmd:
+            data[exit_cmd] = "cancel"
+        if display:
+            for i, v in enumerate(variants, 1):
+                self.print(f'[green]{i}[/]) [blue]{view(v)}')
+        while True:
+            res = self.prompt(prompt, data)
+            if res == exit_cmd:
+                return None
+            elif res.isnumeric() and 1 <= int(res) <= len(variants):
+                return variants[int(res)-1]
+            
+
