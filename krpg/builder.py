@@ -1,6 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from krpg.actions import action
+from krpg.attributes import Attributes
+from krpg.inventory import Item, ItemType
 from krpg.scenario import Section
 from krpg.world import Location
 
@@ -16,19 +18,47 @@ class Builder:
         self.game.add_saver("test", self.save, self.load)
     
     def save(self):
-        return [self.game.scenario_hash, self.game.version]
+        g = self.game
+        return [g.scenario_hash, g.version, g.start_time, g.save_time]
     
     def load(self, data):
-        if data[0] != self.game.scenario_hash:
-            raise Exception(f"save:{data[0]} != game:{self.game.scenario_hash}")
-        if data[1] != self.game.version:
-            raise Exception(f"save:{data[1]} != game:{self.game.version}")
+        g = self.game
+        if data[0] != g.scenario_hash:
+            raise Exception(f"save:{data[0]} != game:{g.scenario_hash}")
+        if data[1] != g.version:
+            raise Exception(f"save:{data[1]} != game:{g.version}")
     
     def build(self):
         self.build_world(self.scenario.first("map"))
+        self.build_items(self.scenario.first("items"))
+
+    def build_items(self, items: Section):
+        item_list = items.all("item")
+        for item in item_list:
+            id, name, description = item.args
+            obj = Item(id, name, description)
+            self.debug(f"Building {id}:{name}")
+            for cmd in item.children:
+                if cmd.name == "wear":
+                    wear, *attrs = cmd.args
+                    attrs = list(map(int, attrs))
+                    if wear not in ItemType.__members__:
+                        raise Exception(f'Invalid item type: {wear}')
+                    if len(attrs) != 7:
+                        raise Exception(f"Invalid amount of SPECIAW attrs ({len(attrs)})")
+                    obj.set_wear(ItemType[wear], Attributes(*attrs))
+                elif cmd.name == "use":
+                    act, am = cmd.args
+                    am = int(am)
+                    obj.set_use(act, am)
+                elif cmd.name == "stack":
+                    obj.set_stack(int(cmd.args[0]))
+                elif cmd.name == "cost":
+                    sell, buy = map(int, cmd.args)
+                    obj.set_cost(sell, buy)
+                    
 
     def build_world(self, world: Section):
-
         locations = world.all("location")
         start = world.first("start")
         links = world.all("link")
