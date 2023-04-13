@@ -1,6 +1,7 @@
 from __future__ import annotations
 from krpg.actions import action
 from krpg.entity import Entity
+
 from typing import TYPE_CHECKING
 from rich.tree import Tree
 

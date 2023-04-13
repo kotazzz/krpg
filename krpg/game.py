@@ -11,7 +11,7 @@ from krpg.executer import Executer
 from krpg.player import Player
 from krpg.builder import Builder
 from krpg.world import World
-
+import time
 __version__ = "8B"
 DEBUG = True
 
@@ -21,7 +21,7 @@ class Game:
     debug = DEBUG
     def __init__(self):
         self.state = "none"
-
+        self.start_time = self.save_time = self.timestamp()
         self.console = KrpgConsole()
         self.log = self.console.log
         self.log.setLevel(DEBUG * 5)
@@ -56,12 +56,13 @@ class Game:
         self.player = Player(self)
         debug(f"Init Player: {self.player}")
 
-        self.world = World()
+        self.world = World(self)
         debug(f"Init World: {self.world}")
         self.builder = Builder(self)
         debug(f"Starting build world...")
         self.builder.build()
-
+    def timestamp(self):
+        return int(time.time()) - 1667250000 # 1 Nov 2022 00:00 (+3)
     def add_actions(self, obj: object):
         self.log.debug(f"Add submanager {obj}")
         self.actions.submanagers.append(obj)
@@ -104,11 +105,14 @@ class Game:
         self.state = state
 
     def on_save(self):
+        self.save_time = self.timestamp()
         data = {name: funcs[0]() for name, funcs in self.savers.items()}
         bdata = msgpack.packb(data)
         zdata = zlib.compress(bdata, level=9)
         encoded = self.encoder.encode(zdata, type=0)
         self.log.debug(f"Data: {data}")
+        self.log.debug(f"BinData ({len(bdata)}): {bdata.hex()}")
+        self.log.debug(f"Zipped from {len(bdata)} to {len(zdata)}, string: {len(encoded)}")
         self.console.print(f"[green]Код сохранения: [yellow]{encoded}[/]")
 
     def on_load(self, failcb=None, successcb=None):
@@ -162,7 +166,7 @@ class Game:
         success = lambda: self.events.dispatch("state_change", state="playing")
         while self.state != "playing":
             c.print(f"[yellow]Желаете загрузить сохранение? (yn)[/]")
-            if c.confirm(1):
+            if c.confirm(5):
                 self.events.dispatch("load", successcb=success)
             else:
                 c.print(f"[green]Введите имя:[/]")
