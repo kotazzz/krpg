@@ -1,3 +1,4 @@
+# [red]S[/], [green]P[/], [blue]E[/], [yellow]C[/], [magenta]I[/], [cyan]A[/], [white]W[/]
 # (s) strength
 # (p) perception
 # (e) endurance
@@ -6,12 +7,27 @@
 # (a) agility
 # (w) wisdom
 
+# (1) lockpicking - взлом замков
+# (3) enchanting - зачарование
+# (4) healing - исцеление
+# (5) persuasion - убеждение
+# (6) sneaking - скрытность
+# (8) cooking - готовка
+# (9) tracking - слежка
+# (10) animal taming - приручение животных
+# (12) hacking - взлом компьютеров
+# (18) herbalism - травничество
+# (21) ranged combat - дальний бой
+# (22) melee combat - ближний бой
+# (23) crafting - крафт
+
 map {
   location city Город "Точка появления" {
     
   }
 
   location forest Лес "Тут можно поискать приключений" {
+    item sword 1
     action explore "Изучать местность" {
       print Вы ничего не нашли
     }
@@ -41,10 +57,10 @@ items {
 }
 
 entities {
-  @entity goblin "Гоблин" "Неприятный парень" {
+  entity goblin "Гоблин" "Неприятный парень" {
     speciaw 1 1 1 1 1 1 1
   }
-  @entity goblin "Синий гоблин" "Гоблин побольше" {
-    speciaw 1 1 1 1 1 1 1
+  entity blue_goblin "Синий гоблин" "Гоблин побольше" {
+    speciaw 2 1 1 1 1 1 1
   }
 }

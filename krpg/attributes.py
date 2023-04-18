@@ -57,7 +57,7 @@ free = 0,
         charisma: int | None = None,
         perception: int | None = None,
         free: int | None = None,
-        set: bool = True,
+        set: bool = False,
     ):
         def action(a, b, set):
             if not b:
@@ -78,3 +78,9 @@ free = 0,
     @property
     def max_hp(self):
         return self.endurance * 10
+    @property
+    def attack(self):
+        return self.strength * 10
+    @property
+    def defense(self):
+        return self.agility * 10

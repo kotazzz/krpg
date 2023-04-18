@@ -1,10 +1,14 @@
 from __future__ import annotations
 from itertools import groupby
+from textwrap import wrap
 import msgpack
 import zlib
+from krpg.bestiary import Bestiary
+from krpg.clock import Clock
 from krpg.console import KrpgConsole
 from krpg.actions import ActionManager, action
 from krpg.events import EventHandler
+from krpg.presenter import Presenter
 from krpg.scenario import parse
 from krpg.encoder import Encoder
 from krpg.executer import Executer
@@ -28,19 +32,19 @@ class Game:
         debug = self.log.debug
 
         self.actions = ActionManager()
-        debug(f"ActionManager: {self.actions}")
+        debug(f"Init [green]ActionManager[/]: {self.actions}")
 
         self.add_actions(self)
         self.encoder = Encoder()
-        debug(f"Encoder: {self.encoder}")
+        debug(f"Init [green]Encoder[/]: {self.encoder}")
 
         self.events = EventHandler(locked=True)
-        debug(f"EventHandler: {self.events}")
+        debug(f"Init [green]EventHandler[/]: {self.events}")
 
         for attr in filter(lambda x: x.startswith("on_"), dir(self)):
             cb = getattr(self, attr)
             self.events.listen(attr[3:], cb)
-            debug(f"Added listener for {attr[3:]}")
+            debug(f"Added [red]listener[/] for {attr[3:]}")
 
         scenario = open("scenario.krpg").read()
         self.scenario_hash = f"{zlib.crc32(scenario.encode()):x}"
@@ -51,15 +55,27 @@ class Game:
         
 
         self.executer = Executer(self)
-        debug(f"Init Executer: {self.executer}")
+        debug(f"Init [green]Executer[/]: {self.executer}")
 
         self.player = Player(self)
-        debug(f"Init Player: {self.player}")
+        debug(f"Init [green]Player[/]: {self.player}")
+        
+        self.presenter = Presenter(self)
+        debug(f"Init [green]Presenter[/]: {self.presenter}")
+        
+        self.bestiary = Bestiary(self)
+        debug(f"Init [green]Bestiary[/]: {self.bestiary}")
 
+        
+        self.clock = Clock(self)
+        debug(f"Init [green]Clock[/]: {self.clock}")
+        
         self.world = World(self)
-        debug(f"Init World: {self.world}")
+        debug(f"Init [green]World[/]: {self.world}")
+        
         self.builder = Builder(self)
         debug(f"Starting build world...")
+        
         self.builder.build()
     def timestamp(self):
         return int(time.time()) - 1667250000 # 1 Nov 2022 00:00 (+3)
@@ -69,11 +85,56 @@ class Game:
 
     @action("help", "Показать помощь", "Игра")
     def action_help(game: Game):
-        cmdcat = groupby(game.actions.get_actions(), key=lambda x: x.category)
+        actions = sorted(game.actions.get_actions(), key=lambda x: x.category)
+        cmdcat = groupby(actions, key=lambda x: x.category)
         for cat, cmds in cmdcat:
             game.console.print(f"[b red]{cat}")
             for cmd in cmds:
                 game.console.print(f" [green]{cmd.name}[/] - {cmd.description}")
+    @action("credits", "Авторы и благодарности", "Игра")
+    def action_credits(game: Game):
+        game.console.print(
+                "[green]Автор:[/] Kotaz\n"
+                "[green]Язык:[/] Python 3\n"
+                "[green]Библиотеки:[/] rich, prompt_toolkit, msgpack\n"
+                "[green]Кол-во строк кода:[/] 1000+\n\n"
+                "[bold green]Отдельная благодарность:[/]\n"
+                "  [green]Никто[/]\n"
+                "  [red]Конец[/]\n"
+            )
+        
+    @action("guide", "Игровая справка", "Игра")
+    def action_guide(game: Game):
+        passages = {
+            "FAQ": ("Тут пусто :("),
+            "Changelog": ("Мне [red]лень[/] тут что-то писать... :( \n"),
+            "Мне нужна помощь по командам": (
+                "Используйте [green]help[/] или [green]guide[/] для получения справки\n"
+            ),
+            "[blue][AUTO][/] и аргументы": (
+                "В игре все действия используют лишь одну фразу или слово. "
+                "У них нет аргументов или какого либо синтаксиса. "
+                "Если для определенного действия требуются аргументы - "
+                "они будут запрошенные через отдельные поля ввода. Теперь "
+                "вам не надо заучивать сложный синтаксис дял простых действий. "
+                "Хотите ввести аргументы сразу? Разделяйте свои действия пробелом. "
+                "Игра запоминает каждое слово отдельно и как только понадобится что-то "
+                "ввести она сама вставит то, что вы вводили ранее. "
+                "Таким образом вы можете одновременно вводить множество "
+                "команд за раз и они все исполнятся сами\n"
+                "Попробуйте ввести [green]e guide 1[/] и вы выйдете из "
+                "справки и вернетесь, открыв первую страницу"
+            ),
+        }
+        while True:
+            game.console.print("[bold green]Гайды и справка[/]")
+            game.console.print("[green]Выберите секцию (e - Выход)[/]")
+            select = game.console.menu(2, list(passages.items()), "e", lambda x: x[0])
+            if not select:
+                return
+            else:
+                text = wrap(select[1], replace_whitespace=False)
+                game.console.print("\n".join(text))
 
     @action("exit", "Выйти из игры", "Игра")
     def action_exit(game: Game):
@@ -86,6 +147,7 @@ class Game:
     @action("load", "Загрузить игру", "Игра")
     def action_load(game: Game):
         game.events.dispatch("load")
+        
 
     def add_saver(self, name: str, save: callable, load: callable):
         def add_message(func, message):
@@ -142,13 +204,14 @@ class Game:
             failcb()
 
     def on_event(self, event, *args, **kwargs):
-        self.log.debug(f"{event} {args} {kwargs}")
+        self.log.debug(f"[b yellow]{event}[/] {args} {kwargs}")
 
     def on_command(self, command):
         actions = self.actions.get_actions()
         cmds = {cmd.name: cmd for cmd in actions}
         if command in cmds:
             cmds[command].callback(self)
+            self.clock.wait(cmds[command].time)
         else:
             self.console.print(f"[red]Неизвестная команда {command}[/]")
             self.console.print(f"[green]Доступные команды: {' '.join(cmds.keys())}[/]")

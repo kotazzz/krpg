@@ -1,3 +1,4 @@
+from __future__ import annotations
 from enum import Enum
 from krpg.attributes import Attributes
 
@@ -36,17 +37,22 @@ class Slot:
         self.amount = 0
     
     def save(self):
-        return (self.id, self.amount)
+        return None if self.empty else (self.id, self.amount)
     
     def load(self, data):
-        self.id = data[0]
-        self.amount = data[1]
+        if data is not None:
+            self.id = data[0]
+            self.amount = data[1]
+        else:
+            self.clear()
     
     @property
     def empty(self):
         self.optimize()
         return not self.amount
-    
+    def clear(self):
+        self.id = None
+        self.amount = 0
     def optimize(self):
         if not self.amount:
             self.id = None
@@ -79,10 +85,26 @@ class Inventory:
     
     def __repr__(self):
         return f"<Inventory {[s.id for s in self.slots]}>"
+    
+    def pickup(self, item: Item, amount: int):
+        for slot in self.slots:
+            if slot.type == ItemType.ITEM:
+                if slot.empty:
+                    slot_amount = min(item.stack, amount)
+                    amount -= slot_amount
+                    slot.id = item.id
+                    slot.amount = slot_amount
+                elif slot.id == item.id:
+                    slot_amount = min(item.stack - slot.amount, amount)
+                    amount -= slot_amount
+                    slot.id = item.id
+                    slot.amount = slot_amount
+        return amount
+                
         
 
 class Item:
-    def __init__(self, id, name, description):
+    def __init__(self, id: str, name: str, description: str):
         self.id = id
         self.name = name
         self.description = description
@@ -103,5 +125,14 @@ class Item:
     def set_cost(self, sell, cost):
         self.sell = sell
         self.cost = cost
+    @property
+    def is_wearable(self):
+        return self.attributes.total != 0
+    
+    @property
+    def is_usable(self):
+        return bool(self.effects)
+    
     def __repr__(self):
         return f"<Item {id!r}>"
+    
