@@ -1,17 +1,18 @@
 from __future__ import annotations
 
-class Attributes:
 
-    def __init__(self,
-                 strength = 0,
-wisdom = 0,
-endurance = 0,
-agility = 0,
-intelligence = 0,
-charisma = 0,
-perception = 0,
-free = 0,
-                 ):
+class Attributes:
+    def __init__(
+        self,
+        strength=0,
+        wisdom=0,
+        endurance=0,
+        agility=0,
+        intelligence=0,
+        charisma=0,
+        perception=0,
+        free=0,
+    ):
         self.strength = strength  # Сила
         self.wisdom = wisdom  # Мудрость
         self.endurance = endurance  # Выносливость
@@ -78,9 +79,11 @@ free = 0,
     @property
     def max_hp(self):
         return self.endurance * 10
+
     @property
     def attack(self):
         return self.strength * 10
+
     @property
     def defense(self):
         return self.agility * 10

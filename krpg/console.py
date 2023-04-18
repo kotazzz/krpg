@@ -18,15 +18,22 @@ def rich(*args, console=None, **kwargs):
 
 class KrpgConsole:
     def __init__(self):
-        
+
         self.console = Console()
         self.session = PromptSession()
-        
+
         logging.basicConfig(
             level="DEBUG",
             format="%(message)s",
             datefmt="[%X]",
-            handlers=[RichHandler(rich_tracebacks=True, tracebacks_show_locals=True, console=self.console, markup=True)],
+            handlers=[
+                RichHandler(
+                    rich_tracebacks=True,
+                    tracebacks_show_locals=True,
+                    console=self.console,
+                    markup=True,
+                )
+            ],
         )
         self.log = logging.getLogger("console")
 
@@ -91,32 +98,46 @@ class KrpgConsole:
     def __repr__(self):
         return "<Console>"
 
-
-    def print_list(self, variants: list, view:callable=None, display:bool=True, title: str=None, empty: str = "Ничего нет"):
-        t = ''
+    def print_list(
+        self,
+        variants: list,
+        view: callable = None,
+        display: bool = True,
+        title: str = None,
+        empty: str = "Ничего нет",
+    ):
+        t = ""
         if title:
-            t = '  '
-            self.print(f'[b green]{title}')
+            t = "  "
+            self.print(f"[b green]{title}")
         if not variants:
-            return self.print(f'{t}[b red]{empty}')
+            return self.print(f"{t}[b red]{empty}")
         for i, v in enumerate(variants, 1):
-            self.print(f'{t}[green]{i}[/]) [blue]{view(v)}')
-        return t 
-    def menu(self, prompt, variants: list, exit_cmd=None, view:callable=None, display:bool=True, title: str=None, empty: str = "Ничего нет"):
+            self.print(f"{t}[green]{i}[/]) [blue]{view(v)}")
+        return t
+
+    def menu(
+        self,
+        prompt,
+        variants: list,
+        exit_cmd=None,
+        view: callable = None,
+        display: bool = True,
+        title: str = None,
+        empty: str = "Ничего нет",
+    ):
         view = view or str
-        data = {str(i):view(j) for i, j in enumerate(variants, 1)}
+        data = {str(i): view(j) for i, j in enumerate(variants, 1)}
         if exit_cmd:
             data[exit_cmd] = "cancel"
 
         if display:
             t = self.print_list(variants, view, display, title, empty)
             if exit_cmd:
-                self.print(f'{t}[red]{exit_cmd}[/]) [blue]Выход')
+                self.print(f"{t}[red]{exit_cmd}[/]) [blue]Выход")
         while True:
             res = self.prompt(prompt, data)
             if res == exit_cmd:
                 return None
             elif res.isnumeric() and 1 <= int(res) <= len(variants):
-                return variants[int(res)-1]
-            
-
+                return variants[int(res) - 1]

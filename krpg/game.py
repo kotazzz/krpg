@@ -16,6 +16,7 @@ from krpg.player import Player
 from krpg.builder import Builder
 from krpg.world import World
 import time
+
 __version__ = "8B"
 DEBUG = True
 
@@ -23,6 +24,7 @@ DEBUG = True
 class Game:
     version = __version__
     debug = DEBUG
+
     def __init__(self):
         self.state = "none"
         self.start_time = self.save_time = self.timestamp()
@@ -52,33 +54,33 @@ class Game:
         debug(f"Loaded scenario with {len(self.scenario.children)} items")
 
         self.savers: dict[str, set[callable, callable]] = {}
-        
 
         self.executer = Executer(self)
         debug(f"Init [green]Executer[/]: {self.executer}")
 
         self.player = Player(self)
         debug(f"Init [green]Player[/]: {self.player}")
-        
+
         self.presenter = Presenter(self)
         debug(f"Init [green]Presenter[/]: {self.presenter}")
-        
+
         self.bestiary = Bestiary(self)
         debug(f"Init [green]Bestiary[/]: {self.bestiary}")
 
-        
         self.clock = Clock(self)
         debug(f"Init [green]Clock[/]: {self.clock}")
-        
+
         self.world = World(self)
         debug(f"Init [green]World[/]: {self.world}")
-        
+
         self.builder = Builder(self)
         debug(f"Starting build world...")
-        
+
         self.builder.build()
+
     def timestamp(self):
-        return int(time.time()) - 1667250000 # 1 Nov 2022 00:00 (+3)
+        return int(time.time()) - 1667250000  # 1 Nov 2022 00:00 (+3)
+
     def add_actions(self, obj: object):
         self.log.debug(f"Add submanager {obj}")
         self.actions.submanagers.append(obj)
@@ -91,18 +93,19 @@ class Game:
             game.console.print(f"[b red]{cat}")
             for cmd in cmds:
                 game.console.print(f" [green]{cmd.name}[/] - {cmd.description}")
+
     @action("credits", "Авторы и благодарности", "Игра")
     def action_credits(game: Game):
         game.console.print(
-                "[green]Автор:[/] Kotaz\n"
-                "[green]Язык:[/] Python 3\n"
-                "[green]Библиотеки:[/] rich, prompt_toolkit, msgpack\n"
-                "[green]Кол-во строк кода:[/] 1000+\n\n"
-                "[bold green]Отдельная благодарность:[/]\n"
-                "  [green]Никто[/]\n"
-                "  [red]Конец[/]\n"
-            )
-        
+            "[green]Автор:[/] Kotaz\n"
+            "[green]Язык:[/] Python 3\n"
+            "[green]Библиотеки:[/] rich, prompt_toolkit, msgpack\n"
+            "[green]Кол-во строк кода:[/] 1000+\n\n"
+            "[bold green]Отдельная благодарность:[/]\n"
+            "  [green]Никто[/]\n"
+            "  [red]Конец[/]\n"
+        )
+
     @action("guide", "Игровая справка", "Игра")
     def action_guide(game: Game):
         passages = {
@@ -147,7 +150,6 @@ class Game:
     @action("load", "Загрузить игру", "Игра")
     def action_load(game: Game):
         game.events.dispatch("load")
-        
 
     def add_saver(self, name: str, save: callable, load: callable):
         def add_message(func, message):
@@ -174,7 +176,9 @@ class Game:
         encoded = self.encoder.encode(zdata, type=0)
         self.log.debug(f"Data: {data}")
         self.log.debug(f"BinData ({len(bdata)}): {bdata.hex()}")
-        self.log.debug(f"Zipped from {len(bdata)} to {len(zdata)}, string: {len(encoded)}")
+        self.log.debug(
+            f"Zipped from {len(bdata)} to {len(zdata)}, string: {len(encoded)}"
+        )
         self.console.print(f"[green]Код сохранения: [yellow]{encoded}[/]")
 
     def on_load(self, failcb=None, successcb=None):

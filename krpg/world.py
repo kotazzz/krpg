@@ -9,6 +9,7 @@ from krpg.inventory import Item
 if TYPE_CHECKING:
     from krpg.game import Game
 
+
 class Location:
     def __init__(self, id, name, description):
         self.id = id
@@ -23,7 +24,7 @@ class Location:
 
     def load(self, data):
         self.env = data[0]
-        self.items= data[1]
+        self.items = data[1]
 
     def __repr__(self) -> str:
         return f"<Location name={self.id!r}>"
@@ -36,33 +37,31 @@ class World:
         self.current: Location | None = None
         self.game = game
         self.game.add_saver("world", self.save, self.load)
-        
+
     def save(self):
         return {loc.name: loc.env for loc in self.locations}
-    
+
     def load(self, data):
         for name, env in data.items():
             self.get(name).env = env
-    
-    def take(self, location: str|Location, item_id: str, remain: int = 0):
+
+    def take(self, location: str | Location, item_id: str, remain: int = 0):
         loc = self.get(location)
         # TODO: Add check
         self.game.events.dispatch("item_take", item_id=item_id, remain=remain)
-        
+
         for i, (item, _) in enumerate(loc.items):
-                if item == item_id:
-                    if remain:
-                        loc.items[i] = (item, remain)
-                    else:
-                        loc.items.pop(i)
-                    break
-        
-        
-    
-    def set(self, current_loc: str|Location):
+            if item == item_id:
+                if remain:
+                    loc.items[i] = (item, remain)
+                else:
+                    loc.items.pop(i)
+                break
+
+    def set(self, current_loc: str | Location):
         self.game.events.dispatch("move", before=self.current, after=current_loc)
         self.current = self.get(current_loc)
-        
+
     def extract(self) -> list[Action]:
         return self.current.actions
 

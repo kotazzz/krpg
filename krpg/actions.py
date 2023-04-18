@@ -5,7 +5,14 @@ from typing import Callable
 
 
 class Action:
-    def __init__(self, name: str, description: str, category: str, callback: Callable, time: int = 0):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        category: str,
+        callback: Callable,
+        time: int = 0,
+    ):
         self.name = name
         self.description = description
         self.category = category
@@ -16,7 +23,9 @@ class Action:
         return f"<Action {self.name} from {self.category}>"
 
 
-def action(name: str, description: str = "No description", category: str = "", time: int = 0):
+def action(
+    name: str, description: str = "No description", category: str = "", time: int = 0
+):
     def decorator(callback: Callable):
         return Action(name, description, category, callback, time)
 
