@@ -4,19 +4,19 @@ from krpg.actions import Action
 
 from typing import TYPE_CHECKING
 
-from krpg.inventory import Item
+from krpg.events import Events
 
 if TYPE_CHECKING:
     from krpg.game import Game
 
 
 class Location:
-    def __init__(self, id, name, description):
+    def __init__(self, id: str, name: str, description: str):
         self.id = id
         self.name = name
         self.description = description
-        self.env = {}
-        self.actions = []
+        self.env: dict = {}
+        self.actions: list[Action] = []
         self.items: list[str, int] = []
 
     def save(self):
@@ -48,7 +48,7 @@ class World:
     def take(self, location: str | Location, item_id: str, remain: int = 0):
         loc = self.get(location)
         # TODO: Add check
-        self.game.events.dispatch("item_take", item_id=item_id, remain=remain)
+        self.game.events.dispatch(Events.ITEM_TAKE, item_id=item_id, remain=remain)
 
         for i, (item, _) in enumerate(loc.items):
             if item == item_id:
@@ -59,7 +59,7 @@ class World:
                 break
 
     def set(self, current_loc: str | Location):
-        self.game.events.dispatch("move", before=self.current, after=current_loc)
+        self.game.events.dispatch(Events.move, before=self.current, after=current_loc)
         self.current = self.get(current_loc)
 
     def extract(self) -> list[Action]:

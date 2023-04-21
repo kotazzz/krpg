@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 from krpg.actions import ActionManager, action
 from krpg.executer import executer_command
-
+from krpg.events import Events
 
 class Clock:
     def __init__(self, game: Game):
@@ -28,9 +28,9 @@ class Clock:
             return
         day = self.days
         self.global_minutes += minutes
-        self.game.events.dispatch("timepass", minutes=minutes)
+        self.game.events.dispatch(Events.TIMEPASS, minutes=minutes)
         if self.days > day:
-            self.game.events.dispatch("newday", day=self.days)
+            self.game.events.dispatch(Events.NEWDAY, day=self.days)
 
     def in_range(self, start, end):
         if start > end:

@@ -16,7 +16,7 @@ from krpg.player import Player
 from krpg.builder import Builder
 from krpg.world import World
 import time
-
+from krpg.events import Events
 __version__ = "8B"
 DEBUG = True
 
@@ -145,11 +145,11 @@ class Game:
 
     @action("save", "Сохранить игру", "Игра")
     def action_save(game: Game):
-        game.events.dispatch("save")
+        game.events.dispatch(Events.SAVE)
 
     @action("load", "Загрузить игру", "Игра")
     def action_load(game: Game):
-        game.events.dispatch("load")
+        game.events.dispatch(Events.LOAD)
 
     def add_saver(self, name: str, save: callable, load: callable):
         def add_message(func, message):
@@ -201,7 +201,7 @@ class Game:
                 self.console.print("[green]Игра загружена[/]")
                 if successcb:
                     successcb()
-                    self.eh.dispatch("load_done")
+                    self.eh.dispatch(Events.LOAD_DONE)
                 return
 
         if failcb:
@@ -230,11 +230,11 @@ class Game:
         self.log.debug("Hello, world!")
         self.events.unlock()
         c = self.console
-        success = lambda: self.events.dispatch("state_change", state="playing")
+        success = lambda: self.events.dispatch(Events.STATE_CHANGE, state="playing")
         while self.state != "playing":
             c.print(f"[yellow]Желаете загрузить сохранение? (yn)[/]")
             if c.confirm(5):
-                self.events.dispatch("load", successcb=success)
+                self.events.dispatch(Events.LOAD, successcb=success)
             else:
                 c.print(f"[green]Введите имя:[/]")
                 self.player.name = c.prompt(2)
@@ -244,7 +244,7 @@ class Game:
                 actions = self.actions.get_actions()
                 cmds_data = {cmd.name: cmd.description for cmd in actions}
                 cmd = c.prompt(1, cmds_data)
-                self.events.dispatch("command", command=cmd)
+                self.events.dispatch(Events.COMMAND, command=cmd)
 
         except KeyboardInterrupt:
             c.print("[red]Выход из игры[/]")

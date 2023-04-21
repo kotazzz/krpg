@@ -7,6 +7,7 @@ from rich.tree import Tree
 from krpg.executer import executer_command
 from krpg.inventory import Item
 
+from krpg.events import Events
 from krpg.world import Location
 
 if TYPE_CHECKING:
@@ -24,18 +25,20 @@ class Player(Entity):
     # Executor and actions
 
     def pickup(self, item: Item, amount: int):
-        self.game.events.dispatch("pickup", item=item, amount=amount)
+        self.game.events.dispatch(Events.PICKUP, item=item, amount=amount)
         return self.inventory.pickup(item, amount)
 
     def add_money(self, amount):
         if not amount:
             return
-        if amount > 0:
-            event = "add_money"
-        else:
-            event = "remove_money"
         self.money += amount
-        self.game.events.dispatch(event, amount=amount, new_balance=self.money)
+        kw = {"amount": amount, "new_balance": self.money}
+
+        if amount > 0:
+
+            self.game.events.dispatch(Events.ADD_MONEY, **kw)
+        else:
+            self.game.events.dispatch(Events.remove_money, **kw)
 
     @executer_command("add_money")
     def add_money_command(game: Game, money):
@@ -46,12 +49,12 @@ class Player(Entity):
     def add_free(self, amount):
         if not amount:
             return
-        if amount > 0:
-            event = "add_free"
-        else:
-            event = "remove_free"
         self.attrib.free += amount
-        self.game.events.dispatch(event, amount=amount, new_balance=self.attrib.free)
+        kw = {"amount": amount, "new_balance": self.attrib.free}
+        if amount > 0:
+            self.game.events.dispatch(Events.ADD_FREE, **kw)
+        else:
+            self.game.events.dispatch(Events.REMOVE_FREE, **kw)
 
     @executer_command("add_free")
     def add_free_command(game: Game, free):
