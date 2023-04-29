@@ -63,13 +63,19 @@ class Slot:
         if not self.id:
             self.amount = 0
 
+    def swap(self, slot: Slot):
+        slot.id, self.id = self.id, slot.id
+        slot.amount, self.amount = self.amount, slot.amount
+    
+    def __repr__(self) -> str:
+        return f"<Slot {self.amount}x{self.id!r}>"
 
 class Inventory:
     def __init__(self, is_carrier=True, size=10):
         self.is_carrier = is_carrier
         self.size = size
 
-        self.slots = [Slot(ItemType.ITEM) for _ in range(size)]
+        self.slots: list[Slot] = [Slot(ItemType.ITEM) for _ in range(size)]
         if is_carrier:
             self.slots.extend(
                 [
@@ -109,6 +115,17 @@ class Inventory:
                     slot.id = item.id
                     slot.amount = slot_amount
         return amount
+    
+    def get(self, item_type: ItemType, inverse: bool = False, only_empty: bool = False) -> list[tuple[int, Slot]]:
+        res: list[tuple[int, Slot]] = []
+        for i, slot in enumerate(self.slots):
+            if not inverse and slot.type == item_type:
+                res.append((i, slot))
+            elif inverse and slot.type != item_type:
+                res.append((i, slot))
+        if only_empty:
+            res = [(i, slot) for i, slot in res if slot.empty]
+        return res
 
 
 class Item:
@@ -116,16 +133,18 @@ class Item:
         self.id = id
         self.name = name
         self.description = description
-        self.stack = 1
-        self.attributes = Attributes()
-        self.effects = {}
-        self.sell = 0
-        self.cost = 10e10
+        self.stack: int = 1
+        self.type: ItemType = ItemType.ITEM
+        self.attributes: Attributes = Attributes()
+        self.effects: dict[str, int] = {}
+        self.sell: int = 0
+        self.cost: int = -1
 
     def set_stack(self, amount):
         self.stack = amount
 
-    def set_wear(self, slot: ItemType, attrib: Attributes):
+    def set_wear(self, type: ItemType, attrib: Attributes):
+        self.type = type
         self.attributes = attrib
 
     def set_use(self, action, amount):

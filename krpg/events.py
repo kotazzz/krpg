@@ -4,26 +4,28 @@ from typing import Callable
 
 class Events:
     # clock.py
-    TIMEPASS = "timepass" # TIMEPASS
-    NEWDAY = "newday" # NEWDAY
+    TIMEPASS = "timepass"
+    NEWDAY = "newday"
 
     # game.py
-    SAVE = "save" # SAVE
-    LOAD = "load" # LOAD
-    LOAD_DONE = "load_done" # LOAD_DONE
-    STATE_CHANGE = "state_change" # STATE_CHANGE
-    COMMAND = "command" # COMMAND
+    SAVE = "save"
+    LOAD = "load"
+    LOAD_DONE = "load_done"
+    STATE_CHANGE = "state_change"
+    COMMAND = "command"
 
     # player.py
-    PICKUP = "pickup" # PICKUP
-    ADD_MONEY = "add_money" # ADD_MONEY
-    REMOVE_MONEY = "remove_money" # REMOVE_MONEY
-    ADD_FREE = "add_free" # ADD_FREE
-    REMOVE_FREE = "remove_free" # REMOVE_FREE
+    PICKUP = "pickup"
+    ADD_MONEY = "add_money"
+    REMOVE_MONEY = "remove_money"
+    ADD_FREE = "add_free"
+    REMOVE_FREE = "remove_free"
+    HEAL = "heal"
 
     # world.py
-    ITEM_TAKE = "item_take" # ITEM_TAKE
-    MOVE = "move" # MOVE
+    ITEM_TAKE = "item_take"
+    ITEM_DROP = "item_drop"
+    MOVE = "move"
 
 class EventHandler:
     def __init__(self, locked: bool = False):

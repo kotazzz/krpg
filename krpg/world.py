@@ -25,6 +25,7 @@ class Location:
     def load(self, data):
         self.env = data[0]
         self.items = data[1]
+    
 
     def __repr__(self) -> str:
         return f"<Location name={self.id!r}>"
@@ -57,9 +58,16 @@ class World:
                 else:
                     loc.items.pop(i)
                 break
+    
+    def drop(self, item_id: str, count: int = 0, location: str | Location = None):
+        loc = self.get(location) if location else self.current
+        # TODO: Add check
+        self.game.events.dispatch(Events.ITEM_DROP, item_id=item_id, count=count)
+
+        loc.items.append((item_id, count))
 
     def set(self, current_loc: str | Location):
-        self.game.events.dispatch(Events.move, before=self.current, after=current_loc)
+        self.game.events.dispatch(Events.MOVE, before=self.current, after=current_loc)
         self.current = self.get(current_loc)
 
     def extract(self) -> list[Action]:

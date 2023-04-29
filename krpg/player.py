@@ -1,11 +1,12 @@
 from __future__ import annotations
+from itertools import groupby
 from krpg.actions import action
 from krpg.entity import Entity
 
 from typing import TYPE_CHECKING
 from rich.tree import Tree
 from krpg.executer import executer_command
-from krpg.inventory import Item
+from krpg.inventory import Item, ItemType, Slot
 
 from krpg.events import Events
 from krpg.world import Location
@@ -38,7 +39,7 @@ class Player(Entity):
 
             self.game.events.dispatch(Events.ADD_MONEY, **kw)
         else:
-            self.game.events.dispatch(Events.remove_money, **kw)
+            self.game.events.dispatch(Events.REMOVE_MONEY, **kw)
 
     @executer_command("add_money")
     def add_money_command(game: Game, money):
@@ -55,6 +56,16 @@ class Player(Entity):
             self.game.events.dispatch(Events.ADD_FREE, **kw)
         else:
             self.game.events.dispatch(Events.REMOVE_FREE, **kw)
+    def heal(self, amount):
+        amount = min(amount, self.attrib.max_hp-self.hp)
+        self.hp += amount
+        self.game.events.dispatch(Events.HEAL, amount=amount)
+        
+    def apply(self, item: Item):
+        effects = item.effects
+        for name, val in effects.items():
+            if name == 'hp':
+                self.heal(val)
 
     @executer_command("add_free")
     def add_free_command(game: Game, free):
@@ -138,10 +149,71 @@ class Player(Entity):
 
     @action("inventory", "Управление инвентарем", "Игрок")
     def action_inventory(game: Game):
-        c = game.console
-        # TODO: TODO
-        c.print(f"[red b]Пока тут ничего нет")
-
+        console = game.console
+        inventory = game.player.inventory
+        bestiary = game.bestiary
+        presenter = game.presenter
+        console.print(
+            "[bold green]Управление инвентарем. Введите номер слота для управления им[/]\n"
+            "  [green]e[white] - выход[/]"
+        )
+        
+        while True:
+            game.presenter.show_inventory(True)
+            slot: Slot = console.menu(2, inventory.slots, "e", lambda x: presenter.show_item(x), display=False)
+            if not slot:
+                break
+            if slot.empty:
+                console.print(f'Слот пуст!')
+                continue
+            
+            console.print(
+                f"[bold green]Управление предметом: {presenter.show_item(slot)}[/]\n"
+                "  [green]i[white] - информация[/]\n"
+                "  [green]w[white] - надеть/снять[/]\n"
+                "  [green]u[white] - использовать[/]\n"
+                "  [green]d[white] - выкинуть[/]\n"
+                "  [green]e[white] - отмена[/]"
+        )
+            item = bestiary.get_item(slot.id)
+            op = console.checked(3, lambda x: x in "iwude")
+            if op == "e":
+                continue
+            if op == "i":
+                presenter.presence_item(item)
+            elif op == "w":
+                if slot.type == ItemType.ITEM and item.type != ItemType.ITEM:
+                    slots = inventory.get(item.type, only_empty=True)
+                    if slots:
+                        slots[0][1].swap(slot)
+                        console.print(f"[green]Предмет надет[/]")
+                    else:
+                        console.print(f"[red]Нет доступных слотов[/]")
+                elif slot.type != ItemType.ITEM:
+                    slots = inventory.get(ItemType.ITEM, only_empty=True)
+                    if slots:
+                        slots[0][1].swap(slot)
+                        console.print(f"[green]Предмет снят[/]")
+                    else:
+                        console.print(f"[red]Нет доступных слотов[/]")
+                elif slot.type == ItemType.ITEM and item.type == ItemType.ITEM:
+                    console.print(f"[red]Вы не можете это надеть")
+            elif op == "u":     
+                if item.effects:
+                    game.player.apply(item)
+                    slot.amount -= 1
+                else:
+                    console.print(f"[red]Вы не можете это использовать")
+            elif op == "d":     
+                game.world.drop(slot.id, slot.amount)
+                slot.clear()
+                console.print(f"[green]Предмет успешно выброшен[/]")
+            
+            
+                
+                
+            
+            
     @action("upgrade", "Улучшить персонажа", "Действия")
     def action_upgrade(game: Game):
         # [red]S[/], [green]P[/], [blue]E[/], [yellow]C[/], [magenta]I[/], [cyan]A[/], [white]W[/]

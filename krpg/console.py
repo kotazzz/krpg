@@ -60,7 +60,7 @@ class KrpgConsole:
         if data:
             kwargs["completer"] = WordCompleter(
                 list(data.keys()),
-                meta_dict=data,
+                meta_dict={i: rich(j) for i, j in data.items()},
             )
         if not self.queue:
             while True:
@@ -81,7 +81,13 @@ class KrpgConsole:
             cmdr = cmd.replace("[", "\[")
             self.console.print(f"[bold blue]\[AUTO][/] [blue]{cmdr}[/]")
             return cmd
-
+        
+    def checked(self, prompt, checker: bool, data: dict = {}, allow_empty=False, raw=False):
+        while True:
+            res = self.prompt(prompt, data, allow_empty, raw)
+            if checker(res):
+                return res
+        
     def confirm(self, prompt, exit_cmd=None):
         data = {"y": "yes", "n": "no"}
         if exit_cmd:
@@ -111,7 +117,8 @@ class KrpgConsole:
             t = "  "
             self.print(f"[b green]{title}")
         if not variants:
-            return self.print(f"{t}[b red]{empty}")
+            self.print(f"{t}[b red]{empty}")
+            return t
         for i, v in enumerate(variants, 1):
             self.print(f"{t}[green]{i}[/]) [blue]{view(v)}")
         return t
