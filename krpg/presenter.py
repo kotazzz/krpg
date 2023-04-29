@@ -19,7 +19,7 @@ class Presenter:
         symlen = int(value / maximum * width) if maximum else 0
         return f"[white][[{color}]{'|'*symlen}{' '*(width-symlen)}[white]][/]"
 
-    def get_stats(self, entity: Entity|Item):
+    def get_stats(self, entity: Entity | Item):
         def _get(attrib: Attributes, free: bool):
             stats: tuple[str, str] = [
                 ("red", "strength"),
@@ -34,11 +34,11 @@ class Presenter:
             for c, stat in stats:
                 val = getattr(attrib, stat)
                 full_stats += f"[b {c}]{stat[0].upper()}{val}"
-            
+
             if free:
                 return full_stats + f"   [b white]F{entity.attrib.free}[/]"
-            return  full_stats
-        
+            return full_stats
+
         if isinstance(entity, Entity):
             return _get(entity.attrib, True)
         return _get(entity.attributes, False)
@@ -73,10 +73,10 @@ class Presenter:
             attack = f"[red]A={e.attrib.attack:<{al}.2f} [blue]D={e.attrib.defense:<{dl}.2f}[/]"
             stats = self.get_stats(e)
             console.print(f"{stats} {name} {attack} {hp}")
-    
-    def show_item(self, slot: Slot,show_amount=True):
+
+    def show_item(self, slot: Slot, show_amount=True):
         game = self.game
-        
+
         if slot.empty:
             return "[yellow]-[/] "
         else:
@@ -86,9 +86,8 @@ class Presenter:
                 text += f"[white]{slot.amount}x"
             text += f"[green]{item.name}[/] "
             return text
-    
+
     def presence_item(self, item: Item):
-        
         def get_effects_string(effects: dict[str, int]) -> str:
             if not effects:
                 return "[b red]Эффектов нет[/]\n"
@@ -97,8 +96,6 @@ class Presenter:
                 result += f"    {key}: {value}\n"
             return result
 
-
-        
         item_type_info = f"[b green]Тип[/]: {ItemType.description(item.type)}\n"
         effects_info = get_effects_string(item.effects)
         sell_info = (
@@ -119,8 +116,14 @@ class Presenter:
         result += sell_info
         result += cost_info
         self.game.console.print(result)
-    
-    def show_inventory(self, show_number=False,show_amount=True, allow: list[ItemType]=None, inverse: bool=False):
+
+    def show_inventory(
+        self,
+        show_number=False,
+        show_amount=True,
+        allow: list[ItemType] = None,
+        inverse: bool = False,
+    ):
         console = self.game.console
         inventory = self.game.player.inventory
         console.print("[bold green]Инвентарь[/]")
@@ -135,12 +138,13 @@ class Presenter:
                 # blacklist
                 if inverse and slot_type in allow:
                     continue
-            console.print("[yellow b]"+ItemType.description(slot_type), end=" ")
+            console.print("[yellow b]" + ItemType.description(slot_type), end=" ")
             for slot in slots:
                 if show_number:
                     console.print(f"[blue]\[{counter}][/]", end="")
                     counter += 1
                 console.print(self.show_item(slot, show_amount), end="")
             console.print()
+
     def __repr__(self):
         return "<Presenter>"

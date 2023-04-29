@@ -66,9 +66,10 @@ class Slot:
     def swap(self, slot: Slot):
         slot.id, self.id = self.id, slot.id
         slot.amount, self.amount = self.amount, slot.amount
-    
+
     def __repr__(self) -> str:
         return f"<Slot {self.amount}x{self.id!r}>"
+
 
 class Inventory:
     def __init__(self, is_carrier=True, size=10):
@@ -115,8 +116,10 @@ class Inventory:
                     slot.id = item.id
                     slot.amount = slot_amount
         return amount
-    
-    def get(self, item_type: ItemType, inverse: bool = False, only_empty: bool = False) -> list[tuple[int, Slot]]:
+
+    def get(
+        self, item_type: ItemType, inverse: bool = False, only_empty: bool = False
+    ) -> list[tuple[int, Slot]]:
         res: list[tuple[int, Slot]] = []
         for i, slot in enumerate(self.slots):
             if not inverse and slot.type == item_type:

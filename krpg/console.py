@@ -50,7 +50,14 @@ class KrpgConsole:
     def print(self, *args, **kwargs):
         return self.console.print(*args, **kwargs, highlight=False)
 
-    def prompt(self, text, data: dict[str, str]=None, allow_empty=False, raw=False, check: bool = False) -> str:
+    def prompt(
+        self,
+        text,
+        data: dict[str, str] = None,
+        allow_empty=False,
+        raw=False,
+        check: bool = False,
+    ) -> str:
         text = (
             rich(text, console=self.console)
             if not isinstance(text, int)
@@ -83,13 +90,15 @@ class KrpgConsole:
             cmdr = cmd.replace("[", "\[")
             self.console.print(f"[bold blue]\[AUTO][/] [blue]{cmdr}[/]")
             return cmd
-        
-    def checked(self, prompt, checker: bool, data: dict = {}, allow_empty=False, raw=False):
+
+    def checked(
+        self, prompt, checker: bool, data: dict = {}, allow_empty=False, raw=False
+    ):
         while True:
             res = self.prompt(prompt, data, allow_empty, raw)
             if checker(res):
                 return res
-        
+
     def confirm(self, prompt, exit_cmd=None):
         data = {"y": "yes", "n": "no"}
         if exit_cmd:

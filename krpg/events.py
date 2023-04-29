@@ -2,6 +2,7 @@ from collections import defaultdict
 from queue import Queue
 from typing import Callable
 
+
 class Events:
     # clock.py
     TIMEPASS = "timepass"
@@ -26,9 +27,10 @@ class Events:
     ITEM_TAKE = "item_take"
     ITEM_DROP = "item_drop"
     MOVE = "move"
-    
-    #settings.py
+
+    # settings.py
     SETTING_CHANGE = "setting_change"
+
 
 class EventHandler:
     def __init__(self, locked: bool = False):

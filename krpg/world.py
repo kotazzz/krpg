@@ -25,7 +25,6 @@ class Location:
     def load(self, data):
         self.env = data[0]
         self.items = data[1]
-    
 
     def __repr__(self) -> str:
         return f"<Location name={self.id!r}>"
@@ -40,7 +39,9 @@ class World:
         self.game.add_saver("world", self.save, self.load)
 
     def save(self):
-        return {loc.id: loc.env for loc in self.locations} | {'CURRENT': self.current.id}
+        return {loc.id: loc.env for loc in self.locations} | {
+            "CURRENT": self.current.id
+        }
 
     def load(self, data):
         self.current = self.get(data.pop("CURRENT"))
@@ -59,7 +60,7 @@ class World:
                 else:
                     loc.items.pop(i)
                 break
-    
+
     def drop(self, item_id: str, count: int = 0, location: str | Location = None):
         loc = self.get(location) if location else self.current
         # TODO: Add check

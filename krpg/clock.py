@@ -9,6 +9,7 @@ from krpg.actions import ActionManager, action
 from krpg.executer import executer_command
 from krpg.events import Events
 
+
 class Clock:
     def __init__(self, game: Game):
         self.global_minutes = 60 * 31  # Day 1, 07:00
