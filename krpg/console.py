@@ -50,7 +50,7 @@ class KrpgConsole:
     def print(self, *args, **kwargs):
         return self.console.print(*args, **kwargs, highlight=False)
 
-    def prompt(self, text, data=None, allow_empty=False, raw=False) -> str:
+    def prompt(self, text, data: dict[str, str]=None, allow_empty=False, raw=False, check: bool = False) -> str:
         text = (
             rich(text, console=self.console)
             if not isinstance(text, int)
@@ -75,7 +75,9 @@ class KrpgConsole:
                     except:
                         continue
                     self.queue.extend(split)
-                    return self.queue.pop(0)
+                    el = self.queue.pop(0)
+                    if not check or el in data:
+                        return el
         else:
             cmd = self.queue.pop(0)
             cmdr = cmd.replace("[", "\[")

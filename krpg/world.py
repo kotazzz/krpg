@@ -40,11 +40,12 @@ class World:
         self.game.add_saver("world", self.save, self.load)
 
     def save(self):
-        return {loc.name: loc.env for loc in self.locations}
+        return {loc.id: loc.env for loc in self.locations} | {'CURRENT': self.current.id}
 
     def load(self, data):
-        for name, env in data.items():
-            self.get(name).env = env
+        self.current = self.get(data.pop("CURRENT"))
+        for id, env in data.items():
+            self.get(id).env = env
 
     def take(self, location: str | Location, item_id: str, remain: int = 0):
         loc = self.get(location)

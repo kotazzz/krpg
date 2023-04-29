@@ -2,24 +2,39 @@ from math import ceil
 
 
 class Encoder:
-    abc = [
-        (
+    abc = {
+        'base871': (
+            'ƸƨǽƩҩΫеÙʘčΝϾĩ0Ê\'=ңwǻSīǅҚҡǢəcƵΜʡŹǟǭÁĆɻЇ3Аǔɿ²ȅчɔщȳÖΟĳɲōǵ[ҥXɖʓɭƎŽƏɘҝɨ'
+            'ƥtțśѩбҘЕșăhőáѸɫґäϧíBÅK&ŕƌ§нǩҠʫQфƲǒŜιD>ǦРΑϚЀǍΦш1ǨěϳǝѮȺÉêǊňϰϲģʞ;ЬȆХОяĉ'
+            'ŦɾϟÏҎťĤŇɊsû#ëƀAѤϮŻ/ŮǶʑ¨¶ǲҞΛʍиmЄµǧUĪΪ¼ƮǛʒ]ЎϻåǼġЉδҜƃšƭβĄѧυкЖжџgƚŐʪэ`ȇ@'
+            '{¿ВɤĻҒȵЧȏΨª÷ǏǑJ,ŪƕɚîóΒýΖüȑÑĐȩŀЊФѪ7ǂΰƣŬάĊİќǴЙКėǮǳϯϿǱŔȶèǤȚ£æǿȈɏɮɄҌÆϫƇŌ'
+            'ʊТѦȀĖ\u03a2ЦȤѓ.ϡҀʌŞЪùŶҕĢįƾБѭr<ʝѬʖƹɷƴϕŖȯĲȔʐŧĥјНŢÞůʕʄWÈìľϋЗρƤюņʗ®űõξҋF'
+            'ɦÐéЭіńαɌǄũĹ)ѰЯɶ»ϏʇΘ҂ωơžʃϸϷôȴȾłƊǌђȂϜ6ËøǷğɍѨïnȎΓєÚʜуÝҢόϦɼκϢyēɴΕϠоѷѴĎöǎ'
+            'ÌѾaȡȮȐʦЩßNŃĕǘʢH*ÍĀλГƘɕĵʉɐѺɛȿИЫŒѻǠϊѵǙųŁǞМĺÂ\\ƉΤҤϬØLư9ўȧϩ5iţɠɳѱДǣъȽ¾ɒЍ'
+            'ŷдʂƗΞћьŉđpΏϥзΥŝϹҙuȰ+ʣ?ȨĠϱεрȍvĒɟ«ѐŰɆпɋЈШȪĜÛΧПѶʠɰĦϼҖÕ³ϤČȄĿ%ƆĘƓїϙқÇɗΔĂɃ'
+            'ɹЂѼѕzҊѣÔɜϒ¹ÓŭѫҭąƖƪĬȞÃƱðĶ°úɂɀęϭƅřƝƠȁɝȱϺÀǜƔҨχȌŚϘыRÎàηkŅҫʤѿœνƙɵɞϓǉċĚȓǥƯ'
+            'ƐϣʁѢŋοϨɽĭѡGцлΙвɇφҔɧjCμҐƜɺЌʩϑǐYήέ½ѹĴƿEþʛƬϐ©ȝ¡ǸҁғǪȼǹlϵϗЏΩɉƞΣĽǾǗʀЃЛҧqȻş'
+            'ΎώūǺŸ!ǕѲҍǫǋķʬǬг·ҟҗŲљƟżfŨĝϛѽ8ɬЮτπтÄTòŠʨхŗʎҦʈ2ĈĨŎMСZѯâƳȬ^ÒĔɅPƑψȸȋħɸмȖŤ'
+            'Ɓ±ȟɈ¦ƂÿΚ¥ϖѝb-϶ɱ$ǈѥƫʅ¤ÜŘȫƋxçɥʚɓďςƻāθOǖɎΗʆЅΐ"Ћźǡ¯Ё_ȷȊǆļйʥσʙγĞϽoƶѳǯñȃ¢ŏ'
+            'ŴȠȲʟãȒ}ǓºǚƈʭёѠҏǰ(ȭњVĮȦίȉĸȕϪζсȹ~Ҫȥ:ŵІƢʧҬϔƒаǁϞćƺI4ȘdΡУΠɢ¬ȗŊǇϝeƛϴύ'
+        ),
+        'base161': (
             "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ["
             "\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ЁАБВГДЕЖЗИЙКЛМНОПРСТУФХЦ"
             "ЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяё№"
         ),
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
-        "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&()*+-;<=>?@^_`{|}~",
-        "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
-        (
+        'base64': "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+        'base85': "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&()*+-;<=>?@^_`{|}~",
+        'base93': "!#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
+        'Braille': (
             "⠀⠁⠂⠃⠄⠅⠆⠇⠈⠉⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟⠠⠡⠢⠣⠤⠥⠦⠧⠨⠩⠪⠫⠬⠭⠮⠯⠰⠱⠲⠳⠴⠵⠶⠷⠸⠹⠺⠻⠼⠽⠾⠿⡀⡁⡂⡃⡄⡅⡆⡇⡈⡉"
             "⡊⡋⡌⡍⡎⡏⡐⡑⡒⡓⡔⡕⡖⡗⡘⡙⡚⡛⡜⡝⡞⡟⡠⡡⡢⡣⡤⡥⡦⡧⡨⡩⡪⡫⡬⡭⡮⡯⡰⡱⡲⡳⡴⡵⡶⡷⡸⡹⡺⡻⡼⡽⡾⡿⢀⢁⢂⢃⢄⢅⢆⢇⢈⢉⢊⢋⢌⢍⢎⢏⢐⢑⢒⢓"
             "⢔⢕⢖⢗⢘⢙⢚⢛⢜⢝⢞⢟⢠⢡⢢⢣⢤⢥⢦⢧⢨⢩⢪⢫⢬⢭⢮⢯⢰⢱⢲⢳⢴⢵⢶⢷⢸⢹⢺⢻⢼⢽⢾⢿⣀⣁⣂⣃⣄⣅⣆⣇⣈⣉⣊⣋⣌⣍⣎⣏⣐⣑⣒⣓⣔⣕⣖⣗⣘⣙⣚⣛⣜⣝⣞"
             "⣟⣠⣡⣢⣣⣤⣥⣦⣧⣨⣩⣪⣫⣬⣭⣮⣯⣰⣱⣲⣳⣴⣵⣶⣷⣸⣹⣺⣻⣼⣽⣾⣿"
-        ),
-    ]
-
-    def encode(self, data, base=None, type=1):
+        ), 
+    }
+         
+    def encode(self, data, type=1, base=None):
         abc = self.abc[type]
         base = base if base else len(abc)
         out_data = []
@@ -31,7 +46,7 @@ class Encoder:
             out_data.append(abc[d])
         return "".join(out_data)
 
-    def decode(self, data, base=None, type=1):
+    def decode(self, data, type=1, base=None):
         abc = self.abc[type]
         base = base if base else len(abc)
         out_data = 0

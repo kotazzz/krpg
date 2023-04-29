@@ -163,4 +163,4 @@ class Item:
         return bool(self.effects)
 
     def __repr__(self):
-        return f"<Item {id!r}>"
+        return f"<Item {self.id!r}>"
