@@ -461,6 +461,7 @@ class Game:
         ]
         self.console.print(random.choice(clrs) + random.choice(self.splashes))
         self.show_logo()
+        self.console.set_bar(f"[magenta]K[/][red]-[/][blue]R[/][yellow]P[/][green]G[/] {random.choice(clrs)}{self.version}[/]")
         while self.state != "playing":
             menu = {
                 "start": "Начать новую игру",
@@ -500,6 +501,7 @@ class Game:
                 self.events.dispatch(Events.COMMAND, command=select)
         try:
             while self.state != "exit":
+                self.console.set_bar(f"[yellow]{self.player.name}[/]")
                 actions = self.actions.get_actions()
                 cmds_data = {cmd.name: cmd.description for cmd in actions}
                 cmd = c.prompt(1, cmds_data)
