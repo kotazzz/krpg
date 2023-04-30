@@ -35,7 +35,7 @@ map {
 
   start city
   link city forest
-}    
+} 
 
 items {
   #             s  p  e  c  i  a  w

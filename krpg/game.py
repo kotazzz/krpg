@@ -29,19 +29,18 @@ import argparse
 from krpg.events import Events
 
 
-
 __version__ = "8B"
 
 parser = argparse.ArgumentParser(
-                    prog='KRPG',
-                    description='Консольная рпг игра',
-                    epilog='Ы :)')
-parser.add_argument('-d', '--debug', action='store_false')      # option that takes a value
+    prog="KRPG", description="Консольная рпг игра", epilog="Ы :)"
+)
+parser.add_argument("-d", "--debug", action="store_false")  # option that takes a value
 args = parser.parse_args()
 
 # DEBUG = args.debug
 DEBUG = args.debug
 TIMESHIFT = 1667250000
+
 
 class Game:
     version = __version__
@@ -146,13 +145,13 @@ class Game:
     ]
 
     def set_debug(self):
-        self.console.setlevel(self.debug*11)
+        self.console.setlevel(self.debug * 11)
+
     def __init__(self):
         self.console = KrpgConsole()
         self.log = self.console.log
-        
         self.main()
-        
+
     def main(self):
         while True:
             try:
@@ -163,35 +162,34 @@ class Game:
             except KeyboardInterrupt:
                 self.console.print("[red b]Пока!")
                 break
-            
-    
+
     def new_game(self):
         if self.debug:
             spinner = random.choice(list(SPINNERS.keys()))
-            spin_size = len(SPINNERS[spinner]['frames'][0])+1
+            spin_size = len(SPINNERS[spinner]["frames"][0]) + 1
             spin = Spinner(spinner, text="test", style="green")
             _reserve = self.console.log.debug
             lines = []
+
             def func(t):
                 nonlocal lines
                 lines.append(t)
                 lines = lines[-3:]
                 spin.update(text=f"\n{' '*spin_size}".join(lines))
-                time.sleep(random.random()/5)
+                time.sleep(random.random() / 5)
 
             self.console.log.debug = func
-            with Live(spin, refresh_per_second=20) as live:   
+            with Live(spin, refresh_per_second=20) as live:
                 self.init_game()
             self.console.log.debug = _reserve
         else:
             self.init_game()
-        
-    
+
     def init_game(self):
         self.state = "none"
         self.start_time = self.save_time = self.timestamp()
         debug = self.log.debug
-        
+
         self.actions = ActionManager()
         debug(f"Init [green]ActionManager[/]: {self.actions}")
 
@@ -241,7 +239,6 @@ class Game:
         debug(f"Starting build world...")
 
         self.builder.build()
-        
 
     def timestamp(self):
         return int(time.time()) - TIMESHIFT  # 1 Nov 2022 00:00 (+3)
@@ -263,12 +260,10 @@ class Game:
     def action_credits(game: Game):
         game.show_logo()
         game.console.print(
-            
             f"[b black on green]"
             f"Вас ждет увлекательное путешествие по миру, где Вы               \n"
             f"будете сражаться с монстрами, выполнять квесты и становиться все \n"
             f"сильнее и сильнее. Сможете ли Вы стать настоящим героем?         [/][green]\n\n"
-            
             f"Автор:             [magenta]Kotaz[/]\n"
             f"Сайт:              [blue u]https://kotazzz.github.io/ [/]\n"
             f"Репозиторий:       [blue u]https://github.com/kotazzz/krpg [/]\n"
@@ -279,15 +274,16 @@ class Game:
             f"Библиотеки:        [red]rich[/], [red]prompt_toolkit[/], [red]msgpack[/]\n"
             f"Кол-во строк кода: [magenta]2000+[/]\n\n"
             f"Лицензия:          [magenta]MIT[/][/]\n\n"
-            
             f"[bold green]Отдельная благодарность:[/]\n"
             f"  [green]Никто (извините.)[/]\n"
             f"  [red]Конец[/]\n"
         )
-        
+
     @action("info", "Об текущей игре", "Игра")
     def action_about(game: Game):
-        datefmt = lambda ts: datetime.fromtimestamp(ts+TIMESHIFT).strftime("%d.%m.%Y %H:%M")
+        datefmt = lambda ts: datetime.fromtimestamp(ts + TIMESHIFT).strftime(
+            "%d.%m.%Y %H:%M"
+        )
         game.console.print(
             f"--- [blue]KRPG[/] by [green]KOTAZ[/] ---\n"
             f"[b green]Подробнее:       [/][magenta]credits[/]\n"
@@ -297,7 +293,6 @@ class Game:
             f"[green  ]Дата сохранения: [/][yellow]{datefmt(game.save_time)}[/]\n"
             f"[green  ]Сид:             [/][yellow]{game.random.seed}[/]\n"
         )
-        
 
     @action("guide", "Игровая справка", "Игра")
     def action_guide(game: Game):
@@ -343,7 +338,6 @@ class Game:
     @action("load", "Загрузить игру", "Игра")
     def action_load(game: Game):
         game.events.dispatch(Events.LOAD)
-
 
     def add_saver(self, name: str, save: callable, load: callable):
         def add_message(func, message):
@@ -461,7 +455,9 @@ class Game:
         ]
         self.console.print(random.choice(clrs) + random.choice(self.splashes))
         self.show_logo()
-        self.console.set_bar(f"[magenta]K[/][red]-[/][blue]R[/][yellow]P[/][green]G[/] {random.choice(clrs)}{self.version}[/]")
+        self.console.set_bar(
+            f"[magenta]K[/][red]-[/][blue]R[/][yellow]P[/][green]G[/] {random.choice(clrs)}{self.version}[/]"
+        )
         while self.state != "playing":
             menu = {
                 "start": "Начать новую игру",
@@ -489,7 +485,16 @@ class Game:
                 c.print(f"[green]Введите сид мира (или оставьте пустым):[/]")
                 src = c.prompt(2, allow_empty=True)
                 if src:
-                    seed = int(src) if src.isnumeric() else (int(int.from_bytes(sha512(src.encode()).digest(), "big")**0.1))
+                    seed = (
+                        int(src)
+                        if src.isnumeric()
+                        else (
+                            int(
+                                int.from_bytes(sha512(src.encode()).digest(), "big")
+                                ** 0.1
+                            )
+                        )
+                    )
                     self.log.debug(f"New seed: {seed} from {src!r}")
                     self.random.set_seed(seed)
                 else:
@@ -512,3 +517,7 @@ class Game:
 
     def __repr__(self):
         return "<Game>"
+
+    @action("random", "RAND", "TEST")
+    def random_cmd(game: Game):
+        game.console.print(f"Random: {game.random.random()}")
