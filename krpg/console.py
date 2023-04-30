@@ -18,10 +18,10 @@ def rich(*args, console=None, **kwargs):
 
 class KrpgConsole:
     def __init__(self):
-
+        
         self.console = Console()
         self.session = PromptSession()
-
+        self.bar = ""
         logging.basicConfig(
             level="DEBUG",
             format="%(message)s",
@@ -36,7 +36,7 @@ class KrpgConsole:
             ],
         )
         self.log = logging.getLogger("console")
-
+        
         self.queue = []
 
         self.levels = {
@@ -46,10 +46,13 @@ class KrpgConsole:
             4: rich("[bold blue]>>>> [/]", console=self.console),
             5: rich("[bold magenta]>>>>> [/]", console=self.console),
         }
-
+    def setlevel(self, level):
+        self.log.level = level
     def print(self, *args, **kwargs):
         return self.console.print(*args, **kwargs, highlight=False)
-
+    def set_bar(self, text):
+        self.bar = rich(text)
+        
     def prompt(
         self,
         text,
@@ -63,12 +66,14 @@ class KrpgConsole:
             if not isinstance(text, int)
             else self.levels[text]
         )
-        kwargs = {}
+        kwargs = {"bottom_toolbar": self.bar}
         if data:
             kwargs["completer"] = WordCompleter(
                 list(data.keys()),
                 meta_dict={i: rich(j) for i, j in data.items()},
             )
+        else:
+            kwargs["completer"] = WordCompleter([])
         if not self.queue:
             while True:
                 user = self.session.prompt(text, **kwargs)

@@ -37,10 +37,10 @@ def param(id: str, name: str, description: str, variants: dict[str, str] = None)
 
 class Settings:
     def __init__(self, game: Game):
+        self.params: list[Param] = []
         self.game = game
         self.game.add_actions(self)
         self.game.add_saver("settings", self.save, self.load)
-        self.params: list[Param] = []
         for attr in dir(self):
             val = getattr(self, attr)
             if isinstance(val, Param):
@@ -96,3 +96,6 @@ class Settings:
                 Events.SETTING_CHANGE, setting=param.id, value=new_value
             )
             param(game, new_value)
+
+    def __repr__(self) -> str:
+        return f"<Settings params={len(self.params)}>"
