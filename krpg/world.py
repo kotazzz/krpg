@@ -51,7 +51,7 @@ class World:
     def take(self, location: str | Location, item_id: str, remain: int = 0):
         loc = self.get(location)
         # TODO: Add check
-        self.game.events.dispatch(Events.ITEM_TAKE, item_id=item_id, remain=remain)
+        self.game.events.dispatch(Events.WORLD_ITEM_TAKE, item_id=item_id, remain=remain)
 
         for i, (item, _) in enumerate(loc.items):
             if item == item_id:
@@ -64,7 +64,7 @@ class World:
     def drop(self, item_id: str, count: int = 0, location: str | Location = None):
         loc = self.get(location) if location else self.current
         # TODO: Add check
-        self.game.events.dispatch(Events.ITEM_DROP, item_id=item_id, count=count)
+        self.game.events.dispatch(Events.WORLD_ITEM_DROP, item_id=item_id, count=count)
 
         loc.items.append((item_id, count))
 

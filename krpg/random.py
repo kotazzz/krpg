@@ -25,11 +25,15 @@ class RandomManager:
         return str(self.seed), self.state
 
     def load(self, data):
-        self.seed = int(data[0])
+        seed = int(data[0])
+        self.seed = seed
+        self.rnd.seed(seed)
         self.state = 0
         for i in range(data[1]):
-            self.rnd()
+            self.random()
+
 
     def random(self):
         self.state += 1
         return self.rnd.random()
+

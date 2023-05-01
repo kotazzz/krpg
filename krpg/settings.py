@@ -60,8 +60,8 @@ class Settings:
         {"enable": "Включить", "disable": "Выключить"},
     )
     def change_debug(param: Param, game: Game, new_value):
-        game.debug = param.value = new_value == "enable"
-        game.set_debug()
+        param.value = new_value == "enable"
+        game.set_debug(param.value)
 
     @param("dummy", "Просто настройка", "Ничего не делает")
     def change_dummy(param: Param, game: Game, new_value):

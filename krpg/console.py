@@ -15,29 +15,35 @@ def rich(*args, console=None, **kwargs):
         console.print(*args, **kwargs)
     return ANSI(c.get())
 
-
+DEFAULT_LEVEL = 0
 class KrpgConsole:
     def __init__(self):
 
         self.console = Console()
         self.session = PromptSession()
         self.bar = ""
-        logging.basicConfig(
-            level="DEBUG",
-            format="%(message)s",
-            datefmt="[%X]",
-            handlers=[
-                RichHandler(
+        self.log: logging.Logger = None
+        
+        self.handler = RichHandler(
+                    level=DEFAULT_LEVEL,
                     rich_tracebacks=True,
                     tracebacks_show_locals=True,
                     console=self.console,
                     markup=True,
                 )
+        logging.basicConfig(
+            level=DEFAULT_LEVEL,
+            format="%(message)s",
+            datefmt="[%X]",
+            handlers=[
+                self.handler
             ],
         )
         self.log = logging.getLogger("console")
+        self.setlevel(0)
 
         self.queue = []
+        self.history = []
 
         self.levels = {
             1: rich("[bold red]> [/]"),
@@ -46,10 +52,11 @@ class KrpgConsole:
             4: rich("[bold blue]>>>> [/]", console=self.console),
             5: rich("[bold magenta]>>>>> [/]", console=self.console),
         }
-
+    def get_history(self):
+        return [repr(i) if " " in i else i for i in self.history]
+    
     def setlevel(self, level):
-        self.log.level = level
-
+        self.handler.level = level
     def print(self, *args, **kwargs):
         return self.console.print(*args, **kwargs, highlight=False)
 
@@ -60,8 +67,8 @@ class KrpgConsole:
         self,
         text,
         data: dict[str, str] = None,
-        allow_empty=False,
-        raw=False,
+        allow_empty: bool=False,
+        raw: bool=False,
         check: bool = False,
     ) -> str:
         text = (
@@ -90,6 +97,7 @@ class KrpgConsole:
                     except:
                         continue
                     self.queue.extend(split)
+                    self.history.extend(split)
                     el = self.queue.pop(0)
                     if not check or el in data:
                         return el
@@ -127,10 +135,10 @@ class KrpgConsole:
         self,
         variants: list,
         view: callable = None,
-        display: bool = True,
         title: str = None,
         empty: str = "Ничего нет",
     ):
+        view = view or str
         t = ""
         if title:
             t = "  "
@@ -158,7 +166,7 @@ class KrpgConsole:
             data[exit_cmd] = "cancel"
 
         if display:
-            t = self.print_list(variants, view, display, title, empty)
+            t = self.print_list(variants, view, title, empty)
             if exit_cmd:
                 self.print(f"{t}[red]{exit_cmd}[/]) [blue]Выход")
         while True:
