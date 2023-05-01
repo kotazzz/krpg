@@ -19,6 +19,7 @@ from krpg.random import RandomManager
 from krpg.player import Player
 from krpg.builder import Builder
 from krpg.settings import Settings
+from krpg.stats import StatsManager
 from krpg.world import World
 from rich.spinner import Spinner, SPINNERS
 
@@ -34,7 +35,7 @@ __version__ = "8B"
 parser = argparse.ArgumentParser(
     prog="KRPG", description="Консольная рпг игра", epilog="Ы :)"
 )
-parser.add_argument("-d", "--debug", action="store_false")  # option that takes a value
+parser.add_argument("-d", "--debug", action="store_true")  # option that takes a value
 args = parser.parse_args()
 
 # DEBUG = args.debug
@@ -43,8 +44,7 @@ TIMESHIFT = 1667250000
 
 
 class Game:
-    version = __version__
-    debug = DEBUG
+
     splashes = [
         "Кто придумал эту игру?",
         "Да, это игра.",
@@ -144,13 +144,17 @@ class Game:
         "Вы нашли магический амулет, но он оказался просто обычной каменной круглой бусиной",
     ]
 
-    def set_debug(self):
-        self.console.setlevel(self.debug * 11)
-
     def __init__(self):
+        self.version = __version__
+        
         self.console = KrpgConsole()
+        self.set_debug(DEBUG)
         self.log = self.console.log
         self.main()
+
+    def set_debug(self, value: bool):
+        self.debug = value
+        self.console.setlevel(0 if self.debug else 100)
 
     def main(self):
         while True:
@@ -159,12 +163,20 @@ class Game:
                 self.run_game()
             except Exception as e:
                 self.log.exception(e)
+                try:
+                    if not self.console.confirm("[red]Перезапустить?: "):
+                        break
+                except KeyboardInterrupt:
+                    break
             except KeyboardInterrupt:
-                self.console.print("[red b]Пока!")
                 break
+        
+        c = self.console
+        c.print(f"[green]История команд: [red]{' '.join(c.get_history())}")
+        c.print("[red b]Пока!")
 
     def new_game(self):
-        if self.debug:
+        if not self.debug:
             spinner = random.choice(list(SPINNERS.keys()))
             spin_size = len(SPINNERS[spinner]["frames"][0]) + 1
             spin = Spinner(spinner, text="test", style="green")
@@ -176,7 +188,7 @@ class Game:
                 lines.append(t)
                 lines = lines[-3:]
                 spin.update(text=f"\n{' '*spin_size}".join(lines))
-                time.sleep(random.random() / 5)
+                time.sleep(random.random() / 10)
 
             self.console.log.debug = func
             with Live(spin, refresh_per_second=20) as live:
@@ -228,6 +240,9 @@ class Game:
 
         self.bestiary = Bestiary(self)
         debug(f"Init [green]Bestiary[/]: {self.bestiary}")
+        
+        self.stats = StatsManager(self)
+        debug(f"Init [green]StatsManager[/]: {self.stats}")
 
         self.clock = Clock(self)
         debug(f"Init [green]Clock[/]: {self.clock}")
@@ -246,98 +261,6 @@ class Game:
     def add_actions(self, obj: object):
         self.log.debug(f"Add submanager {obj}")
         self.actions.submanagers.append(obj)
-
-    @action("help", "Показать команды", "Игра")
-    def action_help(game: Game):
-        actions = sorted(game.actions.get_actions(), key=lambda x: x.category)
-        cmdcat = groupby(actions, key=lambda x: x.category)
-        for cat, cmds in cmdcat:
-            game.console.print(f"[b red]{cat}")
-            for cmd in cmds:
-                game.console.print(f" [green]{cmd.name}[/] - {cmd.description}")
-
-    @action("credits", "Авторы и благодарности", "Игра")
-    def action_credits(game: Game):
-        game.show_logo()
-        game.console.print(
-            f"[b black on green]"
-            f"Вас ждет увлекательное путешествие по миру, где Вы               \n"
-            f"будете сражаться с монстрами, выполнять квесты и становиться все \n"
-            f"сильнее и сильнее. Сможете ли Вы стать настоящим героем?         [/][green]\n\n"
-            f"Автор:             [magenta]Kotaz[/]\n"
-            f"Сайт:              [blue u]https://kotazzz.github.io/ [/]\n"
-            f"Репозиторий:       [blue u]https://github.com/kotazzz/krpg [/]\n"
-            f"                   [blue  ]Дайте ⭐ плиз [/]\n"
-            f"Discord:           [blue u]https://discord.gg/FKcURWZsMW [/]\n"
-            f"                   [blue  ]Kotaz#4769 [/]\n"
-            f"Язык:              [magenta]Python 3[/]\n"
-            f"Библиотеки:        [red]rich[/], [red]prompt_toolkit[/], [red]msgpack[/]\n"
-            f"Кол-во строк кода: [magenta]2000+[/]\n\n"
-            f"Лицензия:          [magenta]MIT[/][/]\n\n"
-            f"[bold green]Отдельная благодарность:[/]\n"
-            f"  [green]Никто (извините.)[/]\n"
-            f"  [red]Конец[/]\n"
-        )
-
-    @action("info", "Об текущей игре", "Игра")
-    def action_about(game: Game):
-        datefmt = lambda ts: datetime.fromtimestamp(ts + TIMESHIFT).strftime(
-            "%d.%m.%Y %H:%M"
-        )
-        game.console.print(
-            f"--- [blue]KRPG[/] by [green]KOTAZ[/] ---\n"
-            f"[b green]Подробнее:       [/][magenta]credits[/]\n"
-            f"[green  ]Версия:          [/][yellow]{game.version}[/]\n"
-            f"[green  ]Игрок:           [/][yellow]{game.player.name}[/]\n"
-            f"[green  ]Дата начала:     [/][yellow]{datefmt(game.start_time)}[/]\n"
-            f"[green  ]Дата сохранения: [/][yellow]{datefmt(game.save_time)}[/]\n"
-            f"[green  ]Сид:             [/][yellow]{game.random.seed}[/]\n"
-        )
-
-    @action("guide", "Игровая справка", "Игра")
-    def action_guide(game: Game):
-        passages = {
-            "FAQ": ("Тут пусто :("),
-            "Changelog": ("Мне [red]лень[/] тут что-то писать... :( \n"),
-            "Мне нужна помощь по командам": (
-                "Используйте [green]help[/] или [green]guide[/] для получения справки\n"
-            ),
-            "[blue][AUTO][/] и аргументы": (
-                "В игре все действия используют лишь одну фразу или слово. "
-                "У них нет аргументов или какого либо синтаксиса. "
-                "Если для определенного действия требуются аргументы - "
-                "они будут запрошенные через отдельные поля ввода. Теперь "
-                "вам не надо заучивать сложный синтаксис дял простых действий. "
-                "Хотите ввести аргументы сразу? Разделяйте свои действия пробелом. "
-                "Игра запоминает каждое слово отдельно и как только понадобится что-то "
-                "ввести она сама вставит то, что вы вводили ранее. "
-                "Таким образом вы можете одновременно вводить множество "
-                "команд за раз и они все исполнятся сами\n"
-                "Попробуйте ввести [green]e guide 1[/] и вы выйдете из "
-                "справки и вернетесь, открыв первую страницу"
-            ),
-        }
-        while True:
-            game.console.print("[bold green]Гайды и справка[/]")
-            game.console.print("[green]Выберите секцию (e - Выход)[/]")
-            select = game.console.menu(2, list(passages.items()), "e", lambda x: x[0])
-            if not select:
-                return
-            else:
-                text = wrap(select[1], replace_whitespace=False)
-                game.console.print("\n".join(text))
-
-    @action("exit", "Выйти из игры", "Игра")
-    def action_exit(game: Game):
-        game.state = "exit"
-
-    @action("save", "Сохранить игру", "Игра")
-    def action_save(game: Game):
-        game.events.dispatch(Events.SAVE)
-
-    @action("load", "Загрузить игру", "Игра")
-    def action_load(game: Game):
-        game.events.dispatch(Events.LOAD)
 
     def add_saver(self, name: str, save: callable, load: callable):
         def add_message(func, message):
@@ -359,6 +282,8 @@ class Game:
     def on_save(self):
         self.save_time = self.timestamp()
         data = {name: funcs[0]() for name, funcs in self.savers.items()}
+        # EXPEREMENTAL
+        data = [i[1] for i in sorted(data.items(), key=lambda item: item[0])]
         bdata = msgpack.packb(data)
         zdata = zlib.compress(bdata, level=9)
         select = self.console.menu(5, list(self.encoder.abc.keys()))
@@ -384,8 +309,12 @@ class Game:
                 zdata = self.encoder.decode(encoded, type=select)
                 bdata = zlib.decompress(zdata)
                 data = msgpack.unpackb(bdata)
-                for name, funcs in self.savers.items():
-                    funcs[1](data[name])
+                # EXPEREMENTAL
+                funcs = dict(sorted(self.savers.items(), key=lambda item: item[0])).values()
+                for i, (save, load) in enumerate(funcs):
+                    load(data[i])
+                # for name, funcs in self.savers.items():
+                #     funcs[1](data[name])
             except Exception as e:
                 self.console.print(f"[red]Ошибка при загрузке игры: {e}[/]")
                 if not self.debug:
@@ -394,7 +323,6 @@ class Game:
                 self.console.print("[green]Игра загружена[/]")
                 if successcb:
                     successcb()
-                    self.events.dispatch(Events.LOAD_DONE)
                 return
 
         if failcb:
@@ -514,10 +442,102 @@ class Game:
 
         except KeyboardInterrupt:
             c.print("[red]Выход из игры[/]")
+    @action("history", "История команд", "Игра")
+    def action_history(game: Game):
+        c = game.console
+        c.print(f"[green]История команд: [red]{' '.join(c.get_history())}")
+        
+    @action("help", "Показать команды", "Игра")
+    def action_help(game: Game):
+        actions = sorted(game.actions.get_actions(), key=lambda x: x.category)
+        cmdcat = groupby(actions, key=lambda x: x.category)
+        for cat, cmds in cmdcat:
+            game.console.print(f"[b red]{cat}")
+            for cmd in cmds:
+                game.console.print(f" [green]{cmd.name}[/] - {cmd.description}")
+
+    @action("credits", "Авторы и благодарности", "Игра")
+    def action_credits(game: Game):
+        game.show_logo()
+        game.console.print(
+            f"[b black on green]"
+            f"Вас ждет увлекательное путешествие по миру, где Вы               \n"
+            f"будете сражаться с монстрами, выполнять квесты и становиться все \n"
+            f"сильнее и сильнее. Сможете ли Вы стать настоящим героем?         [/][green]\n\n"
+            f"Автор:             [magenta]Kotaz[/]\n"
+            f"Сайт:              [blue u]https://kotazzz.github.io/ [/]\n"
+            f"Репозиторий:       [blue u]https://github.com/kotazzz/krpg [/]\n"
+            f"                   [blue  ]Дайте ⭐ плиз [/]\n"
+            f"Discord:           [blue u]https://discord.gg/FKcURWZsMW [/]\n"
+            f"                   [blue  ]Kotaz#4769 [/]\n"
+            f"Язык:              [magenta]Python 3[/]\n"
+            f"Библиотеки:        [red]rich[/], [red]prompt_toolkit[/], [red]msgpack[/]\n"
+            f"Кол-во строк кода: [magenta]2000+[/]\n\n"
+            f"Лицензия:          [magenta]MIT[/][/]\n\n"
+            f"[bold green]Отдельная благодарность:[/]\n"
+            f"  [green]Никто (извините.)[/]\n"
+            f"  [red]Конец[/]\n"
+        )
+
+    @action("info", "Об текущей игре", "Игра")
+    def action_about(game: Game):
+        datefmt = lambda ts: datetime.fromtimestamp(ts + TIMESHIFT).strftime(
+            "%d.%m.%Y %H:%M"
+        )
+        game.console.print(
+            f"--- [blue]KRPG[/] by [green]KOTAZ[/] ---\n"
+            f"[b green]Подробнее:       [/][magenta]credits[/]\n"
+            f"[green  ]Версия:          [/][yellow]{game.version}[/]\n"
+            f"[green  ]Игрок:           [/][yellow]{game.player.name}[/]\n"
+            f"[green  ]Дата начала:     [/][yellow]{datefmt(game.start_time)}[/]\n"
+            f"[green  ]Дата сохранения: [/][yellow]{datefmt(game.save_time)}[/]\n"
+            f"[green  ]Сид:             [/][yellow]{game.random.seed}[/]\n"
+        )
+
+    @action("guide", "Игровая справка", "Игра")
+    def action_guide(game: Game):
+        passages = {
+            "FAQ": ("Тут пусто :("),
+            "Changelog": ("Мне [red]лень[/] тут что-то писать... :( \n"),
+            "Мне нужна помощь по командам": (
+                "Используйте [green]help[/] или [green]guide[/] для получения справки\n"
+            ),
+            "[blue][AUTO][/] и аргументы": (
+                "В игре все действия используют лишь одну фразу или слово. "
+                "У них нет аргументов или какого либо синтаксиса. "
+                "Если для определенного действия требуются аргументы - "
+                "они будут запрошенные через отдельные поля ввода. Теперь "
+                "вам не надо заучивать сложный синтаксис дял простых действий. "
+                "Хотите ввести аргументы сразу? Разделяйте свои действия пробелом. "
+                "Игра запоминает каждое слово отдельно и как только понадобится что-то "
+                "ввести она сама вставит то, что вы вводили ранее. "
+                "Таким образом вы можете одновременно вводить множество "
+                "команд за раз и они все исполнятся сами\n"
+                "Попробуйте ввести [green]e guide 1[/] и вы выйдете из "
+                "справки и вернетесь, открыв первую страницу"
+            ),
+        }
+        while True:
+            game.console.print("[bold green]Гайды и справка[/]")
+            game.console.print("[green]Выберите секцию (e - Выход)[/]")
+            select = game.console.menu(2, list(passages.items()), "e", lambda x: x[0])
+            if not select:
+                return
+            else:
+                text = wrap(select[1], replace_whitespace=False)
+                game.console.print("\n".join(text))
+
+    @action("exit", "Выйти из игры", "Игра")
+    def action_exit(game: Game):
+        game.state = "exit"
+
+    @action("save", "Сохранить игру", "Игра")
+    def action_save(game: Game):
+        game.events.dispatch(Events.SAVE)
+
+    @action("load", "Загрузить игру", "Игра")
+    def action_load(game: Game):
+        game.events.dispatch(Events.LOAD)
 
     def __repr__(self):
         return "<Game>"
-
-    @action("random", "RAND", "TEST")
-    def random_cmd(game: Game):
-        game.console.print(f"Random: {game.random.random()}")
