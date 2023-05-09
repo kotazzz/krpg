@@ -29,7 +29,19 @@ map {
 
   location forest Лес "Тут можно поискать приключений" {
     action explore "Изучать местность" {
-      print Вы ничего не нашли
+      # print Вы ничего не нашли
+      if "game.clock.in_range(7, 20)" {
+        print {env}
+        set select "game.random.choices(range(2), weights=[0.1, 0.9], k=1)[0]"
+        print {env}
+        if "select==0" {
+          print 0
+        }
+        if "select==1" {
+          print 1
+        }
+      }
+      pass 60
     }
   }
 

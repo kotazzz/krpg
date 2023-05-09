@@ -118,15 +118,14 @@ class Player(Entity):
 
     @action("map", "Информация о карте", "Информация")
     def action_map(game: Game):
-        game.console.print(f"[green b]Вы тут: {game.world.current.name}")
-        tree = Tree("[green]Карта мира[/]")
-        visited = []
+        tree = Tree(f"[green b]{game.world.current.name} [/][blue] <-- Вы тут[/]")
+        visited = [game.world.current]
 
         def populate(tree: Tree, location: Location):
             for loc in game.world.get_road(location):
                 if loc not in visited:
                     visited.append(loc)
-                    sub = tree.add(loc.name)
+                    sub = tree.add(f"[green]{loc.name}")
                     populate(sub, loc)
 
         populate(tree, game.world.current)

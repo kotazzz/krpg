@@ -3,7 +3,7 @@ from __future__ import annotations
 import ast
 from typing import TYPE_CHECKING
 
-from krpg.scenario import Command
+from krpg.scenario import Command, Section, Multiline
 
 if TYPE_CHECKING:
     from krpg.game import Game
@@ -25,28 +25,65 @@ class ExecuterCommand:
 class Base:
     @executer_command("print")
     def builtin_print(game: Game, *args, **kwargs):
+        env = game.executer.env | {"game": game, "env": game.executer.env}
         args = [ast.literal_eval('"""' + arg + '"""') for arg in args]
-        newkwargs = {}
-        argtypes = {"min": float}
-
-        for name, func in argtypes.items():
-            if name in kwargs:
-                newkwargs[name] = func(kwargs[name])
+        #newkwargs = {}
+        #argtypes = {"min": float}
+        #for name, func in argtypes.items():
+        #    if name in kwargs:
+        #        newkwargs[name] = func(kwargs[name])
         text = eval(
-            f"f'''{' '.join(args)}'''", {"game": game, "env": game.executer.env}
+            f"f'''{' '.join(args)}'''", env
         )
-        game.console.print(text, **newkwargs)
+        # game.console.print(text, **newkwargs)
+        game.console.print(text)
 
-    @executer_command("exec")
-    def builtin_exec(game: Game, code):
-        exec(code, {"game": game, "env": game.executer.env})
+    @executer_command("$")
+    def builtin_exec(game: Game, code: str):
+        env = game.executer.env | {"game": game, "env": game.executer.env}
+        exec(code, env)
 
     @executer_command("set")
-    def builtin_exec(game: Game, name, expr):
-        env = game.executer.env
-        env[name] = eval(expr, {"game": game, "env": env})
+    def builtin_exec(game: Game, name: str, expr: str):
+        env = game.executer.env | {"game": game, "env": game.executer.env}
+        game.executer.env[name] = eval(expr, env)
+    
+    @executer_command("if")
+    def builtin_if(game: Game, expr: str, block: Block):
+        env = game.executer.env | {"game": game, "env": game.executer.env}
+        if eval(expr, env):
+            block.run()
 
+class Block:
+    def __init__(self, executer: Executer, data: list[Command | Section | Multiline], parent = None):
+        self.pos = 0
+        self.state = "stop"
+        self.code = data
+        self.executer = executer
+        self.execute = self.executer.create_execute([self])
+        self.parent = parent
+    
+        @executer_command("print_block") # TODO: Goto
+        def print_block_command(game: Game):
+            game.console.print(self)
 
+        self.print_block_command = print_block_command
+        
+    def run(self, from_start: bool = True):
+        if from_start:
+            self.pos = 0
+        self.state = "run"
+        while self.state == "run":
+            pos = self.pos
+            self.execute(self.code[self.pos])
+            if pos == self.pos: # if execute dont changed pos
+                self.pos += 1
+            if self.pos >= len(self.code):
+                break
+        self.state = "stop"
+        
+        
+        
 class Executer:
     def __init__(self, game: Game):
         self.game = game
@@ -72,20 +109,45 @@ class Executer:
         self.game.log.debug(f"Added ExecuterExtension {ext}")
         self.extensions.append(ext)
 
-    def get_all_commands(self):
-        commands = {}
+    def get_all_commands(self) -> dict[str, ExecuterCommand]:
+        commands: dict[str, ExecuterCommand] = {}
         for ext in self.extensions:
             commands |= self.get_executer_additions(ext)
         return commands
 
-    def execute(self, command: Command):
+    def create_execute(self, extensions: list[object]):
+        """
+        Creates new execute method, that works same, but before
+        run it extends extension list and after returns it back
+        """
+        def execute(command: Command):
+            ext = self.extensions
+            self.extensions += extensions 
+            self.execute(command)
+            self.extensions = ext
+        return execute
+    
+    
+    def execute(self, command: Command | Section):
+        """
+        Executes command by name, passing game, args, kwargs
+        and "block" kwarg if command have {}
+        """
         commands = self.get_all_commands()
         if command.name in commands:
             self.game.log.debug(f"Executing {command.name} ")
-            commands[command.name](self.game, *command.args, **command.kwargs)
+            if isinstance(command, Section):
+                kwargs = {"block": self.create_block(command)}
+            else:
+                kwargs = command.kwargs
+            commands[command.name].callback(self.game, *command.args, **kwargs)
         else:
             raise Exception(f"Unknown command: {command.name}")
-
+    
+    def create_block(self, section: Section):
+        block = Block(self, section.children)
+        return block
+    
     def __repr__(self):
         return (
             f"<Executer ext={len(self.extensions)} cmd={len(self.get_all_commands())}>"

@@ -77,13 +77,21 @@ class Attributes:
         self.free = action(self.free, free, set)
 
     @property
-    def max_hp(self):
-        return self.endurance * 10
-
-    @property
     def attack(self):
-        return self.strength * 10
+        return (self.strength * 2) + (self.agility * 0.5) + (self.intelligence * 0.25)
 
     @property
     def defense(self):
-        return self.agility * 10
+        return (self.endurance * 2) + (self.wisdom * 0.5) + (self.intelligence * 0.25)
+
+    @property
+    def parry_chance(self):
+        return (self.agility * 0.1) + (self.perception * 0.05)
+
+    @property
+    def crit_chance(self):
+        return (self.intelligence * 0.1) + (self.perception * 0.05)
+
+    @property
+    def max_hp(self):
+        return (self.endurance * 3) + (self.strength * 2) + (self.wisdom * 0.5) + (self.intelligence * 0.25)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from krpg.actions import Action
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from krpg.events import Events
 
@@ -30,6 +30,7 @@ class Location:
         return f"<Location name={self.id!r}>"
 
 
+
 class World:
     def __init__(self, game: Game):
         self.locations: list[Location] = []
@@ -37,6 +38,8 @@ class World:
         self.current: Location | None = None
         self.game = game
         self.game.add_saver("world", self.save, self.load)
+        self.game.add_actions(self)
+        
 
     def save(self):
         return {loc.id: loc.env for loc in self.locations} | {

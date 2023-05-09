@@ -2,7 +2,7 @@ from __future__ import annotations
 import random
 import time
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from krpg.game import Game
@@ -37,3 +37,16 @@ class RandomManager:
         self.state += 1
         return self.rnd.random()
 
+    def choices(self, options, weights=None, k=1):
+        if weights is None:
+            weights = [1] * len(options)
+        total_weight = sum(weights)
+        choices = []
+        for i in range(k):
+            r = self.random() * total_weight
+            for j, w in enumerate(weights):
+                r -= w
+                if r <= 0:
+                    choices.append(options[j])
+                    break
+        return choices
