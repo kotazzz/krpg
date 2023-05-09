@@ -220,7 +220,7 @@ class Game:
             self.events.listen(attr[3:], cb)
             debug(f"Added [red]listener[/] for {attr[3:]}")
 
-        scenario = open("scenario.krpg").read()
+        scenario = open("scenario.krpg", encoding='utf-8').read()
         self.scenario_hash = f"{zlib.crc32(scenario.encode()):x}"
         self.scenario = parse(scenario)
         debug(f"Loaded scenario with {len(self.scenario.children)} items")
