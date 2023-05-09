@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from krpg.actions import action
 from krpg.attributes import Attributes
+from krpg.bestiary import Meta
 from krpg.inventory import Item, ItemType
 from krpg.scenario import Section
 from krpg.world import Location
@@ -60,6 +61,15 @@ class Builder:
                     obj.set_cost(sell, buy)
             self.game.bestiary.items.append(obj)
 
+    def build_entities(self, entities: Section):
+        for entity in entities.all("entity"):
+            id, name, description = entity.args
+            speciaw = entity.first("speciaw")
+            speciaw = map(int, speciaw.args)
+            attr = Attributes(*speciaw, free=0)
+            meta = Meta(id, name, description, attr)
+            self.game.bestiary.entities.append(meta)
+
     def build_world(self, world: Section):
         locations = world.all("location")
         start = world.first("start")
@@ -99,11 +109,8 @@ class Builder:
 
     def build_action(self, command: Section):
         name, description = command.args
-
+        block = self.game.executer.create_block(command)
         def new_command(game: Game):
-            for cmd in command.children:
-                game.executer.execute(
-                    cmd
-                )  # TODO: Change from line execute to scenario execute
+            block.run()
 
         return action(name, description)(new_command)

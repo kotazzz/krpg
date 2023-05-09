@@ -154,7 +154,7 @@ class Game:
 
     def set_debug(self, value: bool):
         self.debug = value
-        self.console.setlevel(0 if self.debug else 100)
+        self.console.setlevel(0 if self.debug else 30)
 
     def main(self):
         while True:
@@ -193,6 +193,9 @@ class Game:
             self.console.log.debug = func
             with Live(spin, refresh_per_second=20) as live:
                 self.init_game()
+                func('Завершение инициализации...')
+                func('Подготовка...')
+                func('⭐ Игра загружена')
             self.console.log.debug = _reserve
         else:
             self.init_game()

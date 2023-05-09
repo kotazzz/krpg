@@ -53,7 +53,7 @@ class KrpgConsole:
             5: rich("[bold magenta]>>>>> [/]", console=self.console),
         }
     def get_history(self):
-        return [repr(i) if " " in i else i for i in self.history]
+        return [repr(i) if " " in i or not i else i for i in self.history]
     
     def setlevel(self, level):
         self.handler.level = level
@@ -88,8 +88,10 @@ class KrpgConsole:
             while True:
                 user = self.session.prompt(text, **kwargs)
                 if raw:
+                    self.history.append(user)
                     return user
                 if not user and allow_empty:
+                    self.history.append("")
                     return ""
                 elif user:
                     try:
