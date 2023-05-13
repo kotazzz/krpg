@@ -1,3 +1,7 @@
+# KRPG
+
+Моя собственная игрушка. Текстовая рпг игра на python
+
 <p align="center">
   <a href="" rel="noopener">
  <img width=500px src="images/logo.jpg" alt="Project logo"></a>
