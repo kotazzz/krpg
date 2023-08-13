@@ -45,7 +45,7 @@ class KrpgConsole:
         self.queue = []
         self.history = []
 
-        self.levels = {
+        self.levels: dict[int, ANSI] = {
             1: rich("[bold red]> [/]"),
             2: rich("[bold yellow]>> [/]", console=self.console),
             3: rich("[bold green]>>> [/]", console=self.console),
