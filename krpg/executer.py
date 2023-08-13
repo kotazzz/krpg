@@ -44,7 +44,7 @@ class Base:
         exec(code, env)
 
     @executer_command("set")
-    def builtin_exec(game: Game, name: str, expr: str):
+    def builtin_set(game: Game, name: str, expr: str):
         env = game.executer.env | {"game": game, "env": game.executer.env}
         game.executer.env[name] = eval(expr, env)
     

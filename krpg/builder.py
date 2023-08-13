@@ -31,7 +31,9 @@ class Builder:
 
     def build(self):
         self.build_items(self.scenario.first("items"))
+        self.build_entities(self.scenario.first("entities"))
         self.build_world(self.scenario.first("map"))
+        
 
     def build_items(self, items: Section):
         item_list = items.all("item")
@@ -64,10 +66,15 @@ class Builder:
     def build_entities(self, entities: Section):
         for entity in entities.all("entity"):
             id, name, description = entity.args
+            self.debug(f"  Creating {id}:{name}")
             speciaw = entity.first("speciaw")
             speciaw = map(int, speciaw.args)
+            if money:=entity.first("money"):
+                money = int(money.args[0])
+            else:
+                money = 0
             attr = Attributes(*speciaw, free=0)
-            meta = Meta(id, name, description, attr)
+            meta = Meta(id, name, description, attr, money)
             self.game.bestiary.entities.append(meta)
 
     def build_world(self, world: Section):
@@ -75,8 +82,8 @@ class Builder:
         start = world.first("start")
         links = world.all("link")
         self.debug(f"  Found {len(locations)} locations")
-        self.debug(f"  Found start={start}")
         self.debug(f"  Found {len(links)} links")
+        self.debug(f"  Found start={start.args[0]}")
 
         for location in locations:
             loc = self.build_location(location)

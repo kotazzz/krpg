@@ -6,6 +6,7 @@ import random
 from textwrap import wrap
 import msgpack
 import zlib
+from krpg.battle import BattleManager
 from krpg.bestiary import Bestiary
 from krpg.clock import Clock
 from krpg.console import KrpgConsole
@@ -241,6 +242,9 @@ class Game:
         self.presenter = Presenter(self)
         debug(f"Init [green]Presenter[/]: {self.presenter}")
 
+        self.battle_manager = BattleManager(self)
+        debug(f"Init [green]BattleManager[/]: {self.battle_manager}")
+
         self.bestiary = Bestiary(self)
         debug(f"Init [green]Bestiary[/]: {self.bestiary}")
         
@@ -278,7 +282,8 @@ class Game:
             add_message(save, f"Saving {name}"),
             add_message(load, f"Loading {name}"),
         )
-
+    def on_dead(self):
+        self.events.dispatch(Events.STATE_CHANGE, "dead")
     def on_state_change(self, state):
         self.state = state
 
@@ -436,7 +441,7 @@ class Game:
             else:
                 self.events.dispatch(Events.COMMAND, command=select)
         try:
-            while self.state != "exit":
+            while self.state == "playing":
                 self.console.set_bar(f"[yellow]{self.player.name}[/]")
                 actions = self.actions.get_actions()
                 cmds_data = {cmd.name: cmd.description for cmd in actions}

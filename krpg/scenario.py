@@ -19,7 +19,7 @@ class Section:
     def as_command(self):
         return Command(self.name, self.args)
 
-    def first(self, name, section=True, command=True):
+    def first(self, name, section=True, command=True) -> Section | Command | None:
         for child in self.children:
             if child.name == name:
                 if isinstance(child, Section) and section:

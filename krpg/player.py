@@ -58,15 +58,28 @@ class Player(Entity):
             self.game.events.dispatch(Events.REMOVE_FREE, **kw)
 
     def heal(self, amount):
+        if amount <= 0:
+            return self.damage(-amount)
         amount = min(amount, self.attrib.max_hp - self.hp)
         self.hp += amount
         self.game.events.dispatch(Events.HEAL, amount=amount)
-
+        
+    def damage(self, amount):
+        if amount <= 0:
+            return self.heal(-amount)
+        amount = min(amount, self.hp)
+        self.hp -= amount
+        self.game.events.dispatch(Events.DAMAGE, amount=amount)
+        if self.hp <= 0:
+            self.game.events.dispatch(Events.DEAD)
+            
     def apply(self, item: Item):
         effects = item.effects
         for name, val in effects.items():
             if name == "hp":
                 self.heal(val)
+            else:
+                raise ValueError(f"Unknown effect {name}")
 
     @executer_command("add_free")
     def add_free_command(game: Game, free):
