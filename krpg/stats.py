@@ -22,6 +22,7 @@ class StatsManager:
             "r": ["Потрачено денег", 0],
             "m": ["Перемещений", 0],
             "s": ["Сохранений", 0],
+            "k": ["Убийств", 0],
         }
         game.add_saver("stats", self.save, self.load)
         game.add_actions(self)
@@ -53,6 +54,8 @@ class StatsManager:
         self.counters["m"][1]+= 1
     def on_save(self):
         self.counters["s"][1]+= 1
+    def on_kill(self, monster_id):
+        self.counters["k"][1]+= 1
     def __repr__(self) -> str:
         return f"<StatsManger>"
     

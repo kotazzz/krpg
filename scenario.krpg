@@ -29,17 +29,31 @@ map {
 
   location forest Лес "Тут можно поискать приключений" {
     action explore "Изучать местность" {
-      # print Вы ничего не нашли
-      if "game.clock.in_range(7, 20)" {
+      set res "game.clock.in_range(7, 20)"
+      if "res" {
+        set select "game.random.choices(range(4), weights=[0.1,0.1,0.2,0.6], k=1)[0]"
         print {env}
-        set select "game.random.choices(range(2), weights=[0.1, 0.9], k=1)[0]"
-        print {env}
+        # 0 - найти монстра
+        # 1 - найти предмет
+        # 2 - найти монеты
+        # 3 - ничего не найти
         if "select==0" {
-          print 0
+          fight_list goblin blue_goblin
         }
         if "select==1" {
-          print 1
+          print Вы ничего не нашли # TODO: add items
         }
+        if "select==2" {
+          set m "game.random.randint(1, 10)"
+          print Вы нашли {m} монет
+          $ game.player.add_money(m)
+        }
+        if "select==3" {
+          print Вы ничего не нашли
+        }
+      }
+      if "not res" {
+
       }
       pass 60
     }
@@ -71,8 +85,10 @@ items {
 entities {
   entity goblin "Гоблин" "Неприятный парень" {
     speciaw 1 1 1 1 1 1 1
+    money 10
   }
   entity blue_goblin "Синий гоблин" "Гоблин побольше" {
-    speciaw 2 1 1 1 1 1 1
+    speciaw 3 2 1 2 2 2 1
+    money 25
   }
 }

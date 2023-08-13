@@ -1,4 +1,7 @@
 from __future__ import annotations
+import bisect
+import itertools
+import math
 import random
 import time
 
@@ -36,17 +39,22 @@ class RandomManager:
     def random(self):
         self.state += 1
         return self.rnd.random()
-
+    def randint(self, a, b):
+        self.state += 1
+        return math.floor(self.rnd.random() * (b - a + 1)) + a
+    
+    def choice(self, options):
+        # use only self.random() for save state
+        return options[math.floor(self.random() * len(options))]
+    
     def choices(self, options, weights=None, k=1):
-        if weights is None:
-            weights = [1] * len(options)
-        total_weight = sum(weights)
-        choices = []
-        for i in range(k):
-            r = self.random() * total_weight
-            for j, w in enumerate(weights):
-                r -= w
-                if r <= 0:
-                    choices.append(options[j])
-                    break
-        return choices
+        # options - list of items
+        # weights - list of weights for items. If None, the weights are assumed to be equal.
+        # k - number of items to choose from options
+        # bigger weights - bigger chance to choose item
+        # allowed call only self.random() for save state of random
+        n = len(options)
+        weights = weights or [1] * len(options)
+        cum_weights = list(itertools.accumulate(weights))
+        total = cum_weights[-1] + 0.0   # convert to float
+        return [options[bisect.bisect(cum_weights, self.random() * total)] for i in range(k)]

@@ -33,10 +33,10 @@ class Presenter:
             full_stats = ""
             for c, stat in stats:
                 val = getattr(attrib, stat)
-                full_stats += f"[b {c}]{stat[0].upper()}{val}"
+                full_stats += f"[b {c}]{stat[0].upper():>2}{val}"
 
             if free:
-                return full_stats + f"   [b white]F{entity.attrib.free}[/]"
+                return full_stats + f"   [b white]F{entity.attrib.free:>2}[/]"
             return full_stats
 
         if isinstance(entity, Entity):
@@ -68,7 +68,7 @@ class Presenter:
         ml = max([len(f"{e.attrib.max_hp:.2f}") for e in entities])
 
         for e in entities:
-            name = f"[bold white]{e.name:<{nl}}[0 white]:"
+            name = f"[bold white]{e.name:<{nl}}[white]:"
             hp = f"{self.bar(e.hp, e.attrib.max_hp)} [cyan]HP={e.hp:<{hl}.2f}/{e.attrib.max_hp:<{ml}.2f}"
             attack = f"[red]A={e.attrib.attack:<{al}.2f} [blue]D={e.attrib.defense:<{dl}.2f}[/]"
             stats = self.get_stats(e)

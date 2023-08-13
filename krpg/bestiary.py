@@ -8,11 +8,12 @@ if TYPE_CHECKING:
 from krpg.inventory import Item
 
 class Meta:
-    def __init__(self, id: str, name: str,description: str, attributes: Attributes):
+    def __init__(self, id: str, name: str,description: str, attributes: Attributes, money: int = 0):
         self.id = id
         self.name = name
         self.description = description
         self.attributes = attributes
+        self.money = money
         
 class Bestiary:
     def __init__(self, game: Game):
@@ -35,6 +36,7 @@ class Bestiary:
     
     def create_monster(self, meta: Meta):
         entity = Entity(meta.name)
+        entity.money = meta.money
         entity.attrib.load(meta.attributes.save())
         return entity
 

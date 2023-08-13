@@ -21,7 +21,9 @@ class Events:
     ADD_FREE = "add_free" # amount: int, new_balance: int
     REMOVE_FREE = "remove_free" # amount: int, new_balance: int
     HEAL = "heal" # amount: int
-
+    DAMAGE = "damage" # amount: int
+    DEAD = "dead" # -
+    
     # world.py
     WORLD_ITEM_TAKE = "world_item_take" # item_id: str, remain: int
     WORLD_ITEM_DROP = "world_item_drop" # item_id: str, count: int
@@ -30,6 +32,8 @@ class Events:
     # settings.py
     SETTING_CHANGE = "setting_change" # setting: str, value: Any
 
+    # battle.py
+    KILL = "kill" # monster_id: str
 
 class EventHandler:
     def __init__(self, locked: bool = False):
