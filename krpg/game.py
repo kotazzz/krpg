@@ -11,6 +11,7 @@ from krpg.bestiary import Bestiary
 from krpg.clock import Clock
 from krpg.console import KrpgConsole
 from krpg.actions import ActionManager, action
+from krpg.diary import Diary
 from krpg.events import EventHandler
 from krpg.presenter import Presenter
 from krpg.scenario import parse
@@ -239,6 +240,9 @@ class Game:
         self.player = Player(self)
         debug(f"Init [green]Player[/]: {self.player}")
 
+        self.diary = Diary(self)
+        debug(f"Init [green]Diary[/]: {self.diary}")
+        
         self.presenter = Presenter(self)
         debug(f"Init [green]Presenter[/]: {self.presenter}")
 
