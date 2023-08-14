@@ -162,6 +162,8 @@ class KrpgConsole:
         title: str = None,
         empty: str = "Ничего нет",
     ):
+        if not isinstance(variants, list):
+            variants = list(variants)
         view = view or str
         data = {str(i): view(j) for i, j in enumerate(variants, 1)}
         if exit_cmd:

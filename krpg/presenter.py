@@ -74,7 +74,7 @@ class Presenter:
             stats = self.get_stats(e)
             console.print(f"{stats} {name} {attack} {hp}")
 
-    def show_item(self, slot: Slot, show_amount=True):
+    def show_item(self, slot: Slot, show_amount=True, additional: callable = None):
         game = self.game
 
         if slot.empty:
@@ -85,6 +85,8 @@ class Presenter:
             if show_amount:
                 text += f"[white]{slot.amount}x"
             text += f"[green]{item.name}[/] "
+            if additional:
+                text += additional(item)
             return text
 
     def presence_item(self, item: Item):

@@ -71,7 +71,10 @@ npcs {
       action trade "Торговать" {
         set res "game.clock.in_range(7, 20)"
         if "res" {
-          print Торговля
+          trade {
+            sell berry
+            buy hp_bottle
+          }
         }
         if "not res" {
           print Торговец сейчас не работает
