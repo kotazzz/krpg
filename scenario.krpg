@@ -63,6 +63,23 @@ map {
   link city forest
 } 
 
+npcs {
+  npc trader "Торговец" "Продает всякую всячину" {
+    init base
+    location city
+    state base {
+      action trade "Торговать" {
+        set res "game.clock.in_range(7, 20)"
+        if "res" {
+          print Торговля
+        }
+        if "not res" {
+          print Торговец сейчас не работает
+        }
+      }
+    }
+  }
+}
 items {
   #             s  p  e  c  i  a  w
   # wear SLOT SPECIAW
@@ -79,6 +96,10 @@ items {
     use hp 100
     stack 5
     cost 1 10
+  }
+  item berry "Ягода" "Вкусная ягодка" {
+    stack 10
+    cost 3 4
   }
 }
 

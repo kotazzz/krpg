@@ -13,6 +13,7 @@ from krpg.console import KrpgConsole
 from krpg.actions import ActionManager, action
 from krpg.diary import Diary
 from krpg.events import EventHandler
+from krpg.npc import NpcManager
 from krpg.presenter import Presenter
 from krpg.scenario import parse
 from krpg.encoder import Encoder
@@ -258,6 +259,9 @@ class Game:
         self.clock = Clock(self)
         debug(f"Init [green]Clock[/]: {self.clock}")
 
+        self.npc_manager = NpcManager(self)
+        debug(f"Init [green]NpcManager[/]: {self.npc_manager}")
+        
         self.world = World(self)
         debug(f"Init [green]World[/]: {self.world}")
 
