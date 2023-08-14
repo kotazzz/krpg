@@ -55,10 +55,11 @@ class Base:
             block.run()
 
 class Block:
-    def __init__(self, executer: Executer, data: list[Command | Section | Multiline], parent = None):
+    def __init__(self, executer: Executer, section: Section, parent = None):
         self.pos = 0
         self.state = "stop"
-        self.code = data
+        self.section = section
+        self.code: list[Command | Section | Multiline] = section.children
         self.executer = executer
         self.execute = self.executer.create_execute([self])
         self.parent = parent
@@ -147,7 +148,7 @@ class Executer:
             raise Exception(f"Unknown command: {command.name}")
     
     def create_block(self, section: Section):
-        block = Block(self, section.children)
+        block = Block(self, section)
         return block
     
     def __repr__(self):

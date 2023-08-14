@@ -38,6 +38,11 @@ class Slot:
         self.id = None
         self.amount = 0
 
+    def set(self, id, amount=1):
+        self.id = id
+        self.amount = amount
+        return self
+    
     def save(self):
         return None if self.empty else (self.id, self.amount)
 
