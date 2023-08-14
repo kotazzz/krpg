@@ -12,17 +12,16 @@ class Record:
     def __init__(self, day: int, text: str):
         self.day = day
         self.text = text
-
 class Diary:
     def __init__(self, game: Game):
+        self.records: list[Record] = [] # (Day #, text)
         self.game = game
         self.game.add_saver("diary", self.save, self.load)
         self.game.add_actions(self)
-        self.records: list[Record] = [] # (Day #, text)
     def save(self) -> dict:
-        return [record.__dict__ for record in self.records]
+        return [(record.day, record.text) for record in self.records]
     def load(self, data: dict):
-        self.records = [Record(**record) for record in data]
+        self.records = [Record(*record) for record in data]
     def present(self, record:Record):
         text = record.text.replace("\n", " ")
         text =  text[:10] + '...' if len(text) > 10 else text
@@ -69,9 +68,16 @@ class Diary:
                     continue
                 elif op == "e":
                     linenum = console.prompt("[green]Введите номер строки: ")
+                    if not linenum.isdigit() or int(linenum) >= len(game.diary.records[int(res)].text.split("\n")):
+                        continue
                     line = console.prompt("[green]Введите текст строки: ")
+                    if line == "e":
+                        continue
                     text = game.diary.records[int(res)].text.split("\n")
-                    text[int(linenum)] = line
+                    if line == "":
+                        text.pop(int(linenum))
+                    else:
+                        text[int(linenum)] = line
                     game.diary.records[int(res)].text = "\n".join(text)
                     
                 elif op == "a":
@@ -81,7 +87,8 @@ class Diary:
                     game.diary.records.pop(int(res))
             else:
                 console.print("[red]Неверная команда")
-                    
+    def __repr__(self) -> str:
+        return f"<Diary rec={len(self.records)}>"    
                     
                 
                 

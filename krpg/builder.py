@@ -4,6 +4,7 @@ from krpg.actions import action
 from krpg.attributes import Attributes
 from krpg.bestiary import Meta
 from krpg.inventory import Item, ItemType
+from krpg.npc import Npc
 from krpg.scenario import Section
 from krpg.world import Location
 
@@ -32,6 +33,7 @@ class Builder:
     def build(self):
         self.build_items(self.scenario.first("items"))
         self.build_entities(self.scenario.first("entities"))
+        self.build_npc(self.scenario.first("npcs"))
         self.build_world(self.scenario.first("map"))
         
 
@@ -66,7 +68,7 @@ class Builder:
     def build_entities(self, entities: Section):
         for entity in entities.all("entity"):
             id, name, description = entity.args
-            self.debug(f"  Creating {id}:{name}")
+            self.debug(f"  Assembling {id}:{name}")
             speciaw = entity.first("speciaw")
             speciaw = map(int, speciaw.args)
             if money:=entity.first("money"):
@@ -77,6 +79,19 @@ class Builder:
             meta = Meta(id, name, description, attr, money)
             self.game.bestiary.entities.append(meta)
 
+    def build_npc(self, npcs: Section):
+        for npc in npcs.all("npc"):
+            id, name, description = npc.args
+            self.debug(f"  Creating {id}:{name}")
+            init_state = npc.first("init").args[0]
+            location = npc.first("location").args[0]
+            actions = {}
+            for state in npc.all("state"):
+                actions[state.args[0]] = []
+                for act in state.all("action"):
+                    actions[state.args[0]].append(self.build_action(act))
+            new_npc = Npc(id, name, description, init_state, location, actions)
+            self.game.npc_manager.npcs.append(new_npc)
     def build_world(self, world: Section):
         locations = world.all("location")
         start = world.first("start")
