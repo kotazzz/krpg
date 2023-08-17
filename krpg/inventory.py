@@ -18,7 +18,9 @@ class ItemType(Enum):
 
     def description(itemtype):
         """Describe the item type"""
-        return {
+        return ITEM_DESCRIPTIONS[itemtype]
+    
+ITEM_DESCRIPTIONS = {
             ItemType.ITEM: "Предметы",
             ItemType.HELMET: "Шлем",
             ItemType.CHESTPLATE: "Нагрудник",
@@ -29,9 +31,44 @@ class ItemType(Enum):
             ItemType.WEAPON: "Оружие",
             ItemType.RING: "Кольцо",
             ItemType.AMULET: "Амулет",
-        }[itemtype]
+        }
+class Item:
+    def __init__(self, id: str, name: str, description: str):
+        self.id = id
+        self.name = name
+        self.description = description
+        self.stack: int = 1
+        self.type: ItemType = ItemType.ITEM
+        self.attributes: Attributes = Attributes()
+        self.effects: dict[str, int] = {}
+        self.sell: int = 0
+        self.cost: int = -1
 
+    def set_stack(self, amount):
+        self.stack = amount
 
+    def set_wear(self, type: ItemType, attrib: Attributes):
+        self.type = type
+        self.attributes = attrib
+
+    def set_use(self, action, amount):
+        self.effects[action] = amount
+
+    def set_cost(self, sell, cost):
+        self.sell = sell
+        self.cost = cost
+
+    @property
+    def is_wearable(self):
+        return self.attributes.total != 0
+
+    @property
+    def is_usable(self):
+        return bool(self.effects)
+
+    def __repr__(self):
+        return f"<Item {self.id!r}>"
+    
 class Slot:
     def __init__(self, type: ItemType = ItemType.ITEM):
         self.type = type
@@ -136,39 +173,4 @@ class Inventory:
         return res
 
 
-class Item:
-    def __init__(self, id: str, name: str, description: str):
-        self.id = id
-        self.name = name
-        self.description = description
-        self.stack: int = 1
-        self.type: ItemType = ItemType.ITEM
-        self.attributes: Attributes = Attributes()
-        self.effects: dict[str, int] = {}
-        self.sell: int = 0
-        self.cost: int = -1
 
-    def set_stack(self, amount):
-        self.stack = amount
-
-    def set_wear(self, type: ItemType, attrib: Attributes):
-        self.type = type
-        self.attributes = attrib
-
-    def set_use(self, action, amount):
-        self.effects[action] = amount
-
-    def set_cost(self, sell, cost):
-        self.sell = sell
-        self.cost = cost
-
-    @property
-    def is_wearable(self):
-        return self.attributes.total != 0
-
-    @property
-    def is_usable(self):
-        return bool(self.effects)
-
-    def __repr__(self):
-        return f"<Item {self.id!r}>"

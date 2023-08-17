@@ -32,7 +32,6 @@ map {
       set res "game.clock.in_range(7, 20)"
       if "res" {
         set select "game.random.choices(range(4), weights=[0.1,0.1,0.2,0.6], k=1)[0]"
-        print {env}
         # 0 - найти монстра
         # 1 - найти предмет
         # 2 - найти монеты
@@ -53,7 +52,7 @@ map {
         }
       }
       if "not res" {
-
+        print Вы ничего не нашли
       }
       pass 60
     }

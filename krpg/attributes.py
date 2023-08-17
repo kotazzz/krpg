@@ -1,17 +1,25 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
+
+
+
+if TYPE_CHECKING:
+    from krpg.entity import Entity
+
 
 
 class Attributes:
     def __init__(
         self,
-        strength=0,
-        wisdom=0,
-        endurance=0,
-        agility=0,
-        intelligence=0,
-        charisma=0,
-        perception=0,
-        free=0,
+        strength: int=0,
+        wisdom: int=0,
+        endurance: int=0,
+        agility: int=0,
+        intelligence: int=0,
+        charisma: int=0,
+        perception: int=0,
+        free: int=0,
+        holder: Entity = None,
     ):
         self.strength = strength  # Сила
         self.wisdom = wisdom  # Мудрость
@@ -22,6 +30,8 @@ class Attributes:
         self.perception = perception  # Восприятие
 
         self.free = free
+        
+        self.holder = holder
 
     @property
     def total(self):
@@ -47,6 +57,8 @@ class Attributes:
         self.intelligence = data[4]
         self.charisma = data[5]
         self.perception = data[6]
+        self.free = data[7]
+        
 
     def update(
         self,
@@ -76,22 +88,4 @@ class Attributes:
         self.perception = action(self.perception, perception, set)
         self.free = action(self.free, free, set)
 
-    @property
-    def attack(self):
-        return (self.strength * 2) + (self.agility * 0.5) + (self.intelligence * 0.25)
-
-    @property
-    def defense(self):
-        return (self.endurance * 2) + (self.wisdom * 0.5) + (self.intelligence * 0.25)
-
-    @property
-    def parry_chance(self):
-        return (self.agility * 0.1) + (self.perception * 0.05)
-
-    @property
-    def crit_chance(self):
-        return (self.intelligence * 0.1) + (self.perception * 0.05)
-
-    @property
-    def max_hp(self):
-        return (self.endurance * 3) + (self.strength * 2) + (self.wisdom * 0.5) + (self.intelligence * 0.25)
+    

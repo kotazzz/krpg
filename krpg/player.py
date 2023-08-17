@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class Player(Entity):
     def __init__(self, game: Game):
         self.game = game
-        super().__init__("Player")
+        super().__init__(game, "Player")
         self.game.add_saver("player", self.save, self.load)
         self.game.add_actions(self)
         self.game.executer.add_extension(self)
@@ -57,8 +57,8 @@ class Player(Entity):
     def add_free(self, amount):
         if not amount:
             return
-        self.attrib.free += amount
-        kw = {"amount": amount, "new_balance": self.attrib.free}
+        self.attributes.free += amount
+        kw = {"amount": amount, "new_balance": self.attributes.free}
         if amount > 0:
             self.game.events.dispatch(Events.ADD_FREE, **kw)
         else:
@@ -73,7 +73,7 @@ class Player(Entity):
     def heal(self, amount):
         if amount <= 0:
             return self.damage(-amount)
-        amount = min(amount, self.attrib.max_hp - self.hp)
+        amount = min(amount, self.max_hp - self.hp)
         self.hp += amount
         self.game.events.dispatch(Events.HEAL, amount=amount)
     
@@ -280,7 +280,7 @@ class Player(Entity):
     def action_upgrade(game: Game):
         # [red]S[/], [green]P[/], [blue]E[/], [yellow]C[/], [magenta]I[/], [cyan]A[/], [white]W[/]
         c = game.console
-        a = game.player.attrib
+        a = game.player.attributes
         stats: tuple[str, str, str] = [
             ("red", "strength", "сила"),
             ("green", "perception", "восприятие"),
