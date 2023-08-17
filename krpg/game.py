@@ -299,6 +299,7 @@ class Game:
         self.save_time = self.timestamp()
         data = {name: funcs[0]() for name, funcs in self.savers.items()}
         # EXPEREMENTAL
+        self.log.debug(f"Data: {data}")
         data = [i[1] for i in sorted(data.items(), key=lambda item: item[0])]
         bdata = msgpack.packb(data)
         zdata = zlib.compress(bdata, level=9)

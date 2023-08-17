@@ -19,8 +19,8 @@ class Presenter:
         symlen = int(value / maximum * width) if maximum else 0
         return f"[white][[{color}]{'|'*symlen}{' '*(width-symlen)}[white]][/]"
 
-    def get_stats(self, entity: Entity | Item):
-        def _get(attrib: Attributes, free: bool):
+    def get_stats(self, source: Entity | Item):
+        def _get(entity: Entity, free: bool):
             stats: tuple[str, str] = [
                 ("red", "strength"),
                 ("green", "perception"),
@@ -32,29 +32,29 @@ class Presenter:
             ]
             full_stats = ""
             for c, stat in stats:
-                val = getattr(attrib, stat)
+                val = getattr(entity, stat)
                 full_stats += f"[b {c}]{stat[0].upper():>2}{val}"
 
             if free:
-                return full_stats + f"   [b white]F{entity.attrib.free:>2}[/]"
+                return full_stats + f"   [b white]F{entity.attributes.free:>2}[/]"
             return full_stats
 
-        if isinstance(entity, Entity):
-            return _get(entity.attrib, True)
-        return _get(entity.attributes, False)
+        if isinstance(source, Entity):
+            return _get(source, True)
+        return _get(source.attributes, False)
 
     def presense(self, e: Entity, minimal=False):
         console = self.game.console
 
         if minimal:
             name = f"[bold white]{e.name}[/][white]:"
-            hp = f"{self.bar(e.hp, e.attrib.max_hp)} [cyan]HP={e.hp:.2f}/{e.attrib.max_hp:.2f}"
-            attack = f"[red]A={e.attrib.attack:.2f} [blue]D={e.attrib.defense:.2f}[/]"
+            hp = f"{self.bar(e.hp, e.max_hp)} [cyan]HP={e.hp:.2f}/{e.max_hp:.2f}"
+            attack = f"[red]A={e.attack:.2f} [blue]D={e.defense:.2f}[/]"
             console.print(f"{name} {attack} {hp}")
         else:
             stats = (
-                f"[cyan]HP={e.hp:.2f}/{e.attrib.max_hp:.2f} {self.bar(e.hp, e.attrib.max_hp, 'green')}\n"
-                f"[red]A={e.attrib.attack:.2f} [blue]D={e.attrib.defense:.2f}\n"
+                f"[cyan]HP={e.hp:.2f}/{e.max_hp:.2f} {self.bar(e.hp, e.max_hp, 'green')}\n"
+                f"[red]A={e.attack:.2f} [blue]D={e.defense:.2f}\n"
                 + self.get_stats(e)
             )
             console.print(f"[bold white]{e.name}[/]\n{stats}")
@@ -62,15 +62,15 @@ class Presenter:
     def presenses(self, entities: list[Entity]):
         console = self.game.console
         nl = max([len(e.name) for e in entities])
-        al = max([len(f"{e.attrib.attack:.2f}") for e in entities])
-        dl = max([len(f"{e.attrib.defense:.2f}") for e in entities])
+        al = max([len(f"{e.attack:.2f}") for e in entities])
+        dl = max([len(f"{e.defense:.2f}") for e in entities])
         hl = max([len(f"{e.hp:.2f}") for e in entities])
-        ml = max([len(f"{e.attrib.max_hp:.2f}") for e in entities])
+        ml = max([len(f"{e.max_hp:.2f}") for e in entities])
 
         for e in entities:
             name = f"[bold white]{e.name:<{nl}}[white]:"
-            hp = f"{self.bar(e.hp, e.attrib.max_hp)} [cyan]HP={e.hp:<{hl}.2f}/{e.attrib.max_hp:<{ml}.2f}"
-            attack = f"[red]A={e.attrib.attack:<{al}.2f} [blue]D={e.attrib.defense:<{dl}.2f}[/]"
+            hp = f"{self.bar(e.hp, e.max_hp)} [cyan]HP={e.hp:<{hl}.2f}/{e.max_hp:<{ml}.2f}"
+            attack = f"[red]A={e.attack:<{al}.2f} [blue]D={e.defense:<{dl}.2f}[/]"
             stats = self.get_stats(e)
             console.print(f"{stats} {name} {attack} {hp}")
 

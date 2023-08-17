@@ -1,10 +1,10 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from krpg.attributes import Attributes
 from krpg.entity import Entity
 
 if TYPE_CHECKING:
     from krpg.game import Game
+    from krpg.attributes import Attributes
 from krpg.inventory import Item
 
 class Meta:
@@ -17,6 +17,7 @@ class Meta:
         
 class Bestiary:
     def __init__(self, game: Game):
+        self.game = game
         self.entities: list[Meta] = []
         self.items: list[Item] = []
 
@@ -35,9 +36,9 @@ class Bestiary:
         raise Exception(f"Monster {id} not found")
     
     def create_monster(self, meta: Meta):
-        entity = Entity(meta.name)
+        entity = Entity(self.game, meta.name)
         entity.money = meta.money
-        entity.attrib.load(meta.attributes.save())
+        entity.attributes.load(meta.attributes.save())
         return entity
 
     def __repr__(self):

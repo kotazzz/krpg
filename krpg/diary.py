@@ -52,7 +52,7 @@ class Diary:
             },)
             if res == "a":
                 day = game.clock.days
-                text = console.prompt("[green]Введите текст записи: ")
+                text = console.prompt("[green]Введите текст записи: ", raw=True)
                 game.diary.records.append(Record(day, text))
             elif res == "e":
                 break

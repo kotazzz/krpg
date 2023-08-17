@@ -28,20 +28,18 @@ class BattleManager:
         # Rule format: ([...expressions (str)], action, weight)
         rules = [
             # If enemy have 50%+ hp, then attack
-            (["ehp / enemy.max_hp >= 0.5"], 0, 1),
+            (["enemy.hp / enemy.max_hp >= 0.5"], 0, 1),
             # If enemy have 50%- hp, then defend
-            (["ehp / enemy.max_hp < 0.5"], 1, 1),
+            (["enemy.hp / enemy.max_hp < 0.5"], 1, 1),
             # If player have 50%+ hp, then attack
-            (["php / player.max_hp >= 0.5"], 0, 0.5),
+            (["player.hp / player.max_hp >= 0.5"], 0, 0.5),
             # If player have 50%- hp, then attack
-            (["php / player.max_hp < 0.5"], 0, 1),
+            (["player.hp / player.max_hp < 0.5"], 0, 1),
         ]
         results: list[tuple[int, int]] = []
         env = {
-            "player": player.attrib,
-            "enemy": enemy.attrib,
-            "php": player.hp,
-            "ehp": enemy.hp,
+            "player": player,
+            "enemy": enemy,
         }
         for rule in rules:
             if all(eval(expr, env) for expr in rule[0]):
@@ -82,22 +80,22 @@ class BattleManager:
             ], view=lambda x: x[0])[1]
             m_select = self.predict(player, monster)
             if select == 0:
-                damage = player.attrib.attack*spread() - monster.attrib.defense*0.1*spread()
+                damage = player.attack*spread() - monster.defense*0.1*spread()
                 if m_select == 1:
-                    damage -= monster.attrib.defense*spread()
+                    damage -= monster.defense*spread()
                 damage = round(damage, 2)
                 monster.hp -= damage
                 console.print(f"[green]Вы нанесли [red]{monster.name} [cyan]{damage} [green]урона")
             if m_select == 0:
-                damage = monster.attrib.attack*spread() - player.attrib.defense*0.1*spread()
+                damage = monster.attack*spread() - player.defense*0.1*spread()
                 if select == 1:
-                    damage -= player.attrib.defense*spread()
+                    damage -= player.defense*spread()
                 damage = round(damage, 2)
                 player.damage(damage)
                 console.print(f"[red]{monster.name} [green]нанес вам [cyan]{damage} [green]урона")
             if select == 2:
                 # chance 30% + 1/100 of player agility - 1/20 of monster agility
-                chance = 0.3 + player.attrib.agility/100 - monster.attrib.agility/20
+                chance = 0.3 + player.attributes.agility/100 - monster.attributes.agility/20
                 if self.game.random.random() < chance:
                     console.print("[bold green]Вы убежали")
                     break
