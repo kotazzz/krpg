@@ -7,14 +7,23 @@ if TYPE_CHECKING:
     from krpg.attributes import Attributes
 from krpg.inventory import Item
 
+
 class Meta:
-    def __init__(self, id: str, name: str,description: str, attributes: Attributes, money: int = 0):
+    def __init__(
+        self,
+        id: str,
+        name: str,
+        description: str,
+        attributes: Attributes,
+        money: int = 0,
+    ):
         self.id = id
         self.name = name
         self.description = description
         self.attributes = attributes
         self.money = money
-        
+
+
 class Bestiary:
     def __init__(self, game: Game):
         self.game = game
@@ -28,13 +37,13 @@ class Bestiary:
             if item.id == id:
                 return item
         raise Exception(f"Item {id} not found")
-    
+
     def get_entity(self, id: str):
         for meta in self.entities:
             if meta.id == id:
                 return self.create_monster(meta)
         raise Exception(f"Monster {id} not found")
-    
+
     def create_monster(self, meta: Meta):
         entity = Entity(self.game, meta.name)
         entity.money = meta.money

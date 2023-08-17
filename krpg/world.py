@@ -30,7 +30,6 @@ class Location:
         return f"<Location name={self.id!r}>"
 
 
-
 class World:
     def __init__(self, game: Game):
         self.locations: list[Location] = []
@@ -39,7 +38,6 @@ class World:
         self.game = game
         self.game.add_saver("world", self.save, self.load)
         self.game.add_actions(self)
-        
 
     def save(self):
         return {loc.id: loc.env for loc in self.locations} | {
@@ -54,7 +52,9 @@ class World:
     def take(self, location: str | Location, item_id: str, remain: int = 0):
         loc = self.get(location)
         # TODO: Add check
-        self.game.events.dispatch(Events.WORLD_ITEM_TAKE, item_id=item_id, remain=remain)
+        self.game.events.dispatch(
+            Events.WORLD_ITEM_TAKE, item_id=item_id, remain=remain
+        )
 
         for i, (item, _) in enumerate(loc.items):
             if item == item_id:

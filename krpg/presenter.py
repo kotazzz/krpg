@@ -54,8 +54,7 @@ class Presenter:
         else:
             stats = (
                 f"[cyan]HP={e.hp:.2f}/{e.max_hp:.2f} {self.bar(e.hp, e.max_hp, 'green')}\n"
-                f"[red]A={e.attack:.2f} [blue]D={e.defense:.2f}\n"
-                + self.get_stats(e)
+                f"[red]A={e.attack:.2f} [blue]D={e.defense:.2f}\n" + self.get_stats(e)
             )
             console.print(f"[bold white]{e.name}[/]\n{stats}")
 

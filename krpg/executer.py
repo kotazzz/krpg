@@ -27,14 +27,12 @@ class Base:
     def builtin_print(game: Game, *args, **kwargs):
         env = game.executer.env | {"game": game, "env": game.executer.env}
         args = [ast.literal_eval('"""' + arg + '"""') for arg in args]
-        #newkwargs = {}
-        #argtypes = {"min": float}
-        #for name, func in argtypes.items():
+        # newkwargs = {}
+        # argtypes = {"min": float}
+        # for name, func in argtypes.items():
         #    if name in kwargs:
         #        newkwargs[name] = func(kwargs[name])
-        text = eval(
-            f"f'''{' '.join(args)}'''", env
-        )
+        text = eval(f"f'''{' '.join(args)}'''", env)
         # game.console.print(text, **newkwargs)
         game.console.print(text)
 
@@ -47,15 +45,16 @@ class Base:
     def builtin_set(game: Game, name: str, expr: str):
         env = game.executer.env | {"game": game, "env": game.executer.env}
         game.executer.env[name] = eval(expr, env)
-    
+
     @executer_command("if")
     def builtin_if(game: Game, expr: str, block: Block):
         env = game.executer.env | {"game": game, "env": game.executer.env}
         if eval(expr, env):
             block.run()
 
+
 class Block:
-    def __init__(self, executer: Executer, section: Section, parent = None):
+    def __init__(self, executer: Executer, section: Section, parent=None):
         self.pos = 0
         self.state = "stop"
         self.section = section
@@ -63,13 +62,13 @@ class Block:
         self.executer = executer
         self.execute = self.executer.create_execute([self])
         self.parent = parent
-    
-        @executer_command("print_block") # TODO: Goto
+
+        @executer_command("print_block")  # TODO: Goto
         def print_block_command(game: Game):
             game.console.print(self)
 
         self.print_block_command = print_block_command
-        
+
     def run(self, from_start: bool = True):
         if not self.code:
             return
@@ -79,14 +78,13 @@ class Block:
         while self.state == "run":
             pos = self.pos
             self.execute(self.code[self.pos])
-            if pos == self.pos: # if execute dont changed pos
+            if pos == self.pos:  # if execute dont changed pos
                 self.pos += 1
             if self.pos >= len(self.code):
                 break
         self.state = "stop"
-        
-        
-        
+
+
 class Executer:
     def __init__(self, game: Game):
         self.game = game
@@ -123,14 +121,15 @@ class Executer:
         Creates new execute method, that works same, but before
         run it extends extension list and after returns it back
         """
+
         def execute(command: Command):
             ext = self.extensions
-            self.extensions += extensions 
+            self.extensions += extensions
             self.execute(command)
             self.extensions = ext
+
         return execute
-    
-    
+
     def execute(self, command: Command | Section):
         """
         Executes command by name, passing game, args, kwargs
@@ -146,11 +145,11 @@ class Executer:
             commands[command.name].callback(self.game, *command.args, **kwargs)
         else:
             raise Exception(f"Unknown command: {command.name}")
-    
+
     def create_block(self, section: Section):
         block = Block(self, section)
         return block
-    
+
     def __repr__(self):
         return (
             f"<Executer ext={len(self.extensions)} cmd={len(self.get_all_commands())}>"

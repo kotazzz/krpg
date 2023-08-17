@@ -19,19 +19,22 @@ class ItemType(Enum):
     def description(itemtype):
         """Describe the item type"""
         return ITEM_DESCRIPTIONS[itemtype]
-    
+
+
 ITEM_DESCRIPTIONS = {
-            ItemType.ITEM: "Предметы",
-            ItemType.HELMET: "Шлем",
-            ItemType.CHESTPLATE: "Нагрудник",
-            ItemType.LEGGINGS: "Поножи",
-            ItemType.BOOTS: "Ботинки",
-            ItemType.GLOVES: "Перчатки",
-            ItemType.SHIELD: "Щит",
-            ItemType.WEAPON: "Оружие",
-            ItemType.RING: "Кольцо",
-            ItemType.AMULET: "Амулет",
-        }
+    ItemType.ITEM: "Предметы",
+    ItemType.HELMET: "Шлем",
+    ItemType.CHESTPLATE: "Нагрудник",
+    ItemType.LEGGINGS: "Поножи",
+    ItemType.BOOTS: "Ботинки",
+    ItemType.GLOVES: "Перчатки",
+    ItemType.SHIELD: "Щит",
+    ItemType.WEAPON: "Оружие",
+    ItemType.RING: "Кольцо",
+    ItemType.AMULET: "Амулет",
+}
+
+
 class Item:
     def __init__(self, id: str, name: str, description: str):
         self.id = id
@@ -68,7 +71,8 @@ class Item:
 
     def __repr__(self):
         return f"<Item {self.id!r}>"
-    
+
+
 class Slot:
     def __init__(self, type: ItemType = ItemType.ITEM):
         self.type = type
@@ -79,7 +83,7 @@ class Slot:
         self.id = id
         self.amount = amount
         return self
-    
+
     def save(self):
         return None if self.empty else (self.id, self.amount)
 
@@ -171,6 +175,3 @@ class Inventory:
         if only_empty:
             res = [(i, slot) for i, slot in res if slot.empty]
         return res
-
-
-

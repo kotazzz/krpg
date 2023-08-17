@@ -2,23 +2,21 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 
-
 if TYPE_CHECKING:
     from krpg.entity import Entity
-
 
 
 class Attributes:
     def __init__(
         self,
-        strength: int=0,
-        wisdom: int=0,
-        endurance: int=0,
-        agility: int=0,
-        intelligence: int=0,
-        charisma: int=0,
-        perception: int=0,
-        free: int=0,
+        strength: int = 0,
+        wisdom: int = 0,
+        endurance: int = 0,
+        agility: int = 0,
+        intelligence: int = 0,
+        charisma: int = 0,
+        perception: int = 0,
+        free: int = 0,
         holder: Entity = None,
     ):
         self.strength = strength  # Сила
@@ -30,7 +28,7 @@ class Attributes:
         self.perception = perception  # Восприятие
 
         self.free = free
-        
+
         self.holder = holder
 
     @property
@@ -58,7 +56,6 @@ class Attributes:
         self.charisma = data[5]
         self.perception = data[6]
         self.free = data[7]
-        
 
     def update(
         self,
@@ -87,5 +84,3 @@ class Attributes:
         self.charisma = action(self.charisma, charisma, set)
         self.perception = action(self.perception, perception, set)
         self.free = action(self.free, free, set)
-
-    

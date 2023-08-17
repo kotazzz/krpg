@@ -5,35 +5,36 @@ from typing import Callable
 
 class Events:
     # clock.py
-    TIMEPASS = "timepass" # minutes: int
-    NEWDAY = "newday" # day: int
+    TIMEPASS = "timepass"  # minutes: int
+    NEWDAY = "newday"  # day: int
 
     # game.py
-    SAVE = "save" # -
-    LOAD = "load" # successcb=None
-    STATE_CHANGE = "state_change" # state: str
-    COMMAND = "command" # command: str
+    SAVE = "save"  # -
+    LOAD = "load"  # successcb=None
+    STATE_CHANGE = "state_change"  # state: str
+    COMMAND = "command"  # command: str
 
     # player.py
-    PICKUP = "pickup" # item: Item, amount: int
-    ADD_MONEY = "add_money" # amount: int, new_balance: int
-    REMOVE_MONEY = "remove_money" # amount: int, new_balance: int
-    ADD_FREE = "add_free" # amount: int, new_balance: int
-    REMOVE_FREE = "remove_free" # amount: int, new_balance: int
-    HEAL = "heal" # amount: int
-    DAMAGE = "damage" # amount: int
-    DEAD = "dead" # -
-    
+    PICKUP = "pickup"  # item: Item, amount: int
+    ADD_MONEY = "add_money"  # amount: int, new_balance: int
+    REMOVE_MONEY = "remove_money"  # amount: int, new_balance: int
+    ADD_FREE = "add_free"  # amount: int, new_balance: int
+    REMOVE_FREE = "remove_free"  # amount: int, new_balance: int
+    HEAL = "heal"  # amount: int
+    DAMAGE = "damage"  # amount: int
+    DEAD = "dead"  # -
+
     # world.py
-    WORLD_ITEM_TAKE = "world_item_take" # item_id: str, remain: int
-    WORLD_ITEM_DROP = "world_item_drop" # item_id: str, count: int
-    MOVE = "move" # before: Location, after: Location
+    WORLD_ITEM_TAKE = "world_item_take"  # item_id: str, remain: int
+    WORLD_ITEM_DROP = "world_item_drop"  # item_id: str, count: int
+    MOVE = "move"  # before: Location, after: Location
 
     # settings.py
-    SETTING_CHANGE = "setting_change" # setting: str, value: Any
+    SETTING_CHANGE = "setting_change"  # setting: str, value: Any
 
     # battle.py
-    KILL = "kill" # monster_id: str
+    KILL = "kill"  # monster_id: str
+
 
 class EventHandler:
     def __init__(self, locked: bool = False):

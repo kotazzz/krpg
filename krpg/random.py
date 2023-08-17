@@ -35,18 +35,18 @@ class RandomManager:
         for i in range(data[1]):
             self.random()
 
-
     def random(self):
         self.state += 1
         return self.rnd.random()
+
     def randint(self, a, b):
         self.state += 1
         return math.floor(self.rnd.random() * (b - a + 1)) + a
-    
+
     def choice(self, options):
         # use only self.random() for save state
         return options[math.floor(self.random() * len(options))]
-    
+
     def choices(self, options, weights=None, k=1):
         # options - list of items
         # weights - list of weights for items. If None, the weights are assumed to be equal.
@@ -56,5 +56,7 @@ class RandomManager:
         n = len(options)
         weights = weights or [1] * len(options)
         cum_weights = list(itertools.accumulate(weights))
-        total = cum_weights[-1] + 0.0   # convert to float
-        return [options[bisect.bisect(cum_weights, self.random() * total)] for i in range(k)]
+        total = cum_weights[-1] + 0.0  # convert to float
+        return [
+            options[bisect.bisect(cum_weights, self.random() * total)] for i in range(k)
+        ]
