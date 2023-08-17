@@ -342,9 +342,10 @@ class Game:
                 cmds_data = {cmd.name: cmd.description for cmd in actions}
                 cmd = self.console.prompt(1, cmds_data)
                 self.events.dispatch(Events.COMMAND, command=cmd)
-
         except KeyboardInterrupt:
             self.console.print("[red]Выход из игры[/]")
+            self.state = "None"
+            
     
 
     def timestamp(self):

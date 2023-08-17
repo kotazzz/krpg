@@ -30,7 +30,7 @@ class Entity:
 
     def load(self, data):
         self.name, self.hp, self.money, inv, *attrib = data
-        self.attributes.update(*attrib)
+        self.attributes.update(*attrib, set=True)
         self.inventory.load(inv)
 
     def __repr__(self):
