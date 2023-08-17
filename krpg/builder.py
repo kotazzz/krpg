@@ -35,7 +35,6 @@ class Builder:
         self.build_entities(self.scenario.first("entities"))
         self.build_npc(self.scenario.first("npcs"))
         self.build_world(self.scenario.first("map"))
-        
 
     def build_items(self, items: Section):
         item_list = items.all("item")
@@ -71,7 +70,7 @@ class Builder:
             self.debug(f"  Assembling {id}:{name}")
             speciaw = entity.first("speciaw")
             speciaw = map(int, speciaw.args)
-            if money:=entity.first("money"):
+            if money := entity.first("money"):
                 money = int(money.args[0])
             else:
                 money = 0
@@ -92,6 +91,7 @@ class Builder:
                     actions[state.args[0]].append(self.build_action(act))
             new_npc = Npc(id, name, description, init_state, location, actions)
             self.game.npc_manager.npcs.append(new_npc)
+
     def build_world(self, world: Section):
         locations = world.all("location")
         start = world.first("start")
@@ -132,6 +132,7 @@ class Builder:
     def build_action(self, command: Section):
         name, description = command.args
         block = self.game.executer.create_block(command)
+
         def new_command(game: Game):
             block.run()
 

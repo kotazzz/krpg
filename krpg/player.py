@@ -35,7 +35,7 @@ class Player(Entity):
         if not item:
             raise ValueError(f"Unknown item {item_id}")
         game.player.pickup(item, amount)
-        
+
     def add_money(self, amount):
         if not amount:
             return
@@ -68,20 +68,19 @@ class Player(Entity):
     def add_free_command(game: Game, free: int):
         free = int(free)
         game.player.add_free(free)
-        
-    
+
     def heal(self, amount):
         if amount <= 0:
             return self.damage(-amount)
         amount = min(amount, self.max_hp - self.hp)
         self.hp += amount
         self.game.events.dispatch(Events.HEAL, amount=amount)
-    
+
     @executer_command("heal")
     def heal_command(game: Game, amount):
         amount = int(amount)
         game.player.heal(amount)
-    
+
     def damage(self, amount):
         if amount <= 0:
             return self.heal(-amount)
@@ -90,12 +89,12 @@ class Player(Entity):
         self.game.events.dispatch(Events.DAMAGE, amount=amount)
         if self.hp <= 0:
             self.game.events.dispatch(Events.DEAD)
-     
+
     @executer_command("damage")
     def damage_command(game: Game, amount):
         amount = int(amount)
         game.player.damage(amount)
-            
+
     def apply(self, item: Item):
         effects = item.effects
         for name, val in effects.items():
@@ -110,15 +109,14 @@ class Player(Entity):
         if not item:
             raise ValueError(f"Unknown item {item_id}")
         game.player.apply(item)
-    
+
     def has_item(self, item: Item | str) -> Slot | bool:
         item = item.id if isinstance(item, Item) else item
         for slot in self.inventory.slots:
             if slot.id == item:
                 return slot
         return False
-    
-    
+
     def require_item(self, item_id: str, amount: int = 1, take: bool = True):
         game = self.game
         slot = game.player.has_item(item_id)
@@ -132,12 +130,11 @@ class Player(Entity):
             else:
                 slot.amount -= amount
         return True
-                
-    
+
     @executer_command("require_item")
     def require_item_command(game: Game, item_id: str, amount: int = 1):
         game.player.require_item(item_id, amount)
-        
+
     @executer_command("move")
     def move_command(game: Game, new_loc):
         game.world.set(new_loc)

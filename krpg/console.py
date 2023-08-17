@@ -15,7 +15,10 @@ def rich(*args, console=None, **kwargs):
         console.print(*args, **kwargs)
     return ANSI(c.get())
 
+
 DEFAULT_LEVEL = 0
+
+
 class KrpgConsole:
     def __init__(self):
 
@@ -23,21 +26,19 @@ class KrpgConsole:
         self.session = PromptSession()
         self.bar = ""
         self.log: logging.Logger = None
-        
+
         self.handler = RichHandler(
-                    level=DEFAULT_LEVEL,
-                    rich_tracebacks=True,
-                    tracebacks_show_locals=True,
-                    console=self.console,
-                    markup=True,
-                )
+            level=DEFAULT_LEVEL,
+            rich_tracebacks=True,
+            tracebacks_show_locals=True,
+            console=self.console,
+            markup=True,
+        )
         logging.basicConfig(
             level=DEFAULT_LEVEL,
             format="%(message)s",
             datefmt="[%X]",
-            handlers=[
-                self.handler
-            ],
+            handlers=[self.handler],
         )
         self.log = logging.getLogger("console")
         self.setlevel(0)
@@ -52,11 +53,13 @@ class KrpgConsole:
             4: rich("[bold blue]>>>> [/]", console=self.console),
             5: rich("[bold magenta]>>>>> [/]", console=self.console),
         }
+
     def get_history(self):
         return [repr(i) if " " in i or not i else i for i in self.history]
-    
+
     def setlevel(self, level):
         self.handler.level = level
+
     def print(self, *args, **kwargs):
         return self.console.print(*args, **kwargs, highlight=False)
 
@@ -67,8 +70,8 @@ class KrpgConsole:
         self,
         text,
         data: dict[str, str] = None,
-        allow_empty: bool=False,
-        raw: bool=False,
+        allow_empty: bool = False,
+        raw: bool = False,
         check: bool = False,
     ) -> str:
         text = (
