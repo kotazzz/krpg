@@ -44,11 +44,14 @@ args = parser.parse_args()
 # DEBUG = args.debug
 DEBUG = args.debug
 TIMESHIFT = 1667250000
-
-
-class Game:
-
-    splashes = [
+BRAND_COLORS = [
+            "[bold magenta]",
+            "[bold red]",
+            "[bold blue]",
+            "[bold yellow]",
+            "[bold green]",
+        ]
+SPLASHES = [
         "Кто придумал эту игру?",
         "Да, это игра.",
         "Мне нравится эта игра.",
@@ -147,12 +150,14 @@ class Game:
         "Вы нашли магический амулет, но он оказался просто обычной каменной круглой бусиной",
     ]
 
+
+class Game:
     def __init__(self):
         self.version = __version__
-        
+        self.state = "none"
         self.console = KrpgConsole()
-        self.set_debug(DEBUG)
         self.log = self.console.log
+        self.set_debug(DEBUG)
         self.main()
 
     def set_debug(self, value: bool):
@@ -162,12 +167,11 @@ class Game:
     def main(self):
         while True:
             try:
-                self.new_game()
-                self.run_game()
+                self.main_menu()
             except Exception as e:
                 self.log.exception(e)
                 try:
-                    if not self.console.confirm("[red]Перезапустить?: "):
+                    if not self.console.confirm("[red]Перезапустить? (y/n): "):
                         break
                 except KeyboardInterrupt:
                     break
@@ -195,16 +199,16 @@ class Game:
 
             self.console.log.debug = func
             with Live(spin, refresh_per_second=20) as live:
-                self.init_game()
+                self.new_game_init()
                 func('Завершение инициализации...')
                 func('Подготовка...')
                 func('⭐ Игра загружена')
             self.console.log.debug = _reserve
         else:
-            self.init_game()
+            self.new_game_init()
 
-    def init_game(self):
-        self.state = "none"
+    def new_game_init(self):
+        
         self.start_time = self.save_time = self.timestamp()
         debug = self.log.debug
 
@@ -215,7 +219,7 @@ class Game:
         self.encoder = Encoder()
         debug(f"Init [green]Encoder[/]: {self.encoder}")
 
-        self.events = EventHandler(locked=True)
+        self.events = EventHandler()
         debug(f"Init [green]EventHandler[/]: {self.events}")
 
         for attr in filter(lambda x: x.startswith("on_"), dir(self)):
@@ -226,7 +230,7 @@ class Game:
         scenario = open("scenario.krpg", encoding='utf-8').read()
         self.scenario_hash = f"{zlib.crc32(scenario.encode()):x}"
         self.scenario = parse(scenario)
-        debug(f"Loaded scenario with {len(self.scenario.children)} items")
+        debug(f"Loaded scenario [{self.scenario_hash}] with {len(self.scenario.children)} items")
 
         self.savers: dict[str, set[callable, callable]] = {}
 
@@ -270,6 +274,79 @@ class Game:
 
         self.builder.build()
 
+    def main_menu(self):
+        
+        c = self.console
+
+        
+        self.console.print(random.choice(BRAND_COLORS) + random.choice(SPLASHES))
+        self.show_logo()
+        self.console.set_bar(
+            f"[magenta]K[/][red]-[/][blue]R[/][yellow]P[/][green]G[/] {random.choice(BRAND_COLORS)}{self.version}[/]"
+        )
+        while self.state != "playing":
+            menu = {
+                "start": "Начать новую игру",
+                "load": "Загрузить сохранение",
+                "credits": "Авторы игры",
+                "settings": "Настройки игры",
+                "exit": "Выйти",
+            }
+            select = self.console.menu(
+                5,
+                list(menu.keys()),
+                view=lambda k: f"{menu[k]}",
+                title="[green b]Игровое меню",
+            )
+            
+            if select == "load":
+                self.new_game()
+                self.events.dispatch(Events.LOAD)
+            elif select == "start":
+                self.new_game()
+                c.print(
+                    "Задать имя персонажу можно [red]только один раз[/]!\n"
+                    "  [blue]help[/] - Показать список команд\n"
+                    "  [blue]guide[/] - Справка и помощь, как начать\n"
+                )
+                c.print(f"[green]Введите имя:[/]")
+                self.player.name = c.prompt(2)
+                c.print(f"[green]Введите сид мира (или оставьте пустым):[/]")
+                src = c.prompt(2, allow_empty=True)
+                if src:
+                    seed = (
+                        int(src)
+                        if src.isnumeric()
+                        else (
+                            int(
+                                int.from_bytes(sha512(src.encode()).digest(), "big")
+                                ** 0.1
+                            )
+                        )
+                    )
+                    self.log.debug(f"New seed: {seed} from {src!r}")
+                    self.random.set_seed(seed)
+                else:
+                    self.log.debug(f"Using by default: {self.random.seed}")
+                self.events.dispatch(Events.STATE_CHANGE, state="playing")
+            elif select == "exit":
+                exit()
+            else:
+                self.events.dispatch(Events.COMMAND, command=select)
+    
+    def playing(self):
+        try:
+            while self.state == "playing":
+                self.console.set_bar(f"[yellow]{self.player.name}[/]")
+                actions = self.actions.get_actions()
+                cmds_data = {cmd.name: cmd.description for cmd in actions}
+                cmd = self.console.prompt(1, cmds_data)
+                self.events.dispatch(Events.COMMAND, command=cmd)
+
+        except KeyboardInterrupt:
+            self.console.print("[red]Выход из игры[/]")
+    
+
     def timestamp(self):
         return int(time.time()) - TIMESHIFT  # 1 Nov 2022 00:00 (+3)
 
@@ -292,9 +369,13 @@ class Game:
         )
     def on_dead(self):
         self.events.dispatch(Events.STATE_CHANGE, "dead")
+        
     def on_state_change(self, state):
+        old = self.state
         self.state = state
-
+        if old != "playing" and state == "playing":
+            self.playing()
+        
     def on_save(self):
         self.save_time = self.timestamp()
         data = {name: funcs[0]() for name, funcs in self.savers.items()}
@@ -314,7 +395,7 @@ class Game:
             f"[green]Код сохранения: [yellow]{list(self.encoder.abc.keys()).index(select)}{encoded}[/]"
         )
 
-    def on_load(self, failcb=None, successcb=None):
+    def on_load(self):
         while True:
             self.console.print("[green]Введите код сохранения (e - выход):")
             encoded = self.console.prompt(2, raw=True)
@@ -338,12 +419,9 @@ class Game:
                     self.log.exception(e)
             else:
                 self.console.print("[green]Игра загружена[/]")
-                if successcb:
-                    successcb()
+                self.events.dispatch(Events.STATE_CHANGE, state="playing")
                 return
 
-        if failcb:
-            failcb()
 
     def on_event(self, event, *args, **kwargs):
         self.log.debug(f"[b yellow]{event}[/] {args} {kwargs}")
@@ -385,80 +463,6 @@ class Game:
             "все сильнее и сильнее. Сможете ли Вы стать настоящим героем?\n"
         )
 
-    def run_game(self):
-        self.log.debug("Hello, world!")
-        self.events.unlock()
-        c = self.console
-        success = lambda: self.events.dispatch(Events.STATE_CHANGE, state="playing")
-
-        clrs = [
-            "[bold magenta]",
-            "[bold red]",
-            "[bold blue]",
-            "[bold yellow]",
-            "[bold green]",
-        ]
-        self.console.print(random.choice(clrs) + random.choice(self.splashes))
-        self.show_logo()
-        self.console.set_bar(
-            f"[magenta]K[/][red]-[/][blue]R[/][yellow]P[/][green]G[/] {random.choice(clrs)}{self.version}[/]"
-        )
-        while self.state != "playing":
-            menu = {
-                "start": "Начать новую игру",
-                "load": "Загрузить сохранение",
-                "credits": "Авторы игры",
-                "settings": "Настройки игры",
-                "exit": "Выйти",
-            }
-            select = self.console.menu(
-                5,
-                list(menu.keys()),
-                view=lambda k: f"{menu[k]}",
-                title="[green b]Игровое меню",
-            )
-            if select == "load":
-                self.events.dispatch(Events.LOAD, successcb=success)
-            elif select == "start":
-                c.print(
-                    "Задать имя персонажу можно [red]только один раз[/]!\n"
-                    "  [blue]help[/] - Показать список команд\n"
-                    "  [blue]guide[/] - Справка и помощь, как начать\n"
-                )
-                c.print(f"[green]Введите имя:[/]")
-                self.player.name = c.prompt(2)
-                c.print(f"[green]Введите сид мира (или оставьте пустым):[/]")
-                src = c.prompt(2, allow_empty=True)
-                if src:
-                    seed = (
-                        int(src)
-                        if src.isnumeric()
-                        else (
-                            int(
-                                int.from_bytes(sha512(src.encode()).digest(), "big")
-                                ** 0.1
-                            )
-                        )
-                    )
-                    self.log.debug(f"New seed: {seed} from {src!r}")
-                    self.random.set_seed(seed)
-                else:
-                    self.log.debug(f"Using by default: {self.random.seed}")
-                success()
-            elif select == "exit":
-                exit()
-            else:
-                self.events.dispatch(Events.COMMAND, command=select)
-        try:
-            while self.state == "playing":
-                self.console.set_bar(f"[yellow]{self.player.name}[/]")
-                actions = self.actions.get_actions()
-                cmds_data = {cmd.name: cmd.description for cmd in actions}
-                cmd = c.prompt(1, cmds_data)
-                self.events.dispatch(Events.COMMAND, command=cmd)
-
-        except KeyboardInterrupt:
-            c.print("[red]Выход из игры[/]")
     @action("history", "История команд", "Игра")
     def action_history(game: Game):
         c = game.console
@@ -486,7 +490,8 @@ class Game:
             f"Репозиторий:       [blue u]https://github.com/kotazzz/krpg [/]\n"
             f"                   [blue  ]Дайте ⭐ плиз [/]\n"
             f"Discord:           [blue u]https://discord.gg/FKcURWZsMW [/]\n"
-            f"                   [blue  ]Kotaz#4769 [/]\n"
+            f"                   [blue  ]@kot_az[/]\n"
+            f"Telegram:          [blue  ]@kot_az[/]\n"
             f"Язык:              [magenta]Python 3[/]\n"
             f"Библиотеки:        [red]rich[/], [red]prompt_toolkit[/], [red]msgpack[/]\n"
             f"Кол-во строк кода: [magenta]2000+[/]\n\n"
