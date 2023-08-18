@@ -151,3 +151,5 @@ class NpcManager:
             elif action == 2:
                 item = game.bestiary.get_item(slot.id)
                 presenter.presence_item(item)
+    def __repr__(self) -> str:
+        return f"<NpcManager n={len(self.npcs)}>"

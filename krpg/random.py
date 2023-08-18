@@ -60,3 +60,6 @@ class RandomManager:
         return [
             options[bisect.bisect(cum_weights, self.random() * total)] for i in range(k)
         ]
+
+    def __repr__(self):
+        return f"<RandomManager state={self.state} seed={self.seed}>"
