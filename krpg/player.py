@@ -23,8 +23,6 @@ class Player(Entity):
         self.game.add_actions(self)
         self.game.executer.add_extension(self)
 
-    # Executor and actions
-
     def pickup(self, item: Item, amount: int):
         self.game.events.dispatch(Events.PICKUP, item=item, amount=amount)
         return self.inventory.pickup(item, amount)

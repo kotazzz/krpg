@@ -15,6 +15,7 @@ from krpg.diary import Diary
 from krpg.events import EventHandler
 from krpg.npc import NpcManager
 from krpg.presenter import Presenter
+from krpg.quests import QuestManager
 from krpg.scenario import parse
 from krpg.encoder import Encoder
 from krpg.executer import Executer
@@ -225,13 +226,13 @@ class Game:
         for attr in filter(lambda x: x.startswith("on_"), dir(self)):
             cb = getattr(self, attr)
             self.events.listen(attr[3:], cb)
-            debug(f"Added [red]listener[/] for {attr[3:]}")
+            debug(f"  [yellow3]Added [red]listener[/] for {attr[3:]}")
 
         scenario = open("scenario.krpg", encoding="utf-8").read()
         self.scenario_hash = f"{zlib.crc32(scenario.encode()):x}"
         self.scenario = parse(scenario)
         debug(
-            f"Loaded scenario [{self.scenario_hash}] with {len(self.scenario.children)} items"
+            f"[red]Loaded scenario [{self.scenario_hash}] with {len(self.scenario.children)} items"
         )
 
         self.savers: dict[str, set[callable, callable]] = {}
@@ -271,8 +272,12 @@ class Game:
         self.world = World(self)
         debug(f"Init [green]World[/]: {self.world}")
 
+        self.quest_manager = QuestManager(self)
+        debug(f"Init [green]QuestManager[/]: {self.quest_manager}")
+        
         self.builder = Builder(self)
         debug(f"Starting build world...")
+        
 
         self.builder.build()
 
@@ -351,7 +356,7 @@ class Game:
         return int(time.time()) - TIMESHIFT  # 1 Nov 2022 00:00 (+3)
 
     def add_actions(self, obj: object):
-        self.log.debug(f"Add submanager {obj}")
+        self.log.debug(f"  [yellow3]Add submanager [yellow]{obj.__class__.__name__}")
         self.actions.submanagers.append(obj)
 
     def add_saver(self, name: str, save: callable, load: callable):
@@ -362,7 +367,7 @@ class Game:
 
             return deco
 
-        self.log.debug(f"Added Savers {name!r}")
+        self.log.debug(f"  [yellow3]Add Savers {name!r}")
         self.savers[name] = (
             add_message(save, f"Saving {name}"),
             add_message(load, f"Loading {name}"),

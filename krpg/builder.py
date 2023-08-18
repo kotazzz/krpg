@@ -16,9 +16,8 @@ class Builder:
     def __init__(self, game: Game):
         self.game = game
         self.scenario = game.scenario
-        self.debug = self.game.log.debug
         self.game.add_saver("test", self.save, self.load)
-
+        self.tag = ""
     def save(self):
         g = self.game
         return [g.scenario_hash, g.version, g.start_time, g.save_time]
@@ -30,18 +29,27 @@ class Builder:
         if data[1] != g.version:
             raise Exception(f"save:{data[1]} != game:{g.version}")
 
+    def debug(self, msg: str):
+        self.game.log.debug(f"[cyan]\[{self.tag:^10}] {msg}", stacklevel=1)
+
     def build(self):
+        
+        self.tag = "items"
         self.build_items(self.scenario.first("items"))
+        self.tag = "entities"
         self.build_entities(self.scenario.first("entities"))
+        self.tag = "npc"
         self.build_npc(self.scenario.first("npcs"))
+        self.tag = "world"
         self.build_world(self.scenario.first("map"))
+        self.tag = ""
 
     def build_items(self, items: Section):
         item_list = items.all("item")
         for item in item_list:
             id, name, description = item.args
             obj = Item(id, name, description)
-            self.debug(f"  Building {id}:{name}")
+            self.debug(f"  Building [blue]{id}:{name}")
             for cmd in item.children:
                 if cmd.name == "wear":
                     wear, *attrs = cmd.args
@@ -67,7 +75,7 @@ class Builder:
     def build_entities(self, entities: Section):
         for entity in entities.all("entity"):
             id, name, description = entity.args
-            self.debug(f"  Assembling {id}:{name}")
+            self.debug(f"  Assembling [blue]{id}:{name}")
             speciaw = entity.first("speciaw")
             speciaw = map(int, speciaw.args)
             if money := entity.first("money"):
@@ -81,7 +89,7 @@ class Builder:
     def build_npc(self, npcs: Section):
         for npc in npcs.all("npc"):
             id, name, description = npc.args
-            self.debug(f"  Creating {id}:{name}")
+            self.debug(f"  Creating [blue]{id}:{name}")
             init_state = npc.first("init").args[0]
             location = npc.first("location").args[0]
             actions = {}
@@ -119,7 +127,7 @@ class Builder:
         location = Location(id, name, description)
         location.actions = actions
         location.items = items
-        self.debug(f"    Built {location}")
+        self.debug(f"    Built [blue]{id}:{name}")
         return location
 
     def build_item(self, item: Section):
