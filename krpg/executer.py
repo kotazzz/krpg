@@ -107,7 +107,7 @@ class Executer:
         return cmds
 
     def add_extension(self, ext: object):
-        self.game.log.debug(f"  [yellow3]Added ExecuterExtension [yellow]{ext.__class__.__name__}")
+        self.game.log.debug(f"  [yellow3]Added ExecuterExtension [yellow]{ext.__class__.__name__}", stacklevel=2)
         self.extensions.append(ext)
 
     def get_all_commands(self) -> dict[str, ExecuterCommand]:

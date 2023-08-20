@@ -20,9 +20,17 @@
 # (21) ranged combat - дальний бой
 # (22) melee combat - ближний бой
 # (23) crafting - крафт
-
+init {
+  print Вы открываете портал и попадаете в неизвестную вам деревню
+}
 map {
-  location city Город "Точка появления" {
+
+  location village Город "Точка появления" {
+    triggers {
+      first_visit {
+        print Где я?
+      }
+    }
     item sword 1
     item hp_bottle 1
   }
@@ -58,14 +66,14 @@ map {
     }
   }
 
-  start city
-  link city forest
+  start village
+  link village forest
 } 
 
 npcs {
   npc trader "Торговец" "Продает всякую всячину" {
     init base
-    location city
+    location village
     state base {
       action trade "Торговать" {
         set res "game.clock.in_range(7, 20)"
@@ -82,6 +90,21 @@ npcs {
     }
   }
 }
+
+quests {
+  quest first_meet "Первая встреча" "Ваше приключение только начинается" {
+    # require: ... (Not developed yet)
+    stage 0 "Что это за место?" {
+      goal visit forest "Посетите лес" "Вам стоит поискать там ягоды"
+      reward next_stage
+    }
+    stage 1 "Ладно, помогу ему" {
+      goal collect berries 5 "Соберите 5 ягод" "Вам нужно собрать 5 ягод"
+      reward set_npc trader first_meet_complete
+    }
+  }
+}
+
 items {
   #             s  p  e  c  i  a  w
   # wear SLOT SPECIAW

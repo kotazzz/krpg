@@ -5,6 +5,7 @@ from krpg.actions import Action
 from typing import TYPE_CHECKING, Any
 
 from krpg.events import Events
+from krpg.executer import Block
 
 if TYPE_CHECKING:
     from krpg.game import Game
@@ -19,12 +20,24 @@ class Location:
         self.actions: list[Action] = []
         self.items: list[str, int] = []
 
+        self.triggers: list[tuple[str, list, Block]] = []
+        self.visited: bool = False
+
     def save(self):
-        return [self.env, self.items]
+        return [self.env, self.items, self.visited]
 
     def load(self, data):
         self.env = data[0]
         self.items = data[1]
+        self.visited = data[2]
+
+    def get_triggers(self, name) -> list[tuple[str, list, Block]]:
+        # first_visit
+        res = []
+        for trig in self.triggers:
+            if trig[0] == name:
+                res.append(trig)
+        return res
 
     def __repr__(self) -> str:
         return f"<Location name={self.id!r}>"
@@ -38,6 +51,7 @@ class World:
         self.game = game
         self.game.add_saver("world", self.save, self.load)
         self.game.add_actions(self)
+        self._start = None
 
     def save(self):
         return {loc.id: loc.env for loc in self.locations} | {
@@ -71,9 +85,14 @@ class World:
 
         loc.items.append((item_id, count))
 
-    def set(self, current_loc: str | Location):
+    def set(self, current_loc: str | Location | None = None):
         self.game.events.dispatch(Events.MOVE, before=self.current, after=current_loc)
-        self.current = self.get(current_loc)
+        self.current = self.get(current_loc or self._start)
+        
+        if not self.current.visited:
+            for *_, block in self.current.get_triggers("first_visit"):
+                block.run()
+        self.current.visited = True
 
     def extract(self) -> list[Action]:
         return self.current.actions
