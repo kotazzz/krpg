@@ -8,21 +8,13 @@ if TYPE_CHECKING:
     from krpg.game import Game
 
 
-"""
-quests {
-  quest first_meet "Первая встреча" "Ваше приключение только начинается" {
-      
-  }
-}
-"""
 
 class Quest:
-    def __init__(self, id, name, description, goals, rewards):
+    def __init__(self, id, name, description, stages):
         self.id = id
         self.name = name
         self.description = description
-        self.goals = goals
-        self.rewards = rewards
+        self.stages = stages
     
 
 class QuestState:
@@ -38,8 +30,8 @@ class QuestManager:
         self.game.executer.add_extension(self)
         self.game.add_saver("quest", self.save, self.load)
 
-    def load(self):
-        pass
+    def load(self, data):
+        pass    
 
     def save(self):
         pass
@@ -47,3 +39,4 @@ class QuestManager:
     def __repr__(self):
         return f"<QuestManager q={len(self.quests)}>"
 
+    

@@ -28,7 +28,7 @@ class StatsManager:
         for attr in filter(lambda x: x.startswith("on_"), dir(self)):
             cb = getattr(self, attr)
             game.events.listen(attr[3:], cb)
-            game.log.debug(f"  [yellow3]Added stats [red]listener[/] for {attr[3:]}")
+            game.log.debug(f"  [yellow3]Added stats [red]listener[/] for {attr[3:]}", stacklevel=2)
 
     def save(self):
         return [i[1] for i in self.counters.values()]

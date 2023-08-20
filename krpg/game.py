@@ -226,7 +226,7 @@ class Game:
         for attr in filter(lambda x: x.startswith("on_"), dir(self)):
             cb = getattr(self, attr)
             self.events.listen(attr[3:], cb)
-            debug(f"  [yellow3]Added [red]listener[/] for {attr[3:]}")
+            debug(f"  [yellow3]Added [red]listener[/] for {attr[3:]}", stacklevel=2)
 
         scenario = open("scenario.krpg", encoding="utf-8").read()
         self.scenario_hash = f"{zlib.crc32(scenario.encode()):x}"
@@ -334,6 +334,8 @@ class Game:
                     self.random.set_seed(seed)
                 else:
                     self.log.debug(f"Using by default: {self.random.seed}")
+                init = self.scenario.first('init')
+                self.executer.create_block(init).run()
                 self.events.dispatch(Events.STATE_CHANGE, state="playing")
             elif select == "exit":
                 exit()
@@ -341,6 +343,7 @@ class Game:
                 self.events.dispatch(Events.COMMAND, command=select)
 
     def playing(self):
+        self.world.set()
         try:
             while self.state == "playing":
                 self.console.set_bar(f"[yellow]{self.player.name}[/]")
@@ -356,7 +359,7 @@ class Game:
         return int(time.time()) - TIMESHIFT  # 1 Nov 2022 00:00 (+3)
 
     def add_actions(self, obj: object):
-        self.log.debug(f"  [yellow3]Add submanager [yellow]{obj.__class__.__name__}")
+        self.log.debug(f"  [yellow3]Add submanager [yellow]{obj.__class__.__name__}", stacklevel=2)
         self.actions.submanagers.append(obj)
 
     def add_saver(self, name: str, save: callable, load: callable):
@@ -367,7 +370,7 @@ class Game:
 
             return deco
 
-        self.log.debug(f"  [yellow3]Add Savers {name!r}")
+        self.log.debug(f"  [yellow3]Add Savers {name!r}", stacklevel=2)
         self.savers[name] = (
             add_message(save, f"Saving {name}"),
             add_message(load, f"Loading {name}"),

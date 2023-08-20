@@ -5,6 +5,7 @@ from krpg.attributes import Attributes
 from krpg.bestiary import Meta
 from krpg.inventory import Item, ItemType
 from krpg.npc import Npc
+from krpg.quests import Quest
 from krpg.scenario import Section
 from krpg.world import Location
 
@@ -30,7 +31,7 @@ class Builder:
             raise Exception(f"save:{data[1]} != game:{g.version}")
 
     def debug(self, msg: str):
-        self.game.log.debug(f"[cyan]\[{self.tag:^10}] {msg}", stacklevel=1)
+        self.game.log.debug(f"[cyan]\[{self.tag:^10}] {msg}", stacklevel=2)
 
     def build(self):
         
@@ -39,7 +40,9 @@ class Builder:
         self.tag = "entities"
         self.build_entities(self.scenario.first("entities"))
         self.tag = "npc"
-        self.build_npc(self.scenario.first("npcs"))
+        self.build_npcs(self.scenario.first("npcs"))
+        self.tag = "quests"
+        self.build_quests(self.scenario.first("quests"))
         self.tag = "world"
         self.build_world(self.scenario.first("map"))
         self.tag = ""
@@ -86,7 +89,7 @@ class Builder:
             meta = Meta(id, name, description, attr, money)
             self.game.bestiary.entities.append(meta)
 
-    def build_npc(self, npcs: Section):
+    def build_npcs(self, npcs: Section):
         for npc in npcs.all("npc"):
             id, name, description = npc.args
             self.debug(f"  Creating [blue]{id}:{name}")
@@ -99,6 +102,21 @@ class Builder:
                     actions[state.args[0]].append(self.build_action(act))
             new_npc = Npc(id, name, description, init_state, location, actions)
             self.game.npc_manager.npcs.append(new_npc)
+
+    def build_quests(self, quests: Section):
+        for quest in quests.all("quest"):
+            id, name, description = quest.args
+            self.debug(f"  Building [blue]{id}:{name}")
+            stages = {}
+            for stage in quest.all("stage"):
+                sid, sname = stage.args
+                stages[sid] = {}
+                stages[sid]["name"] = sname
+                stages[sid]["goals"] = stage.all("goal")
+                stages[sid]["rewards"] = stage.all("reward")
+            self.game.quest_manager.quests.append(Quest(id, name, description, stages))
+        
+                
 
     def build_world(self, world: Section):
         locations = world.all("location")
@@ -117,16 +135,18 @@ class Builder:
             self.game.world.road(a, b)
             self.debug(f"  Road {a} <-> {b}")
 
-        self.game.world.set(start.args[0])
+        self.game.world._start = start.args[0]
 
     def build_location(self, locdata: Section):
 
         id, name, description = locdata.args
         actions = [self.build_action(i) for i in locdata.all("action")]
         items = [self.build_item(i) for i in locdata.all("item")]
+        triggers = self.build_triggers(locdata.first("triggers"))
         location = Location(id, name, description)
         location.actions = actions
         location.items = items
+        location.triggers = triggers
         self.debug(f"    Built [blue]{id}:{name}")
         return location
 
@@ -145,3 +165,11 @@ class Builder:
             block.run()
 
         return action(name, description)(new_command)
+
+    def build_triggers(self, triggers: Section | None):
+        res = []
+        if not triggers:
+            return res
+        for i in triggers.children:
+            res.append((i.name, i.args, self.game.executer.create_block(i)))
+        return res
