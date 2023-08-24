@@ -191,7 +191,7 @@ class Game:
             _reserve = self.console.log.debug
             lines = []
 
-            def func(t):
+            def func(t, **_):
                 nonlocal lines
                 lines.append(t)
                 lines = lines[-3:]
@@ -336,6 +336,7 @@ class Game:
                     self.log.debug(f"Using by default: {self.random.seed}")
                 init = self.scenario.first('init')
                 self.executer.create_block(init).run()
+                self.world.set()
                 self.events.dispatch(Events.STATE_CHANGE, state="playing")
             elif select == "exit":
                 exit()
@@ -343,7 +344,7 @@ class Game:
                 self.events.dispatch(Events.COMMAND, command=select)
 
     def playing(self):
-        self.world.set()
+        
         try:
             while self.state == "playing":
                 self.console.set_bar(f"[yellow]{self.player.name}[/]")
@@ -388,9 +389,8 @@ class Game:
     def on_save(self):
         self.save_time = self.timestamp()
         data = {name: funcs[0]() for name, funcs in self.savers.items()}
-        # EXPEREMENTAL
         self.log.debug(f"Data: {data}")
-        data = [i[1] for i in sorted(data.items(), key=lambda item: item[0])]
+        data = [i[1] for i in sorted(data.items(), key=lambda item: item[0])] # EXPEREMENTAL
         bdata = msgpack.packb(data)
         zdata = zlib.compress(bdata, level=9)
         select = self.console.menu(5, list(self.encoder.abc.keys()))
@@ -416,10 +416,10 @@ class Game:
                 zdata = self.encoder.decode(encoded, type=select)
                 bdata = zlib.decompress(zdata)
                 data = msgpack.unpackb(bdata)
-                # EXPEREMENTAL
+                
                 funcs = dict(
                     sorted(self.savers.items(), key=lambda item: item[0])
-                ).values()
+                ).values() # EXPEREMENTAL
                 for i, (save, load) in enumerate(funcs):
                     load(data[i])
                 # for name, funcs in self.savers.items():

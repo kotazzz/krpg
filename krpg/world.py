@@ -54,14 +54,14 @@ class World:
         self._start = None
 
     def save(self):
-        return {loc.id: loc.env for loc in self.locations} | {
+        return {loc.id: loc.save() for loc in self.locations} | {
             "CURRENT": self.current.id
         }
 
     def load(self, data):
         self.current = self.get(data.pop("CURRENT"))
-        for id, env in data.items():
-            self.get(id).env = env
+        for id, locdata in data.items():
+            self.get(id).load(locdata)
 
     def take(self, location: str | Location, item_id: str, remain: int = 0):
         loc = self.get(location)
