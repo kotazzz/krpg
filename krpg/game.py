@@ -341,7 +341,10 @@ class Game:
             elif select == "exit":
                 exit()
             else:
-                self.events.dispatch(Events.COMMAND, command=select)
+                actions = self.actions.get_actions()
+                cmds = {cmd.name: cmd for cmd in actions}
+                cmds[select].callback(self)
+                self.clock.wait(cmds[select].time)
 
     def playing(self):
         
