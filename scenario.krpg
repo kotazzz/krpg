@@ -1,4 +1,4 @@
-# [red]S[/], [green]P[/], [blue]E[/], [yellow]C[/], [magenta]I[/], [cyan]A[/], [white]W[/]
+# [red]S[/], [green]P[/], E[/], [yellow]C[/], [magenta]I[/], [cyan]A[/], [white]]
 # (s) strength
 # (p) perception
 # (e) endurance
@@ -20,19 +20,72 @@
 # (21) ranged combat - дальний бой
 # (22) melee combat - ближний бой
 # (23) crafting - крафт
+
+
+
+
 init {
-  print Вы открываете портал и попадаете в неизвестную вам деревню
+  print "Вы - исследователь-путешественник, целью которого является изучение мира и поиск приключений"
+  print "Вы ищите признание среди разных людей и стремитесь получить репутацию"
+  print "Похоже, ваши запасы еды заканчиваются, но по вашим картам вы должны будете прийти в деревню, если пройдете прямо"
 }
+
+
 map {
 
-  location village Город "Точка появления" {
+  start main_street
+  link main_street market
+  link main_street village_edge
+  link village_edge tavern
+  link village_edge forest
+  link tavern room
+
+  location main_street "Центральная улица" "Похоже, поселение достаточно крупное" {
     triggers {
       first_visit {
-        print Где я?
+        print "Вы заходите в достаточно большую деревню, даже скорее поселение. Вам необходимо найти рынок, у вас как раз есть немного денег"
+        print "[yellow]Подсказка:[/] Чтобы перемещаться по миру, используйте команду [green]go[/]"
+        quest new_adventure
+        quest command_help
+        print "[yellow]Подсказка:[/] Похоже, вы получили задание. Чтобы посмотреть список заданий, используйте команду [green]quests[/]"
       }
     }
-    item sword 1
-    item hp_bottle 1
+  }
+
+  location market Рынок "Тут можно найти торговца" {
+    triggers {
+      first_visit {
+        print "Тут достаточно многолюдно..."
+        print "[yellow]Подсказка:[/] Чтобы посмотреть список людей, используйте команду [green]look[/]"
+        print "[yellow]Подсказка:[/] Чтобы поговорить с кем-либо, используйте команду [green]talk[/]"
+      } 
+    }
+  }
+
+  location village_edge "Конец улицы" "Тут слегка все заброшено, но таверна выделяется из виду" {
+    triggers {
+      first_visit {
+        print "Вы осматриваетесь вокруг и видите, что тут есть небольшая тропинка в лес и таверна"
+      } 
+    }
+  }
+
+  location tavern Таверна "Тут можно отдохнуть" {
+    triggers {
+      first_visit {
+        print "Похоже таверна выполняет роль места для встреч, где можно выпить с друзьями"
+        print "И места, где можно взять комнату и переночевать"
+      } 
+    }
+  }
+
+  location room "Ваша комната" "Надолго ли я тут?" {
+    triggers {
+      first_visit {
+        print "Вы заходите в комнату и видите, что тут есть кровать, стол и стул"
+        print "Все, что нужно для отдыха"
+      } 
+    }
   }
 
   location forest Лес "Тут можно поискать приключений" {
@@ -63,44 +116,97 @@ map {
         print Вы ничего не нашли
       }
       pass 60
+      # TODO: clearup select, res for save size optimization
     }
   }
 
-  start village
-  link village forest
 } 
 
 npcs {
-  npc trader "Торговец" "Продает всякую всячину" {
-    init base
-    location village
+  npc trader "Сэм" "Продает всякую всячину" {
+    init first_meet
+    location market
+
+    state first_meet {
+      action meet "Познакомиться" {
+        say "Ого... Давно же я не видел новых лиц. Что же, добро пожаловать в нашу деревню. "
+        say "Я Сэм, если что"
+        meet
+        say "А тебя как зовут?"
+        ans "Меня зовут {game.player.name}"
+        say "Приятно познакомиться, {game.player.name}. Что привело тебя сюда?"
+        ans "У меня закончились мои припасы. А еще вечереет. Я хотел бы найти место, где можно переночевать и купить продуктов"
+        say "Если тебе нужно что-то купить, то ты можешь обратиться ко мне. А переночевать можно в таверне"
+        say "Она на краю деревни. Ты можешь пойти туда, если хочешь"
+        ans "Спасибо за информацию"
+        set_state base
+      }
+    }
+
     state base {
-      action trade "Торговать" {
+      action trade "Торговаться" {
         set res "game.clock.in_range(7, 20)"
         if "res" {
           trade {
             sell berry
             buy hp_bottle
           }
-        }
+        } 
         if "not res" {
           print Торговец сейчас не работает
         }
       }
     }
   }
+
+  npc tavern_master "Джек" "Отвечает за таверну" {
+    init first_meet
+    location tavern
+
+    state first_meet {
+      action meet "Познакомиться" {
+        say "Приветствую тебя, путник. Я хозяин этой таверны. Меня зовут Джек. "
+        meet
+        say "А тебя как зовут?"
+        ans "Меня зовут {game.player.name}"
+        say "Приятно познакомиться, {game.player.name}"
+        say "Что заставило тебя так поздно посетить деревню?"
+        ans "Мне нужно было пополнить запасы, да и просто отдохнуть"
+        ans "Я около 4 дней в походах. А сейчас наткнулся на место, где есть возможность передохнуть"
+        say "Что ж. У меня для тебя новость. Я могу тебе дать небольшую комнату"
+        ans "Сколько это будет стоить?"
+        say "Если хочешь, можешь помочь с письмами завтра, тогда считай, что бесплатно"
+        ans "Хорошо, я помогу. Спасибо за ключ"
+        print [green]Вы получили ключ от комнаты[/]
+        take key 1
+        set_state base
+      }
+    }
+    state base {
+
+    }
+  }
 }
 
 quests {
-  quest first_meet "Первая встреча" "Ваше приключение только начинается" {
-    # require: ... (Not developed yet)
-    stage 0 "Что это за место?" {
-      goal visit forest "Посетите лес" "Вам стоит поискать там ягоды"
-      reward next_stage
+  quest command_help "Изучение команд" "Опробуйте некоторые команды" {
+    stage 0 "Выполните команды" {
+      goal run help "Команда помощи" "Вам нужно использовать команду [green]help[/] для получения помощи"
+      goal run look "Команда осмотра" "Вам нужно использовать команду [green]look[/] для осмотра местности"
+      goal run talk "Команда разговора" "Вам нужно использовать команду [green]talk[/] для разговора с людьми"
+      reward end
     }
-    stage 1 "Ладно, помогу ему" {
-      goal collect berries 5 "Соберите 5 ягод" "Вам нужно собрать 5 ягод"
-      reward set_npc trader first_meet_complete
+  }
+
+  quest new_adventure "Новые приключения" "Похоже, что в деревне вам есть смысл немного задержаться" {
+    stage 0 "Что это за место?" {
+      goal visit market "Посетите рынок" "Вам нужно посетить рынок"
+      goal meet trader "Познакомьтесь с торговцем" "Он немного познакомит вас с деревней и даст продуктов"
+      reward stage 1
+    }
+    stage 1 "Придется переночевать" {
+      goal meet tavern_master "Познакомьтесь с хозяином таверны" "Он даст вам комнату на ночь"
+      reward end
     }
   }
 }
@@ -111,6 +217,10 @@ items {
   # use hp AMOUNT
   # stack AMOUNT
   # cost SELL BUY
+  item key "Ключ" "Ключ от вашей комнаты" {
+    stack 1
+    cost 0 0
+  }
 
   item sword "Меч" "Острая штука" {  
     wear WEAPON 10 0  0  0  0  0  0

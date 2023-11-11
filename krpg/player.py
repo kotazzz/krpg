@@ -27,13 +27,16 @@ class Player(Entity):
         self.game.events.dispatch(Events.PICKUP, item=item, amount=amount)
         return self.inventory.pickup(item, amount)
 
-    @executer_command("pickup")
+    @executer_command("take")
     def pickup_command(game: Game, item_id: str, amount: int = 1):
         item = game.bestiary.get_item(item_id)
         if not item:
             raise ValueError(f"Unknown item {item_id}")
-        game.player.pickup(item, amount)
-
+        remain = game.player.pickup(item, amount)
+        if remain:
+            game.console.print(f"[red]Вы не смогли подобрать {remain}x{item.name}[/]")
+            game.world.drop(item_id, remain)
+            
     def add_money(self, amount):
         if not amount:
             return
@@ -158,9 +161,17 @@ class Player(Entity):
             item = game.bestiary.get_item(item_id)
             game.console.print(f"  [white]{count}x[green]{item.name}[/]")
         game.console.print()
+        
+        game.console.print("[bold green]Люди[/]")
+        npc = game.npc_manager.get_npcs(location.id)
+        if not npc:
+            game.console.print("  [bold red]Никого нет[/]")
+        for npc in npc:
+            game.console.print(f"  [bold blue]{npc.name}[/]")
+        game.console.print()
 
     @action("pickup", "Подобрать предмет", "Действия")
-    def command_pickup(game: Game):
+    def action_pickup(game: Game):
         location = game.world.current
         variants = [(c, game.bestiary.get_item(i)) for i, c in location.items]
         select: tuple[int, Item] = game.console.menu(
@@ -175,7 +186,8 @@ class Player(Entity):
             remain = game.player.pickup(select[1], select[0])
             game.world.take(location, selected_id, remain)
             game.clock.wait(2)
-
+            
+            
     @action("map", "Информация о карте", "Информация")
     def action_map(game: Game):
         tree = Tree(f"[green b]{game.world.current.name} [/][blue] <-- Вы тут[/]")

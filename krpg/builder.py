@@ -110,10 +110,11 @@ class Builder:
             stages = {}
             for stage in quest.all("stage"):
                 sid, sname = stage.args
+                sid = int(sid) if sid.isdigit() else sid
                 stages[sid] = {}
                 stages[sid]["name"] = sname
-                stages[sid]["goals"] = stage.all("goal")
-                stages[sid]["rewards"] = stage.all("reward")
+                stages[sid]["goals"] = [i.args for i in stage.all("goal")]
+                stages[sid]["rewards"] = [i.args for i in stage.all("reward")]
             self.game.quest_manager.quests.append(Quest(id, name, description, stages))
         
                 

@@ -429,7 +429,7 @@ class Game:
                 #     funcs[1](data[name])
             except Exception as e:
                 self.console.print(f"[red]Ошибка при загрузке игры: {e}[/]")
-                if not self.debug:
+                if self.debug:
                     self.log.exception(e)
             else:
                 self.console.print("[green]Игра загружена[/]")
