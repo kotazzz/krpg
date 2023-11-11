@@ -274,10 +274,9 @@ class Game:
 
         self.quest_manager = QuestManager(self)
         debug(f"Init [green]QuestManager[/]: {self.quest_manager}")
-        
+
         self.builder = Builder(self)
         debug(f"Starting build world...")
-        
 
         self.builder.build()
 
@@ -334,7 +333,7 @@ class Game:
                     self.random.set_seed(seed)
                 else:
                     self.log.debug(f"Using by default: {self.random.seed}")
-                init = self.scenario.first('init')
+                init = self.scenario.first("init")
                 self.executer.create_block(init).run()
                 self.world.set()
                 self.events.dispatch(Events.STATE_CHANGE, state="playing")
@@ -347,7 +346,7 @@ class Game:
                 self.clock.wait(cmds[select].time)
 
     def playing(self):
-        
+
         try:
             while self.state == "playing":
                 self.console.set_bar(f"[yellow]{self.player.name}[/]")
@@ -363,7 +362,9 @@ class Game:
         return int(time.time()) - TIMESHIFT  # 1 Nov 2022 00:00 (+3)
 
     def add_actions(self, obj: object):
-        self.log.debug(f"  [yellow3]Add submanager [yellow]{obj.__class__.__name__}", stacklevel=2)
+        self.log.debug(
+            f"  [yellow3]Add submanager [yellow]{obj.__class__.__name__}", stacklevel=2
+        )
         self.actions.submanagers.append(obj)
 
     def add_saver(self, name: str, save: callable, load: callable):
@@ -393,7 +394,9 @@ class Game:
         self.save_time = self.timestamp()
         data = {name: funcs[0]() for name, funcs in self.savers.items()}
         self.log.debug(f"Data: {data}")
-        data = [i[1] for i in sorted(data.items(), key=lambda item: item[0])] # EXPEREMENTAL
+        data = [
+            i[1] for i in sorted(data.items(), key=lambda item: item[0])
+        ]  # EXPEREMENTAL
         bdata = msgpack.packb(data)
         zdata = zlib.compress(bdata, level=9)
         select = self.console.menu(5, list(self.encoder.abc.keys()))
@@ -419,10 +422,10 @@ class Game:
                 zdata = self.encoder.decode(encoded, type=select)
                 bdata = zlib.decompress(zdata)
                 data = msgpack.unpackb(bdata)
-                
+
                 funcs = dict(
                     sorted(self.savers.items(), key=lambda item: item[0])
-                ).values() # EXPEREMENTAL
+                ).values()  # EXPEREMENTAL
                 for i, (save, load) in enumerate(funcs):
                     load(data[i])
                 # for name, funcs in self.savers.items():
