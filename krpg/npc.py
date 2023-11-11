@@ -31,10 +31,13 @@ class Npc:
 
     def get_actions(self):
         return self.actions[self.state]
+
     def save(self):
         return [self.state, self.known]
+
     def load(self, data):
         self.state, self.known = data
+
     def __repr__(self) -> str:
         return f"<Npc name={self.name!r} state={self.state!r}>"
 
@@ -53,7 +56,7 @@ class NpcManager:
         for npc in self.npcs:
             data[npc.id] = npc.save()
         return data
-            
+
     def load(self, data):
         for npc in self.npcs:
             npc.load(data[npc.id])
@@ -82,7 +85,7 @@ class NpcManager:
         game.npc_manager.talking = sel
         sel_act.callback(game)
         game.npc_manager.talking = None
-        
+
     def say(self, name, text):
         if name == "???":
             nametag = "[grey]???"
@@ -91,27 +94,27 @@ class NpcManager:
             nametag = f"[#{hash&0xffffff:06x}]{name}"
         text = self.game.executer.process_text(text)
         self.game.console.print(f"{nametag}[white]: {text}")
-        
+
     @executer_command("say")
     def say_command(game: Game, *text):
-        text= " ".join(text)
+        text = " ".join(text)
         npc = game.npc_manager.talking
         game.npc_manager.say(npc.name if npc.known else "???", text)
-        
+
     @executer_command("ans")
     def ans_command(game: Game, *text):
-        text= " ".join(text)
+        text = " ".join(text)
         game.npc_manager.say(game.player.name, text)
-        
+
     @executer_command("meet")
     def meet_command(game: Game):
         game.npc_manager.talking.known = True
         game.events.dispatch(Events.NPC_MEET, npc_id=game.npc_manager.talking.id)
-        
+
     @executer_command("set_state")
     def set_state_command(game: Game, state: str):
         game.npc_manager.talking.state = state
-        
+
     @executer_command("trade")
     def trade_command(game: Game, block: Block):
         allowed_sell = block.section.first("sell").args
@@ -193,5 +196,6 @@ class NpcManager:
             elif action == 2:
                 item = game.bestiary.get_item(slot.id)
                 presenter.presence_item(item)
+
     def __repr__(self) -> str:
         return f"<NpcManager n={len(self.npcs)}>"

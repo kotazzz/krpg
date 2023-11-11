@@ -37,9 +37,10 @@ class Events:
 
     # quests.py
     QUEST_START = "quest_start"  # quest_id: str
-    
+
     # nps.py
-    NPC_MEET = "npc_meet" # npc_id: str
+    NPC_MEET = "npc_meet"  # npc_id: str
+
 
 class EventHandler:
     def __init__(self, locked: bool = False):

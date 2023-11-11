@@ -89,7 +89,7 @@ class World:
         loc = current_loc or self._start
         self.game.events.dispatch(Events.MOVE, before=self.current, after=loc)
         self.current = self.get(loc)
-        
+
         if not self.current.visited:
             for *_, block in self.current.get_triggers("first_visit"):
                 block.run()

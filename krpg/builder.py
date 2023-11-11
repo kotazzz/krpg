@@ -19,6 +19,7 @@ class Builder:
         self.scenario = game.scenario
         self.game.add_saver("test", self.save, self.load)
         self.tag = ""
+
     def save(self):
         g = self.game
         return [g.scenario_hash, g.version, g.start_time, g.save_time]
@@ -34,7 +35,7 @@ class Builder:
         self.game.log.debug(f"[cyan]\[{self.tag:^10}] {msg}", stacklevel=2)
 
     def build(self):
-        
+
         self.tag = "items"
         self.build_items(self.scenario.first("items"))
         self.tag = "entities"
@@ -116,8 +117,6 @@ class Builder:
                 stages[sid]["goals"] = [i.args for i in stage.all("goal")]
                 stages[sid]["rewards"] = [i.args for i in stage.all("reward")]
             self.game.quest_manager.quests.append(Quest(id, name, description, stages))
-        
-                
 
     def build_world(self, world: Section):
         locations = world.all("location")

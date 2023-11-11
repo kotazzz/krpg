@@ -159,7 +159,7 @@ class Inventory:
                 elif slot.id == item.id:
                     slot_amount = min(item.stack - slot.amount, amount)
                     amount -= slot_amount
-                    slot.amount += slot_amount 
+                    slot.amount += slot_amount
             if amount == 0:
                 break
         return amount

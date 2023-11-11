@@ -25,7 +25,7 @@ class ExecuterCommand:
 class Base:
     @executer_command("print")
     def builtin_print(game: Game, *args):
-        text = ' '.join(args)
+        text = " ".join(args)
         game.console.print("[blue]" + game.executer.process_text(text))
 
     @executer_command("$")
@@ -99,7 +99,10 @@ class Executer:
         return cmds
 
     def add_extension(self, ext: object):
-        self.game.log.debug(f"  [yellow3]Added ExecuterExtension [yellow]{ext.__class__.__name__}", stacklevel=2)
+        self.game.log.debug(
+            f"  [yellow3]Added ExecuterExtension [yellow]{ext.__class__.__name__}",
+            stacklevel=2,
+        )
         self.extensions.append(ext)
 
     def get_all_commands(self) -> dict[str, ExecuterCommand]:
@@ -141,7 +144,7 @@ class Executer:
     def create_block(self, section: Section):
         block = Block(self, section)
         return block
-    
+
     def process_text(self, text: str):
         game = self.game
         env = game.executer.env | {"game": game, "env": game.executer.env}
