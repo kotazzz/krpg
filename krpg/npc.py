@@ -1,8 +1,10 @@
 from __future__ import annotations
+from krpg.events import Events
 from krpg.inventory import Slot
 from krpg.actions import Action, action
 from typing import TYPE_CHECKING
 
+from zlib import crc32
 from krpg.executer import Block, executer_command
 
 if TYPE_CHECKING:
@@ -25,10 +27,14 @@ class Npc:
         self.description: str = description
         self.location: str = location
         self.actions: dict[str, list[Action]] = actions  # {state: [actions]}
+        self.known: bool = False
 
     def get_actions(self):
         return self.actions[self.state]
-
+    def save(self):
+        return [self.state, self.known]
+    def load(self, data):
+        self.state, self.known = data
     def __repr__(self) -> str:
         return f"<Npc name={self.name!r} state={self.state!r}>"
 
@@ -40,12 +46,17 @@ class NpcManager:
         self.game.add_saver("npcs", self.save, self.load)
         self.game.add_actions(self)
         self.game.executer.add_extension(self)
+        self.talking: Npc | None = None
 
     def save(self):
-        pass
-
+        data = {}
+        for npc in self.npcs:
+            data[npc.id] = npc.save()
+        return data
+            
     def load(self, data):
-        pass
+        for npc in self.npcs:
+            npc.load(data[npc.id])
 
     def get_npcs(self, location: str):
         return [npc for npc in self.npcs if npc.location == location]
@@ -68,8 +79,39 @@ class NpcManager:
         )
         if not sel_act:
             return
+        game.npc_manager.talking = sel
         sel_act.callback(game)
-
+        game.npc_manager.talking = None
+        
+    def say(self, name, text):
+        if name == "???":
+            nametag = "[grey]???"
+        else:
+            hash = crc32(name.encode("utf-8"))
+            nametag = f"[#{hash&0xffffff:06x}]{name}"
+        text = self.game.executer.process_text(text)
+        self.game.console.print(f"{nametag}[white]: {text}")
+        
+    @executer_command("say")
+    def say_command(game: Game, *text):
+        text= " ".join(text)
+        npc = game.npc_manager.talking
+        game.npc_manager.say(npc.name if npc.known else "???", text)
+        
+    @executer_command("ans")
+    def ans_command(game: Game, *text):
+        text= " ".join(text)
+        game.npc_manager.say(game.player.name, text)
+        
+    @executer_command("meet")
+    def meet_command(game: Game):
+        game.npc_manager.talking.known = True
+        game.events.dispatch(Events.NPC_MEET, npc_id=game.npc_manager.talking.id)
+        
+    @executer_command("set_state")
+    def set_state_command(game: Game, state: str):
+        game.npc_manager.talking.state = state
+        
     @executer_command("trade")
     def trade_command(game: Game, block: Block):
         allowed_sell = block.section.first("sell").args

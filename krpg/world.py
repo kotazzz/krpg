@@ -86,8 +86,9 @@ class World:
         loc.items.append((item_id, count))
 
     def set(self, current_loc: str | Location | None = None):
-        self.game.events.dispatch(Events.MOVE, before=self.current, after=current_loc)
-        self.current = self.get(current_loc or self._start)
+        loc = current_loc or self._start
+        self.game.events.dispatch(Events.MOVE, before=self.current, after=loc)
+        self.current = self.get(loc)
         
         if not self.current.visited:
             for *_, block in self.current.get_triggers("first_visit"):

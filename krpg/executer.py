@@ -24,17 +24,9 @@ class ExecuterCommand:
 
 class Base:
     @executer_command("print")
-    def builtin_print(game: Game, *args, **kwargs):
-        env = game.executer.env | {"game": game, "env": game.executer.env}
-        args = [ast.literal_eval('"""' + arg + '"""') for arg in args]
-        # newkwargs = {}
-        # argtypes = {"min": float}
-        # for name, func in argtypes.items():
-        #    if name in kwargs:
-        #        newkwargs[name] = func(kwargs[name])
-        text = eval(f"f'''{' '.join(args)}'''", env)
-        # game.console.print(text, **newkwargs)
-        game.console.print(text)
+    def builtin_print(game: Game, *args):
+        text = ' '.join(args)
+        game.console.print("[blue]" + game.executer.process_text(text))
 
     @executer_command("$")
     def builtin_exec(game: Game, code: str):
@@ -149,6 +141,12 @@ class Executer:
     def create_block(self, section: Section):
         block = Block(self, section)
         return block
+    
+    def process_text(self, text: str):
+        game = self.game
+        env = game.executer.env | {"game": game, "env": game.executer.env}
+        text = eval(f"f'''{text}'''", env)
+        return text
 
     def __repr__(self):
         return (
