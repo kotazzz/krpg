@@ -1,3 +1,4 @@
+import urllib3
 import requests
 import os
 import zlib
@@ -6,6 +7,7 @@ link = "https://raw.githubusercontent.com/kotazzz/krpg/master/"
 files = [
     "krpg/*.py",
     "scenario.krpg",
+    "updater.py"
 ]
 
 def local_hashes():
@@ -38,27 +40,31 @@ def update():
             queue.append(i)
         elif local[i] != remote[i]:
             print(f"Updated: {i}")
-            print(local[i], remote[i])
             queue.append(i)
     for i in local:
         if i not in remote:
             print(f"Deleted: {i}")
             os.remove(i)
+    if not queue:
+        print("Nothing to update")
+        return
     for i in queue:
         print(f"Downloading: {i}")
         # download
         url = (link + i).replace("\\", "/")
-        r = requests.get(url)
-        if r.status_code != 200:
-            raise Exception(f"Can't download {url}: {r.status_code}, {r.reason}")
+        
+        http = urllib3.PoolManager()
+        r = http.request('GET', url)
+        if r.status != 200:
+            raise Exception(f"Can't download {url}: {r.status}, {r.reason}")
         # create folders
         try:
             os.makedirs(os.path.dirname(i), exist_ok=True)
         except FileNotFoundError:
             print("Skipping folder creation")
-        # save
         with open(i, "wb") as f:
-            f.write(r.content)
+            f.write(r.data.replace(b"\r\n", b"\n"))
+        
 
 def main():
     update()
