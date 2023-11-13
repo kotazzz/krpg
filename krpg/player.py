@@ -30,6 +30,7 @@ class Player(Entity):
     @executer_command("take")
     def pickup_command(game: Game, item_id: str, amount: int = 1):
         item = game.bestiary.get_item(item_id)
+        amount = int(amount)
         if not item:
             raise ValueError(f"Unknown item {item_id}")
         remain = game.player.pickup(item, amount)
