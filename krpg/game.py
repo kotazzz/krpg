@@ -294,7 +294,6 @@ class Game:
                 "start": "Начать новую игру",
                 "load": "Загрузить сохранение",
                 "credits": "Авторы игры",
-                "settings": "Настройки игры",
                 "exit": "Выйти",
             }
             select = self.console.menu(
@@ -304,10 +303,7 @@ class Game:
                 title="[green b]Игровое меню",
             )
 
-            if select == "load":
-                self.new_game()
-                self.events.dispatch(Events.LOAD)
-            elif select == "start":
+            if select == "start":
                 self.new_game()
                 c.print(
                     "Задать имя персонажу можно [red]только один раз[/]!\n"
@@ -337,13 +333,14 @@ class Game:
                 self.executer.create_block(init).run()
                 self.world.set()
                 self.events.dispatch(Events.STATE_CHANGE, state="playing")
+                
+            elif select == "load":
+                self.new_game()
+                self.events.dispatch(Events.LOAD)
+            elif select == "credits":
+                self.action_credits.callback(self)
             elif select == "exit":
                 exit()
-            else:
-                actions = self.actions.get_actions()
-                cmds = {cmd.name: cmd for cmd in actions}
-                cmds[select].callback(self)
-                self.clock.wait(cmds[select].time)
 
     def playing(self):
 
