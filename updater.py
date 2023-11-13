@@ -18,7 +18,10 @@ def local_hashes():
         for j in glob.glob(i):
             # get hash
             with open(j, "rb") as f:
-                hashes[j] = zlib.crc32(f.read())
+                j = j.replace("\\", "/")
+                # CRLF -> LF
+                fixed = f.read().replace(b"\r\n", b"\n")
+                hashes[j] = zlib.crc32(fixed)
     return hashes
 
 def get_hashes():
@@ -51,8 +54,7 @@ def update():
     for i in queue:
         print(f"Downloading: {i}")
         # download
-        url = (link + i).replace("\\", "/")
-        
+        url = link + i
         http = urllib3.PoolManager()
         r = http.request('GET', url)
         if r.status != 200:
