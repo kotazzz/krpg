@@ -46,6 +46,18 @@
 pip install rich prompt_toolkit msgpack
 ```
 
+Альтернативные способы установки: скачивание файлов
+
+```bash
+# curl updater.py from kotazzz/krpg and run it with python
+curl https://raw.githubusercontent.com/kotazzz/krpg/master/updater.py | python
+```
+
+```ps
+curl https://raw.githubusercontent.com/kotazzz/krpg/master/updater.py | python
+```
+
+
 ## 🎈 Скриншоты <a name="gallery"></a>
 
 Пока что тут пусто...
