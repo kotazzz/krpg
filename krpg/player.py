@@ -27,8 +27,8 @@ class Player(Entity):
         self.game.events.dispatch(Events.PICKUP, item=item, amount=amount)
         return self.inventory.pickup(item, amount)
 
-    @executer_command("take")
-    def pickup_command(game: Game, item_id: str, amount: int = 1):
+    @executer_command("give")
+    def give_command(game: Game, item_id: str, amount: int = 1):
         item = game.bestiary.get_item(item_id)
         amount = int(amount)
         if not item:
@@ -101,7 +101,7 @@ class Player(Entity):
         effects = item.effects
         for name, val in effects.items():
             if name == "hp":
-                self.heal(val)
+                self.heal(val) # TODO: more effects
             else:
                 raise ValueError(f"Unknown effect {name}")
 
@@ -112,7 +112,7 @@ class Player(Entity):
             raise ValueError(f"Unknown item {item_id}")
         game.player.apply(item)
 
-    def has_item(self, item: Item | str) -> Slot | bool:
+    def has(self, item: Item | str) -> Slot | bool:
         item = item.id if isinstance(item, Item) else item
         for slot in self.inventory.slots:
             if slot.id == item:
@@ -121,7 +121,7 @@ class Player(Entity):
 
     def require_item(self, item_id: str, amount: int = 1, take: bool = True):
         game = self.game
-        slot = game.player.has_item(item_id)
+        slot = game.player.has(item_id)
         if not slot:
             raise ValueError(f"Unknown item {item_id}")
         if slot.amount < amount:
@@ -216,8 +216,8 @@ class Player(Entity):
             3, roads, "e", lambda o: o.name, title="Локации"
         )
         if new_loc:
-            w.set(new_loc)
-            game.console.print(f"[yellow]Вы пришли в {new_loc.name}")
+            if w.set(new_loc):
+                game.console.print(f"[yellow]Вы пришли в {new_loc.name}")
 
     @action("inventory", "Управление инвентарем", "Игрок")
     def action_inventory(game: Game):
@@ -279,9 +279,12 @@ class Player(Entity):
                 else:
                     console.print(f"[red]Вы не можете это использовать")
             elif op == "d":
-                game.world.drop(slot.id, slot.amount)
-                slot.clear()
-                console.print(f"[green]Предмет успешно выброшен[/]")
+                if game.bestiary.get_item(slot.id).throwable:
+                    game.world.drop(slot.id, slot.amount)
+                    slot.clear()
+                    console.print(f"[green]Предмет успешно выброшен[/]")
+                else:
+                    console.print(f"[red]Вы не можете это выбросить")
 
     @action("upgrade", "Улучшить персонажа", "Действия")
     def action_upgrade(game: Game):

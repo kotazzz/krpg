@@ -5,7 +5,7 @@ from krpg.actions import Action
 from typing import TYPE_CHECKING, Any
 
 from krpg.events import Events
-from krpg.executer import Block
+from krpg.executer import Block, executer_command
 
 if TYPE_CHECKING:
     from krpg.game import Game
@@ -16,6 +16,7 @@ class Location:
         self.id = id
         self.name = name
         self.description = description
+        self.locked: bool = True
         self.env: dict = {}
         self.actions: list[Action] = []
         self.items: list[str, int] = []
@@ -24,12 +25,13 @@ class Location:
         self.visited: bool = False
 
     def save(self):
-        return [self.env, self.items, self.visited]
+        return [self.env, self.items, self.visited, self.locked]
 
     def load(self, data):
         self.env = data[0]
         self.items = data[1]
         self.visited = data[2]
+        self.locked = data[3]
 
     def get_triggers(self, name) -> list[tuple[str, list, Block]]:
         # first_visit
@@ -46,11 +48,12 @@ class Location:
 class World:
     def __init__(self, game: Game):
         self.locations: list[Location] = []
-        self.roads = []
+        self.roads: list[tuple[Location, Location]] = []
         self.current: Location | None = None
         self.game = game
         self.game.add_saver("world", self.save, self.load)
         self.game.add_actions(self)
+        self.game.executer.add_extension(self)
         self._start = None
 
     def save(self):
@@ -65,7 +68,7 @@ class World:
 
     def take(self, location: str | Location, item_id: str, remain: int = 0):
         loc = self.get(location)
-        # TODO: Add check
+        # TODO: Add check?
         self.game.events.dispatch(
             Events.WORLD_ITEM_TAKE, item_id=item_id, remain=remain
         )
@@ -80,20 +83,28 @@ class World:
 
     def drop(self, item_id: str, count: int = 0, location: str | Location = None):
         loc = self.get(location) if location else self.current
-        # TODO: Add check
         self.game.events.dispatch(Events.WORLD_ITEM_DROP, item_id=item_id, count=count)
 
         loc.items.append((item_id, count))
 
-    def set(self, current_loc: str | Location | None = None):
-        loc = current_loc or self._start
-        self.game.events.dispatch(Events.MOVE, before=self.current, after=loc)
-        self.current = self.get(loc)
-
-        if not self.current.visited:
-            for *_, block in self.current.get_triggers("first_visit"):
+    def set(self, new_loc: str | Location | None = None) -> bool:
+        new_loc = self.get(new_loc or self._start)
+        if self.current:
+            for *_, block in self.current.get_triggers("on_exit"):
                 block.run()
-        self.current.visited = True
+        for *_, block in new_loc.get_triggers("on_enter"):
+            block.run()
+        
+        if not self.game.executer.env.get('_success', True):
+            return False
+
+        if not new_loc.visited:
+            for *_, block in new_loc.get_triggers("first_visit"):
+                block.run()
+        new_loc.visited = True
+        self.game.events.dispatch(Events.MOVE, before=self.current, after=new_loc)
+        self.current = new_loc
+        return True
 
     def extract(self) -> list[Action]:
         return self.current.actions
@@ -121,11 +132,16 @@ class World:
         loc = self.get(loc)
         res = []
         for a, b in self.roads:
-            if a is loc:
+            if a is loc and not b.locked:
                 res.append(b)
-            if b is loc:
+            if b is loc and not a.locked:
                 res.append(a)
         return res
+    
+    @executer_command("unlock")
+    def unlock(game: Game, loc: str):
+        loc = game.world.get(loc)
+        loc.locked = False
 
     def road(self, loc1: str | Location, loc2: str | Location):
         loc1, loc2 = self.get(loc1, loc2)

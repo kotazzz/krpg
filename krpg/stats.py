@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class StatsManager:
     def __init__(self, game: Game):
         self.game = game
-
+        # TODO: Добавить счетчик квестов
         self.counters = {
             "c": ["Исполнено команд", 0],
             "p": ["Поднято предметов", 0],

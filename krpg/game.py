@@ -236,7 +236,7 @@ class Game:
         )
 
         self.savers: dict[str, set[callable, callable]] = {}
-
+        # TODO: replace init with dict of Module: func
         self.random = RandomManager(self)
         debug(f"Init [green]RandomManager[/]: {self.random}")
 
@@ -332,6 +332,7 @@ class Game:
                 init = self.scenario.first("init")
                 self.executer.create_block(init).run()
                 self.world.set()
+                self.world.current.locked = False
                 self.events.dispatch(Events.STATE_CHANGE, state="playing")
                 
             elif select == "load":

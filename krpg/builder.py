@@ -6,7 +6,7 @@ from krpg.bestiary import Meta
 from krpg.inventory import Item, ItemType
 from krpg.npc import Npc
 from krpg.quests import Quest
-from krpg.scenario import Section
+from krpg.scenario import Command, Section
 from krpg.world import Location
 
 if TYPE_CHECKING:
@@ -54,26 +54,33 @@ class Builder:
             id, name, description = item.args
             obj = Item(id, name, description)
             self.debug(f"  Building [blue]{id}:{name}")
-            for cmd in item.children:
-                if cmd.name == "wear":
-                    wear, *attrs = cmd.args
-                    attrs = list(map(int, attrs))
-                    if wear not in ItemType.__members__:
-                        raise Exception(f"Invalid item type: {wear}")
-                    if len(attrs) != 7:
-                        raise Exception(
-                            f"Invalid amount of SPECIAW attrs ({len(attrs)})"
-                        )
-                    obj.set_wear(ItemType[wear], Attributes(*attrs))
-                elif cmd.name == "use":
-                    act, am = cmd.args
-                    am = int(am)
-                    obj.set_use(act, am)
-                elif cmd.name == "stack":
-                    obj.set_stack(int(cmd.args[0]))
-                elif cmd.name == "cost":
-                    sell, buy = map(int, cmd.args)
-                    obj.set_cost(sell, buy)
+            if not isinstance(item, Command):
+                for cmd in item.children:
+                    if cmd.name == "wear":
+                        wear, *attrs = cmd.args
+                        attrs = list(map(int, attrs))
+                        if wear not in ItemType.__members__:
+                            raise Exception(f"Invalid item type: {wear}")
+                        if len(attrs) != 7:
+                            raise Exception(
+                                f"Invalid amount of SPECIAW attrs ({len(attrs)})"
+                            )
+                        obj.set_wear(ItemType[wear], Attributes(*attrs))
+                    elif cmd.name == "use":
+                        act, am = cmd.args
+                        am = int(am)
+                        obj.set_use(act, am)
+                    elif cmd.name == "stack":
+                        obj.set_stack(int(cmd.args[0]))
+                    elif cmd.name == "cost":
+                        sell, buy = map(int, cmd.args)
+                        obj.set_cost(sell, buy)
+                    elif cmd.name == "throwable":
+                        #! true, not True
+                        obj.throwable = cmd.args[0] == "true"
+            else:
+                # "Краткая" запись предмета без уточнения аттрибутов чаще используется для квестовых предметов
+                obj.throwable = False
             self.game.bestiary.items.append(obj)
 
     def build_entities(self, entities: Section):
