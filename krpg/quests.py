@@ -1,5 +1,4 @@
 from __future__ import annotations
-from tkinter import E
 
 from krpg.actions import action
 from typing import TYPE_CHECKING
