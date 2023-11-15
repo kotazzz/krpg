@@ -63,6 +63,7 @@ class NpcManager:
 
     def get_npcs(self, location: str):
         return [npc for npc in self.npcs if npc.location == location]
+
     def get_npc(self, id: str):
         for npc in self.npcs:
             if npc.id == id:
@@ -120,10 +121,10 @@ class NpcManager:
     def set_state_command(game: Game, state: str):
         game.npc_manager.set_state(game.npc_manager.talking, state)
 
-    def set_state(self, npc: Npc, state:str):
+    def set_state(self, npc: Npc, state: str):
         npc.state = state
         self.game.events.dispatch(Events.NPC_STATE, npc_id=npc.id, state=state)
-    
+
     @executer_command("trade")
     def trade_command(game: Game, block: Block):
         allowed_sell = block.section.first("sell").args

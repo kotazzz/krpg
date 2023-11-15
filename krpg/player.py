@@ -101,7 +101,7 @@ class Player(Entity):
         effects = item.effects
         for name, val in effects.items():
             if name == "hp":
-                self.heal(val) # TODO: more effects
+                self.heal(val)  # TODO: more effects
             else:
                 raise ValueError(f"Unknown effect {name}")
 

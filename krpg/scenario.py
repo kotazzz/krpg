@@ -98,5 +98,6 @@ def parse(text):
                 current.children.append(Command.from_raw(line))
     return current
 
+
 # TODO: def merge(*sections) -> section
 # sum(section.children for section in sections, [])

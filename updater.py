@@ -3,12 +3,10 @@ import requests
 import os
 import zlib
 import glob
+
 link = "https://raw.githubusercontent.com/kotazzz/krpg/master/"
-files = [
-    "krpg/*.py",
-    "scenario.krpg",
-    "updater.py"
-]
+files = ["krpg/*.py", "scenario.krpg", "updater.py"]
+
 
 def local_hashes():
     # find all files
@@ -24,18 +22,20 @@ def local_hashes():
                 hashes[j] = zlib.crc32(fixed)
     return hashes
 
+
 def get_hashes():
     r = requests.get(link + "hashes.json")
     if r.status_code == 200:
         return r.json()
     else:
         raise Exception("Can't get hashes")
-    
+
+
 def update():
     # get hashes from both sides
     local = local_hashes()
     remote = get_hashes()
-    
+
     queue = []
     for i in remote:
         if i not in local:
@@ -56,7 +56,7 @@ def update():
         # download
         url = link + i
         http = urllib3.PoolManager()
-        r = http.request('GET', url)
+        r = http.request("GET", url)
         if r.status != 200:
             raise Exception(f"Can't download {url}: {r.status}, {r.reason}")
         # create folders
@@ -66,10 +66,11 @@ def update():
             print("Skipping folder creation")
         with open(i, "wb") as f:
             f.write(r.data.replace(b"\r\n", b"\n"))
-        
+
 
 def main():
     update()
+
 
 if __name__ == "__main__":
     main()
