@@ -209,25 +209,13 @@ class Game:
             self.new_game_init()
 
     def new_game_init(self):
-
         self.start_time = self.save_time = self.timestamp()
         debug = self.log.debug
-
-        self.actions = ActionManager()
-        debug(f"Init [green]ActionManager[/]: {self.actions}")
-
-        self.add_actions(self)
-        self.encoder = Encoder()
-        debug(f"Init [green]Encoder[/]: {self.encoder}")
-
-        self.events = EventHandler()
-        debug(f"Init [green]EventHandler[/]: {self.events}")
-
-        for attr in filter(lambda x: x.startswith("on_"), dir(self)):
-            cb = getattr(self, attr)
-            self.events.listen(attr[3:], cb)
-            debug(f"  [yellow3]Added [red]listener[/] for {attr[3:]}", stacklevel=2)
-
+        
+        def init(obj: object):
+            debug(f"Init [green]{obj.__class__.__name__}[/]: {obj}")
+            return obj
+        
         scenario = open("scenario.krpg", encoding="utf-8").read()
         self.scenario_hash = f"{zlib.crc32(scenario.encode()):x}"
         self.scenario = parse(scenario)
@@ -236,48 +224,32 @@ class Game:
         )
 
         self.savers: dict[str, set[callable, callable]] = {}
-        # TODO: replace init with dict of Module: func
-        self.random = RandomManager(self)
-        debug(f"Init [green]RandomManager[/]: {self.random}")
-
-        self.settings = Settings(self)
-        debug(f"Init [green]Settings[/]: {self.settings}")
-        self.executer = Executer(self)
-        debug(f"Init [green]Executer[/]: {self.executer}")
-
-        self.player = Player(self)
-        debug(f"Init [green]Player[/]: {self.player}")
-
-        self.diary = Diary(self)
-        debug(f"Init [green]Diary[/]: {self.diary}")
-
-        self.presenter = Presenter(self)
-        debug(f"Init [green]Presenter[/]: {self.presenter}")
-
-        self.battle_manager = BattleManager(self)
-        debug(f"Init [green]BattleManager[/]: {self.battle_manager}")
-
-        self.bestiary = Bestiary(self)
-        debug(f"Init [green]Bestiary[/]: {self.bestiary}")
-
-        self.stats = StatsManager(self)
-        debug(f"Init [green]StatsManager[/]: {self.stats}")
-
-        self.clock = Clock(self)
-        debug(f"Init [green]Clock[/]: {self.clock}")
-
-        self.npc_manager = NpcManager(self)
-        debug(f"Init [green]NpcManager[/]: {self.npc_manager}")
-
-        self.world = World(self)
-        debug(f"Init [green]World[/]: {self.world}")
-
-        self.quest_manager = QuestManager(self)
-        debug(f"Init [green]QuestManager[/]: {self.quest_manager}")
-
+        
+        self.actions = init(ActionManager())
+        self.add_actions(self)
+        
+        self.events = init(EventHandler())
+        for attr in filter(lambda x: x.startswith("on_"), dir(self)):
+            cb = getattr(self, attr)
+            self.events.listen(attr[3:], cb)
+            debug(f"  [yellow3]Added [red]listener[/] for {attr[3:]}", stacklevel=2)
+        
+        self.encoder = init(Encoder())
+        self.random = init(RandomManager(self))
+        self.settings = init(Settings(self))
+        self.executer = init(Executer(self))
+        self.player = init(Player(self))
+        self.diary = init(Diary(self))
+        self.presenter = init(Presenter(self))
+        self.battle_manager = init(BattleManager(self))
+        self.bestiary = init(Bestiary(self))
+        self.stats = init(StatsManager(self))
+        self.clock = init(Clock(self))
+        self.npc_manager = init(NpcManager(self))
+        self.world = init(World(self))
+        self.quest_manager = init(QuestManager(self))
         self.builder = Builder(self)
         debug(f"Starting build world...")
-
         self.builder.build()
 
     def main_menu(self):
