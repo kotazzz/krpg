@@ -29,7 +29,8 @@ class Base:
         game.console.print("[blue]" + game.executer.process_text(text))
 
     @executer_command("$")
-    def builtin_exec(game: Game, code: str):
+    def builtin_exec(game: Game, *code: list[str]):
+        code = " ".join(code)
         env = game.executer.env | {"game": game, "env": game.executer.env}
         exec(code, env)
 
@@ -85,7 +86,9 @@ class Executer:
         game.add_saver("env", self.save, self.load)
 
     def save(self):
-        return self.env
+        # return self.env
+        # ignore _*
+        return {k: v for k, v in self.env.items() if not k.startswith("_")}
 
     def load(self, data):
         self.env = data

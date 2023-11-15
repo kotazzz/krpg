@@ -45,7 +45,8 @@ class Item:
         self.attributes: Attributes = Attributes()
         self.effects: dict[str, int] = {}
         self.sell: int = 0
-        self.cost: int = -1
+        self.cost: int = 0
+        self.throwable: bool = True
 
     def set_stack(self, amount):
         self.stack = amount

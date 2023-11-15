@@ -43,7 +43,10 @@ class Goal:
 
         elif self.type == "meet" and event == Events.NPC_MEET:
             self.completed = self.args[0] == kwargs["npc_id"]
-
+        
+        elif self.type == "state" and event == Events.NPC_STATE:
+            self.completed = self.args[0] == kwargs["npc_id"] and self.args[1] == kwargs["state"]
+            
     def __repr__(self):
         return f"<Goal name={self.name!r} completed={self.completed}>"
 
@@ -64,7 +67,8 @@ class Quest:
 
 
 class QuestState:
-    def __init__(self, quest: Quest):
+    def __init__(self, game: Game, quest: Quest):
+        self.game = game
         self.quest = quest
         self.done_stages: list[str | int] = []
         self.done = False
@@ -108,6 +112,10 @@ class QuestState:
             if type == "stage":
                 new_stage = int(args[0]) if args[0].isdigit() else args[0]
                 self.update(new_stage)
+            elif type == "state":
+                # reward state jack delivery_end
+                npc = self.game.npc_manager.get_npc(args[0])
+                self.game.npc_manager.set_state(npc, args[1])
             elif type == "end":
                 self.done = True
 
@@ -135,7 +143,7 @@ class QuestManager:
         for id, state in data.items():
             quest = self.get_quest(id)
             if quest:
-                new_state = QuestState(quest)
+                new_state = QuestState(self.game, quest)
                 new_state.load(state)
                 self.active_quests.append(new_state)
             else:
@@ -152,7 +160,7 @@ class QuestManager:
     def start_quest(self, id: str):
         quest = self.get_quest(id)
         if quest:
-            self.active_quests.append(QuestState(quest))
+            self.active_quests.append(QuestState(self.game, quest))
             self.game.events.dispatch(Events.QUEST_START, quest.id)
         else:
             raise Exception(f"Quest {id} not found")
@@ -170,22 +178,22 @@ class QuestManager:
     def show_quests(game: Game):
         tree = Tree("Квесты")
         for active in game.quest_manager.active_quests:
-            # QUEST_NAME 1/3
+            # QUEST_NAME 1/3 QUEST_DESCRIPTION
             c = "green" if active.done else "red"
             quest_tree = tree.add(
-                f"[{c} b]{active.quest.name}[white b] {len(active.done_stages)}/{len(active.quest.stages)}"
+                f"[{c} b]{active.quest.name}[white b] {len(active.done_stages)}/{len(active.quest.stages)}\n{active.quest.description}"
             )
             for sid in active.done_stages:
-                # [x] STAGE_NAME
+                # "[x] STAGE_NAME"
                 stage = active.quest.stages[sid]
                 quest_tree.add(f"[white][[green]x[white]] [green]{stage.name}")
             # if completed, skip stage progress tree
             if active.done:
                 continue
-            # [ ] STAGE_NAME
+            # "[ ] STAGE_NAME"
             stage_tree = quest_tree.add(f"[white][ ] [green]{active.stage.name}")
             for goal in active.goals:
-                # [ ] GOAL_NAME
+                # "[ ] GOAL_NAME"
                 #       GOAL_DESCRIPTION
                 mark = "v" if goal.completed else " "
                 stage_tree.add(
