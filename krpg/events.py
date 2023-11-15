@@ -42,6 +42,7 @@ class Events:
     NPC_MEET = "npc_meet"  # npc_id: str
     NPC_STATE = "npc_state"  # npc_id: str, state: str
 
+
 class EventHandler:
     def __init__(self, locked: bool = False):
         self.listeners: dict[str, list[Callable]] = defaultdict(list)

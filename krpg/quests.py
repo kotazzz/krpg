@@ -43,10 +43,12 @@ class Goal:
 
         elif self.type == "meet" and event == Events.NPC_MEET:
             self.completed = self.args[0] == kwargs["npc_id"]
-        
+
         elif self.type == "state" and event == Events.NPC_STATE:
-            self.completed = self.args[0] == kwargs["npc_id"] and self.args[1] == kwargs["state"]
-            
+            self.completed = (
+                self.args[0] == kwargs["npc_id"] and self.args[1] == kwargs["state"]
+            )
+
     def __repr__(self):
         return f"<Goal name={self.name!r} completed={self.completed}>"
 

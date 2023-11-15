@@ -94,8 +94,8 @@ class World:
                 block.run()
         for *_, block in new_loc.get_triggers("on_enter"):
             block.run()
-        
-        if not self.game.executer.env.get('_success', True):
+
+        if not self.game.executer.env.get("_success", True):
             return False
 
         if not new_loc.visited:
@@ -137,7 +137,7 @@ class World:
             if b is loc and not a.locked:
                 res.append(a)
         return res
-    
+
     @executer_command("unlock")
     def unlock(game: Game, loc: str):
         loc = game.world.get(loc)

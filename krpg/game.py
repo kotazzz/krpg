@@ -211,11 +211,11 @@ class Game:
     def new_game_init(self):
         self.start_time = self.save_time = self.timestamp()
         debug = self.log.debug
-        
+
         def init(obj: object):
             debug(f"Init [green]{obj.__class__.__name__}[/]: {obj}")
             return obj
-        
+
         scenario = open("scenario.krpg", encoding="utf-8").read()
         self.scenario_hash = f"{zlib.crc32(scenario.encode()):x}"
         self.scenario = parse(scenario)
@@ -224,16 +224,16 @@ class Game:
         )
 
         self.savers: dict[str, set[callable, callable]] = {}
-        
+
         self.actions = init(ActionManager())
         self.add_actions(self)
-        
+
         self.events = init(EventHandler())
         for attr in filter(lambda x: x.startswith("on_"), dir(self)):
             cb = getattr(self, attr)
             self.events.listen(attr[3:], cb)
             debug(f"  [yellow3]Added [red]listener[/] for {attr[3:]}", stacklevel=2)
-        
+
         self.encoder = init(Encoder())
         self.random = init(RandomManager(self))
         self.settings = init(Settings(self))
@@ -306,7 +306,7 @@ class Game:
                 self.world.set()
                 self.world.current.locked = False
                 self.events.dispatch(Events.STATE_CHANGE, state="playing")
-                
+
             elif select == "load":
                 self.new_game()
                 self.events.dispatch(Events.LOAD)
