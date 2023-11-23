@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0]
+
+## Исправлено
+
+- Исправлена ошибка, не дающая сохраняться
+
+## Добавления
+
+- Добавлена возможность изменить цветовую тему
+
 ## [1.1.0]
 
 ### Удалено
@@ -36,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Внедрена поддержка сценариев. Их стиль так же изменен. Так же они теперь внесены в отдельные файлы
 - Добавлен логгер
 
-### Изменено (ed8c6549bwf9)
+### Изменено
 
 - Переработано большинство систем, полностью переписана структура кода
 - Полная переработка логики сохранений и событий
