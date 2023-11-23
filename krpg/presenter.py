@@ -1,6 +1,5 @@
 from __future__ import annotations
 from itertools import groupby
-from krpg.attributes import Attributes
 from krpg.entity import Entity
 
 from typing import TYPE_CHECKING
@@ -12,14 +11,40 @@ if TYPE_CHECKING:
 
 
 class Presenter:
+    """
+    The Presenter class is responsible for presenting game-related information to the user interface.
+    It contains methods for displaying player and entity statistics, inventory items, and other game-related information.
+    """
+
     def __init__(self, game: Game):
         self.game = game
 
     def bar(self, value, maximum, color="green", width=15):
+        """
+        Generates a progress bar string based on the given value and maximum.
+
+        Args:
+            value (float): The current value.
+            maximum (float): The maximum value.
+            color (str, optional): The color of the progress bar. Defaults to "green".
+            width (int, optional): The width of the progress bar. Defaults to 15.
+
+        Returns:
+            str: The generated progress bar string.
+        """
         symlen = int(value / maximum * width) if maximum else 0
         return f"[white][[{color}]{'|'*symlen}{' '*(width-symlen)}[white]][/]"
 
     def get_stats(self, source: Entity | Item):
+        """
+        Generates a string representation of the statistics of the given entity or item.
+
+        Args:
+            source (Entity | Item): The entity or item to get the statistics from.
+
+        Returns:
+            str: The generated statistics string.
+        """
         def _get(entity: Entity, free: bool):
             stats: tuple[str, str] = [
                 ("red", "strength"),
@@ -44,6 +69,13 @@ class Presenter:
         return _get(source.attributes, False)
 
     def presense(self, e: Entity, minimal=False):
+        """
+        Presents the information of the given entity to the user interface.
+
+        Args:
+            e (Entity): The entity to present.
+            minimal (bool, optional): Whether to display minimal information. Defaults to False.
+        """
         console = self.game.console
 
         if minimal:
@@ -59,6 +91,12 @@ class Presenter:
             console.print(f"[bold white]{e.name}[/]\n{stats}")
 
     def presenses(self, entities: list[Entity]):
+        """
+        Presents the information of multiple entities to the user interface.
+
+        Args:
+            entities (list[Entity]): The list of entities to present.
+        """
         console = self.game.console
         nl = max([len(e.name) for e in entities])
         al = max([len(f"{e.attack:.2f}") for e in entities])
@@ -74,6 +112,17 @@ class Presenter:
             console.print(f"{stats} {name} {attack} {hp}")
 
     def show_item(self, slot: Slot, show_amount=True, additional: callable = None):
+        """
+        Generates a string representation of the item in the given slot.
+
+        Args:
+            slot (Slot): The slot containing the item.
+            show_amount (bool, optional): Whether to display the amount of the item. Defaults to True.
+            additional (callable, optional): Additional information to display about the item. Defaults to None.
+
+        Returns:
+            str: The generated string representation of the item.
+        """
         game = self.game
 
         if slot.empty:
@@ -89,6 +138,12 @@ class Presenter:
             return text
 
     def presence_item(self, item: Item):
+        """
+        Presents the information of the given item to the user interface.
+
+        Args:
+            item (Item): The item to present.
+        """
         def get_effects_string(effects: dict[str, int]) -> str:
             if not effects:
                 return "[b red]Эффектов нет[/]\n"
@@ -125,6 +180,15 @@ class Presenter:
         allow: list[ItemType] = None,
         inverse: bool = False,
     ):
+        """
+        Presents the player's inventory to the user interface.
+
+        Args:
+            show_number (bool, optional): Whether to display numbers for each item. Defaults to False.
+            show_amount (bool, optional): Whether to display the amount of each item. Defaults to True.
+            allow (list[ItemType], optional): The list of allowed item types to display. Defaults to None.
+            inverse (bool, optional): Whether to display items not in the allowed list. Defaults to False.
+        """
         console = self.game.console
         inventory = self.game.player.inventory
         console.print("[bold green]Инвентарь[/]")

@@ -14,8 +14,24 @@ class Record:
         self.day = day
         self.text = text
 
-
+#TODO: rewrite this
 class Diary:
+    """
+    Represents a diary in a game.
+
+    Attributes:
+    - records: A list of Record objects representing the diary entries.
+    - game: A Game object representing the game the diary belongs to.
+
+    Methods:
+    - __init__(self, game: Game): Initializes a Diary object with the specified game.
+    - save(self) -> dict: Saves the diary records as a dictionary.
+    - load(self, data: dict): Loads the diary records from the given dictionary.
+    - present(self, record: Record): Presents a formatted version of a diary record.
+    - present_content(self, record: Record): Presents the content of a diary record.
+    - action_diary(game: Game): Performs actions related to managing the diary.
+    - __repr__(self) -> str: Returns a string representation of the Diary object.
+    """
     def __init__(self, game: Game):
         self.records: list[Record] = []  # (Day #, text)
         self.game = game

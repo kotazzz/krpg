@@ -1,7 +1,11 @@
 from math import ceil
+from typing import Optional
 
 
 class Encoder:
+    """
+    Class for encoding and decoding data using various encoding schemes.
+    """
     abc = {
         "base64 [green]\[Рекомендуется]": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
         "base871": (
@@ -34,7 +38,18 @@ class Encoder:
         ),
     }
 
-    def encode(self, data, type=1, base=None):
+    def encode(self, data: bytes, type: int = 1, base: Optional[int] = None) -> str:
+        """
+        Encode data using the specified encoding scheme.
+
+        Parameters:
+        - data (bytes): The data to be encoded.
+        - type (int): The encoding scheme to use. Defaults to 1.
+        - base (Optional[int]): The base for encoding. If None, the length of the encoding scheme is used.
+
+        Returns:
+        str: The encoded data.
+        """
         abc = self.abc[type]
         base = base if base else len(abc)
         out_data = []
@@ -46,13 +61,23 @@ class Encoder:
             out_data.append(abc[d])
         return "".join(out_data)
 
-    def decode(self, data, type=1, base=None):
+    def decode(self, data: str, type: int = 1, base: Optional[int] = None) -> bytes:
+        """
+        Decode data using the specified encoding scheme.
+
+        Parameters:
+        - data (str): The data to be decoded.
+        - type (int): The encoding scheme to use. Defaults to 1.
+        - base (Optional[int]): The base for decoding. If None, the length of the encoding scheme is used.
+
+        Returns:
+        bytes: The decoded data.
+        """
         abc = self.abc[type]
         base = base if base else len(abc)
         out_data = 0
         for i, ch in enumerate(data):
             out_data = abc.index(ch) * (base**i) + out_data
         return out_data.to_bytes(ceil(out_data.bit_length() / 8), "big")[1:]
-
     def __repr__(self):
         return f"<Encoder codes={len(self.abc)}>"

@@ -16,7 +16,7 @@ from krpg.events import EventHandler
 from krpg.npc import NpcManager
 from krpg.presenter import Presenter
 from krpg.quests import QuestManager
-from krpg.scenario import parse
+from krpg.scenario import Scenario
 from krpg.encoder import Encoder
 from krpg.executer import Executer
 from krpg.random import RandomManager
@@ -153,6 +153,7 @@ SPLASHES = [
 
 
 class Game:
+    savers: dict[str, set[callable, callable]] = {}
     def __init__(self):
         self.version = __version__
         self.state = "none"
@@ -172,7 +173,7 @@ class Game:
             except Exception as e:
                 self.log.exception(e)
                 try:
-                    if not self.console.confirm("[red]Перезапустить? (y/n): "):
+                    if not self.console.confirm("[red]Перезапустить? (y/n): [/]"):
                         break
                 except KeyboardInterrupt:
                     break
@@ -210,47 +211,29 @@ class Game:
 
     def new_game_init(self):
         self.start_time = self.save_time = self.timestamp()
-        debug = self.log.debug
-
-        def init(obj: object):
-            debug(f"Init [green]{obj.__class__.__name__}[/]: {obj}")
+        def init(obj: object) -> object:
+            self.log.debug(f"Init [green]{obj.__class__.__name__}[/]: {obj}")
             return obj
 
-        scenario = open("scenario.krpg", encoding="utf-8").read()
-        self.scenario_hash = f"{zlib.crc32(scenario.encode()):x}"
-        self.scenario = parse(scenario)
-        debug(
-            f"[red]Loaded scenario [{self.scenario_hash}] with {len(self.scenario.children)} items"
-        )
-
-        self.savers: dict[str, set[callable, callable]] = {}
-
-        self.actions = init(ActionManager())
-        self.add_actions(self)
-
-        self.events = init(EventHandler())
-        for attr in filter(lambda x: x.startswith("on_"), dir(self)):
-            cb = getattr(self, attr)
-            self.events.listen(attr[3:], cb)
-            debug(f"  [yellow3]Added [red]listener[/] for {attr[3:]}", stacklevel=2)
-
-        self.encoder = init(Encoder())
-        self.random = init(RandomManager(self))
-        self.settings = init(Settings(self))
-        self.executer = init(Executer(self))
-        self.player = init(Player(self))
-        self.diary = init(Diary(self))
-        self.presenter = init(Presenter(self))
-        self.battle_manager = init(BattleManager(self))
-        self.bestiary = init(Bestiary(self))
-        self.stats = init(StatsManager(self))
-        self.clock = init(Clock(self))
-        self.npc_manager = init(NpcManager(self))
-        self.world = init(World(self))
-        self.quest_manager = init(QuestManager(self))
-        self.builder = Builder(self)
-        debug(f"Starting build world...")
-        self.builder.build()
+        self.scenario : Scenario = init(Scenario("scenario.krpg"))
+        self.actions : ActionManager = init(ActionManager(self))
+        self.events : EventHandler = init(EventHandler(self))
+        self.encoder : Encoder = init(Encoder())
+        self.random : RandomManager = init(RandomManager(self))
+        self.settings : Settings = init(Settings(self))
+        self.executer : Executer = init(Executer(self))
+        self.player : Player = init(Player(self))
+        self.diary : Diary = init(Diary(self))
+        self.presenter : Presenter = init(Presenter(self))
+        self.battle_manager : BattleManager = init(BattleManager(self))
+        self.bestiary : Bestiary = init(Bestiary(self))
+        self.stats : StatsManager = init(StatsManager(self))
+        self.clock : Clock = init(Clock(self))
+        self.npc_manager : NpcManager = init(NpcManager(self))
+        self.world : World = init(World(self))
+        self.quest_manager : QuestManager = init(QuestManager(self))
+        self.builder : Builder = init(Builder(self))
+        
 
     def main_menu(self):
 

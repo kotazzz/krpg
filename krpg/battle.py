@@ -19,6 +19,18 @@ class BattleManager:
         return f"<BattleManager>"
 
     def predict(self, player: Entity, enemy: Entity) -> int:
+        """
+        Predicts the next action for the player in a battle based on the given player and enemy entities.
+
+        Args:
+            player (Entity): The player entity.
+            enemy (Entity): The enemy entity.
+
+        Returns:
+            int: The predicted action for the player. 0 represents attack, 1 represents defend.
+        """
+        # Rest of the code...
+    def predict(self, player: Entity, enemy: Entity) -> int:
         # Rule expressions:
         # player, enemy - Entity
         # actions: 0 - attack, 1 - defend
@@ -63,6 +75,15 @@ class BattleManager:
         game.battle_manager.fight(monster_id)
 
     def fight(self, monster_id: str):
+        """
+        Perform a battle between the player and a monster.
+
+        Args:
+            monster_id (str): The ID of the monster to fight.
+
+        Returns:
+            None
+        """
         monster = self.game.bestiary.get_entity(monster_id)
         player = self.game.player
         console = self.game.console

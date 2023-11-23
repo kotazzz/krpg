@@ -7,6 +7,26 @@ if TYPE_CHECKING:
 
 
 class Attributes:
+    """
+    Represents the attributes of an entity in a role-playing game.
+
+    Attributes:
+    - strength (int): The strength attribute of the entity.
+    - wisdom (int): The wisdom attribute of the entity.
+    - endurance (int): The endurance attribute of the entity.
+    - agility (int): The agility attribute of the entity.
+    - intelligence (int): The intelligence attribute of the entity.
+    - charisma (int): The charisma attribute of the entity.
+    - perception (int): The perception attribute of the entity.
+    - free (int): The number of free attribute points available.
+    - holder (Entity): The entity that holds these attributes.
+
+    Methods:
+    - total(): Calculates the total attribute points.
+    - save(): Returns a list of attribute values.
+    - load(data: list): Loads attribute values from a list.
+    - update(): Updates attribute values based on provided arguments.
+    """
     def __init__(
         self,
         strength: int = 0,
@@ -69,6 +89,20 @@ class Attributes:
         free: int | None = None,
         set: bool = False,
     ):
+        """
+        Update the attributes of the character.
+
+        Args:
+            strength (int | None): The new value for strength attribute. Defaults to None.
+            wisdom (int | None): The new value for wisdom attribute. Defaults to None.
+            endurance (int | None): The new value for endurance attribute. Defaults to None.
+            agility (int | None): The new value for agility attribute. Defaults to None.
+            intelligence (int | None): The new value for intelligence attribute. Defaults to None.
+            charisma (int | None): The new value for charisma attribute. Defaults to None.
+            perception (int | None): The new value for perception attribute. Defaults to None.
+            free (int | None): The new value for free attribute. Defaults to None.
+            set (bool): If True, the attribute will be set to the new value. If False, the new value will be added to the current value. Defaults to False.
+        """
         def action(a, b, set):
             if not b:
                 return a

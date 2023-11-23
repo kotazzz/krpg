@@ -43,6 +43,28 @@ class Npc:
 
 
 class NpcManager:
+    """
+    Class representing a manager for NPCs in the game.
+
+    Attributes:
+    - game (Game): The game instance.
+    - npcs (list[Npc]): The list of NPCs.
+    - talking (Npc | None): The currently talking NPC.
+
+    Methods:
+    - save(): Save the data of all NPCs.
+    - load(data): Load the data of all NPCs.
+    - get_npcs(location): Get NPCs in a specific location.
+    - get_npc(id): Get an NPC by its ID.
+    - action_talk(game): Perform the "talk" action with available NPCs.
+    - say(name, text): Print a message with the given name and text.
+    - say_command(game, *text): Execute the "say" command.
+    - ans_command(game, *text): Execute the "ans" command.
+    - meet_command(game): Execute the "meet" command.
+    - set_state_command(game, state): Execute the "set_state" command.
+    - set_state(npc, state): Set the state of an NPC.
+    - trade_command(game, block): Execute the "trade" command.
+    """
     def __init__(self, game: Game):
         self.game = game
         self.npcs: list[Npc] = []

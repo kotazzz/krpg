@@ -14,17 +14,47 @@ if TYPE_CHECKING:
 
 
 class Builder:
+    """
+    The Builder class is responsible for building various components of the game based on the scenario data.
+
+    Args:
+        game (Game): The game instance.
+
+    Attributes:
+        game (Game): The game instance.
+        scenario (Scenario): The scenario instance.
+        tag (str): The current tag for logging purposes.
+
+    Methods:
+        save: Saves the game data.
+        load: Loads the game data.
+        debug: Logs a debug message.
+        build: Builds all components of the game.
+        build_items: Builds the items in the game.
+        build_entities: Builds the entities in the game.
+        build_npcs: Builds the NPCs in the game.
+        build_quests: Builds the quests in the game.
+        build_world: Builds the world map in the game.
+        build_location: Builds a location in the game.
+        build_item: Builds an item in the game.
+        build_action: Builds an action in the game.
+        build_triggers: Builds triggers for a location in the game.
+    """
+
     def __init__(self, game: Game):
         self.game = game
         self.scenario = game.scenario
         self.game.add_saver("test", self.save, self.load)
         self.tag = ""
+        self.build()
 
     def save(self):
+        # Save game data
         g = self.game
         return [g.scenario_hash, g.version, g.start_time, g.save_time]
 
     def load(self, data):
+        # Load game data
         g = self.game
         if data[0] != g.scenario_hash:
             raise Exception(f"save:{data[0]} != game:{g.scenario_hash}")
@@ -32,10 +62,11 @@ class Builder:
             raise Exception(f"save:{data[1]} != game:{g.version}")
 
     def debug(self, msg: str):
+        # Log a debug message
         self.game.log.debug(f"[cyan]\[{self.tag:^10}] {msg}", stacklevel=2)
 
     def build(self):
-
+        # Build all components of the game
         self.tag = "items"
         self.build_items(self.scenario.first("items"))
         self.tag = "entities"
@@ -49,6 +80,7 @@ class Builder:
         self.tag = ""
 
     def build_items(self, items: Section):
+        # Build the items in the game
         item_list = items.all("item")
         for item in item_list:
             id, name, description = item.args
@@ -84,6 +116,7 @@ class Builder:
             self.game.bestiary.items.append(obj)
 
     def build_entities(self, entities: Section):
+        # Build the entities in the game
         for entity in entities.all("entity"):
             id, name, description = entity.args
             self.debug(f"  Assembling [blue]{id}:{name}")
@@ -98,6 +131,7 @@ class Builder:
             self.game.bestiary.entities.append(meta)
 
     def build_npcs(self, npcs: Section):
+        # Build the NPCs in the game
         for npc in npcs.all("npc"):
             id, name, description = npc.args
             self.debug(f"  Creating [blue]{id}:{name}")
@@ -112,6 +146,7 @@ class Builder:
             self.game.npc_manager.npcs.append(new_npc)
 
     def build_quests(self, quests: Section):
+        # Build the quests in the game
         for quest in quests.all("quest"):
             id, name, description = quest.args
             self.debug(f"  Building [blue]{id}:{name}")
@@ -126,6 +161,7 @@ class Builder:
             self.game.quest_manager.quests.append(Quest(id, name, description, stages))
 
     def build_world(self, world: Section):
+        # Build the world map in the game
         locations = world.all("location")
         start = world.first("start")
         links = world.all("link")
@@ -145,7 +181,7 @@ class Builder:
         self.game.world._start = start.args[0]
 
     def build_location(self, locdata: Section):
-
+        # Build a location in the game
         id, name, description = locdata.args
         actions = [self.build_action(i) for i in locdata.all("action")]
         items = [self.build_item(i) for i in locdata.all("item")]
@@ -158,6 +194,7 @@ class Builder:
         return location
 
     def build_item(self, item: Section):
+        # Build an item in the game
         id, amo = item.args
         self.debug
         self.game.bestiary.get_item(id)  # Check if item exists
@@ -165,6 +202,7 @@ class Builder:
         return [id, amo]
 
     def build_action(self, command: Section):
+        # Build an action in the game
         name, description = command.args
         block = self.game.executer.create_block(command)
 
@@ -174,9 +212,12 @@ class Builder:
         return action(name, description)(new_command)
 
     def build_triggers(self, triggers: Section | None):
+        # Build triggers for a location in the game
         res = []
         if not triggers:
             return res
         for i in triggers.children:
             res.append((i.name, i.args, self.game.executer.create_block(i)))
         return res
+    def __repr__(self):
+        return "<Builder>"

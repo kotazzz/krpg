@@ -1,3 +1,4 @@
+from typing import Any
 from prompt_toolkit.completion import WordCompleter
 from rich.console import Console
 from prompt_toolkit import ANSI
@@ -20,6 +21,30 @@ DEFAULT_LEVEL = 0
 
 
 class KrpgConsole:
+    """
+    A class representing a console for the KRPG game.
+
+    Attributes:
+        console (Console): The console object.
+        session (PromptSession): The prompt session object.
+        bar (str): The bar text.
+        log (logging.Logger): The logger object.
+        handler (RichHandler): The rich handler object.
+        queue (list): The command queue.
+        history (list): The command history.
+        levels (dict): The dictionary of console levels.
+
+    Methods:
+        get_history(): Returns the command history.
+        setlevel(level): Sets the log level.
+        print(*args, **kwargs): Prints the given arguments.
+        set_bar(text): Sets the bar text.
+        prompt(text, data, allow_empty, raw, check): Prompts the user for input.
+        checked(prompt, checker, data, allow_empty, raw): Prompts the user for input and checks the input.
+        confirm(prompt, exit_cmd): Prompts the user for confirmation.
+        print_list(variants, view, title, empty): Prints a list of variants.
+        menu(prompt, variants, exit_cmd, view, display, title, empty): Displays a menu and prompts the user for selection.
+    """
     def __init__(self):
 
         self.console = Console()
@@ -54,37 +79,64 @@ class KrpgConsole:
             5: rich("[bold magenta]>>>>> [/]", console=self.console),
         }
 
-    def get_history(self):
+    def get_history(self) -> list[str | Any]:
+        """
+        Returns the command history.
+
+        Returns:
+            list[str | Any]: The command history.
+        """
         return [repr(i) if " " in i or not i else i for i in self.history]
 
-    def setlevel(self, level):
+    def setlevel(self, level) -> None:
+        """
+        Sets the log level.
+
+        Parameters:
+            level (int): The log level.
+        """
         self.handler.level = level
 
-    def print(self, *args, **kwargs):
+    def print(self, *args, **kwargs) -> None:
         return self.console.print(*args, **kwargs, highlight=False)
 
-    def set_bar(self, text):
-        self.bar = rich(text)
+    def set_bar(self, text: str) -> None:
+        """
+        Sets the bar text.
 
-    def prompt(
-        self,
-        text,
-        data: dict[str, str] = None,
-        allow_empty: bool = False,
-        raw: bool = False,
-        check: bool = False,
-    ) -> str:
-        text = (
-            rich(text, console=self.console)
-            if not isinstance(text, int)
-            else self.levels[text]
-        )
+        Parameters:
+            text (str): The bar text.
+        """
+        self.bar = rich(text)
+    def prompt(self, text, data: dict[str, str] = None, allow_empty: bool = False, raw: bool = False, check: bool = False) -> str:
+        """
+        Prompts the user for input and returns the user's response.
+
+        Args:
+            text (str): The prompt text to display to the user.
+            data (dict[str, str], optional): A dictionary of possible completions for the input. 
+                The keys represent the possible input values, and the values represent the corresponding descriptions.
+                Defaults to None.
+            allow_empty (bool, optional): Specifies whether an empty input is allowed. 
+                If True, an empty input will be returned as an empty string. 
+                If False, the user will be prompted again until a non-empty input is provided.
+                Defaults to False.
+            raw (bool, optional): Specifies whether to return the user's input as is, without any processing.
+                If True, the input will be returned as a string.
+                If False, the input will be split into individual words and processed accordingly.
+                Defaults to False.
+            check (bool, optional): Specifies whether to check if the user's input is a valid option from the provided data.
+                If True, the input will be checked against the keys in the data dictionary.
+                If False, the input will be accepted as is.
+                Defaults to False.
+
+        Returns:
+            str: The user's input as a string.
+        """
+        text = rich(text, console=self.console) if not isinstance(text, int) else self.levels[text]
         kwargs = {"bottom_toolbar": self.bar}
         if data:
-            kwargs["completer"] = WordCompleter(
-                list(data.keys()),
-                meta_dict={i: rich(j) for i, j in data.items()},
-            )
+            kwargs["completer"] = WordCompleter(list(data.keys()), meta_dict={i: rich(j) for i, j in data.items()})
         else:
             kwargs["completer"] = WordCompleter([])
         if not self.queue:
