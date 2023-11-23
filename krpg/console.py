@@ -47,6 +47,7 @@ class KrpgConsole:
         menu(prompt, variants, exit_cmd, view, display, title, empty): Displays a menu and prompts the user for selection.
     """
 
+
     def __init__(self):
         self.console = Console()
         self.session = PromptSession()
