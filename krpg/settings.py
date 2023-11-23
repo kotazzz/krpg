@@ -5,6 +5,7 @@ from krpg.actions import action
 from krpg.events import Events
 from krpg.data.themes import themes
 from rich.table import Table
+
 if TYPE_CHECKING:
     from krpg.game import Game
 
@@ -26,14 +27,17 @@ class Param:
     def __repr__(self) -> str:
         return f"<Param {self.name!r}={self.value!r}>"
 
+
 class ComplexParam:
     def __init__(self, id: str, name: str, description: str):
         self.id = id
         self.name = name
         self.description = description
         self.value = None
+
     def save(self, game: Game):
         return self.value
+
     def load(self, data: dict, game: Game):
         self.value = data
 
@@ -41,13 +45,13 @@ class ComplexParam:
 class ThemeManager(ComplexParam):
     def __init__(self):
         super().__init__("theme", "Тема", "Изменяет тему консоли")
-    
+
     def load(self, data: dict, game: Game):
         self.value = data.pop(self.id, None)
         print(data)
         if self.value is not None:
             self.change_theme(game, self.value)
-            
+
     def callback(self, param: ComplexParam, game: Game):
         """
         Changes the theme setting.
@@ -56,18 +60,18 @@ class ThemeManager(ComplexParam):
             param (Param): The parameter instance.
             game (Game): The game instance.
         """
-        
+
         def parse(theme):
             as_list = theme.split()
             return ("".join([f"[#{i}]█" for i in as_list[:-1]]), as_list[-1])
-        
+
         page_size = 30
         collumns = 3
         page = 0
-        
+
         data = [parse(i) for i in themes]
         pages = [data[i : i + page_size] for i in range(0, len(data), page_size)]
-        
+
         while True:
             table = Table(title="Выберите тему")
             for i in range(collumns):
@@ -78,17 +82,19 @@ class ThemeManager(ComplexParam):
                 cells.extend([theme[0], theme[1]])
             for i in range(0, len(cells), collumns * 2):
                 table.add_row(*cells[i : i + collumns * 2])
-            
+
             game.console.print(table)
             game.console.print("Страница " + str(page + 1) + " из " + str(len(pages)))
             game.console.print("[green]p[/]<<< [green]n[/]>>> | [green]e[/] Выход")
             commands = {
                 "n": "Следующая страница",
                 "p": "Предыдущая страница",
-                "e": "Выход"
+                "e": "Выход",
             }
             commands |= {name: colors for colors, name in data}
-            command = game.console.prompt("[blue]Введите название темы или команду: [/]", commands)
+            command = game.console.prompt(
+                "[blue]Введите название темы или команду: [/]", commands
+            )
             if command == "e":
                 return
             elif command == "n":
@@ -104,12 +110,13 @@ class ThemeManager(ComplexParam):
                 self.value = command
                 game.show_logo()
                 game.console.print("Тема успешно изменена")
-                
+
     def change_theme(self, game: Game, name: str):
-        colors = {i[-1]:[f"#{j}" for j in i[:-1]] for i in [i.split() for i in themes]}
+        colors = {i[-1]: [f"#{j}" for j in i[:-1]] for i in [i.split() for i in themes]}
         print(colors[name])
         game.console.set_theme(colors[name])
-        
+
+
 def param(id: str, name: str, description: str, variants: dict[str, str] = None):
     def decorator(f):
         param = Param(id, name, description, variants)
@@ -189,12 +196,8 @@ class Settings:
         param.value = new_value == "enable"
         game.set_debug(param.value)
 
-    
-                
-        
-        
         # game.console.set_theme(colors)
-        
+
     @action("settings", "Настройки игры", "Игра")
     def settings_command(game: Game):
         """
@@ -210,16 +213,16 @@ class Settings:
             else "-"
         )
         while True:
-            param: Param | ComplexParam= game.console.menu(
+            param: Param | ComplexParam = game.console.menu(
                 2, variants, "e", view, title="Выберете параметр для изменения"
             )
-            
+
             if not param:
                 return
-            
+
             if isinstance(param, ComplexParam):
                 param.callback(param, game)
-                
+
             else:
                 if param.variants:
                     new_value = game.console.menu(
