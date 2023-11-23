@@ -11,11 +11,14 @@
 
 <div align="center">
 
-[![Status](https://img.shields.io/badge/status-active-success.svg)]()
+[![Status](https://img.shields.io/badge/status-active-success.svg)](https://img.shields.io/badge/status-active-success.svg)
 [![GitHub Issues](https://img.shields.io/github/issues/kotazzz/krpg.svg)](https://github.com/kotazzz/krpg/issues)
 [![GitHub Pull Requests](https://img.shields.io/github/issues-pr/kotazzz/krpg.svg)](https://github.com/kotazzz/krpg/pulls)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](/LICENSE)
-[![Дискорд](https://img.shields.io/discord/992780447870357574?label=%D0%9C%D0%BE%D0%B6%D0%B5%D0%BC%20%D0%BF%D0%BE%D0%BE%D0%B1%D1%89%D0%B0%D1%82%D1%8C%D1%81%D1%8F%20%D0%B2%20discord)](https://discord.gg/FKcURWZsMW)
+[![Discord](https://img.shields.io/discord/992780447870357574?logo=discord)
+](https://discord.gg/FKcURWZsMW)
+[![Discord](https://img.shields.io/badge/%D0%A2%D0%B5%D0%BB%D0%B5%D0%B3%D1%80%D0%B0%D0%BC-%D0%BA%D0%B0%D0%BD%D0%B0%D0%BB-blue?logo=telegram)
+](https://t.me/krpgd)
 </div>
 
 ---
@@ -36,31 +39,36 @@
 
 ## 🧐 Об игре <a name = "about"></a>
 
-Это проект текстовой рпг игры, написанной на языке python
+**KRPG** - захватывающая приключенческая игра, где вы, исследователь-путешественник, направляетесь в деревню с целью пополнения запасов. Однако прибытие в деревню сталкивает вас с загадочными событиями, заставляя вас задержаться и помочь разгадать тайны и решить проблемы. Ваш выбор остаться открывает двери к опасным приключениям, и вы сталкиваетесь с разнообразными персонажами, каждый из которых несет свои собственные секреты. Ваше путешествие станет важным моментом в судьбе деревни, выяснить происходящее станет вашим главным вызовом. Сможете ли вы раскрывать тайны и разузнать, что же за тайны, хранит этот мир?
 
 ## 🏁 Установка <a name = "getting_started"></a>
 
-На данный момент игра планирует поставляться в виде архива
+### 💻 Linux
 
-```
-pip install rich prompt_toolkit msgpack
-```
-
-Альтернативные способы установки: скачивание файлов
+Установка:
 
 ```bash
-# curl updater.py from kotazzz/krpg and run it with python
+pip install rich prompt_toolkit msgpack urllib3 requests
 curl https://raw.githubusercontent.com/kotazzz/krpg/master/updater.py | python
 ```
 
-```ps
-curl https://raw.githubusercontent.com/kotazzz/krpg/master/updater.py | python
+Запуск:
+
+```bash
+python -m krpg
 ```
 
+### 🪟 Windows
+
+Скачайте установщик [отсюда](https://github.com/kotazzz/krpg/raw/master/bin/install.exe). Выберите расположение установки и запустите update.bat. После этого запустите run.bat
 
 ## 🎈 Скриншоты <a name="gallery"></a>
 
-Пока что тут пусто...
+![Скриншот 1](images/main.png)
+
+![Скриншот 2](images/commands.png)
+
+![Скриншот 3](images/commands2.png)
 
 ## ✍️ Авторы <a name = "authors"></a>
 
@@ -70,4 +78,6 @@ curl https://raw.githubusercontent.com/kotazzz/krpg/master/updater.py | python
 
 ## 🎉 Информация <a name = "acknowledgement"></a>
 
-Я буду рад услышать все ваши пожелания и идеи на [дискорд сервере](https://discord.gg/FKcURWZsMW)
+Правила поведения можно почитать [здесь](CODE_OF_CONDUCT.md)
+Я буду рад увидеть вас в своем телеграм канале, где я часто публикую интересные детали. Вот [ссылка](https://t.me/krpgd) на него.
+Так же мы можем встретиться на [дискорд сервере](https://discord.gg/FKcURWZsMW)
