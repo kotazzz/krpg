@@ -54,6 +54,7 @@ class Player(Entity):
         action_inventory(game: Game): Performs the "inventory" action.
         action_upgrade(game: Game): Performs the "upgrade" action.
     """
+
     def __init__(self, game: Game):
         self.game = game
         super().__init__(game, "Player")

@@ -30,6 +30,7 @@ class BattleManager:
             int: The predicted action for the player. 0 represents attack, 1 represents defend.
         """
         # Rest of the code...
+
     def predict(self, player: Entity, enemy: Entity) -> int:
         # Rule expressions:
         # player, enemy - Entity

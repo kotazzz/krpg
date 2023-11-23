@@ -32,8 +32,6 @@ class Action:
         return f"<Action {self.name} from {self.category}>"
 
 
-
-
 def action(
     name: str, description: str = "No description", category: str = "", time: int = 0
 ) -> Callable[..., Action]:
@@ -49,6 +47,7 @@ def action(
     Returns:
         Callable: The decorated callback function.
     """
+
     def decorator(callback: Callable):
         return Action(name, description, category, callback, time)
 
@@ -69,12 +68,13 @@ class ActionManager:
         get_actions() -> list[Action]: Retrieves all actions from submanagers and actions attribute.
         __repr__(): Returns a string representation of ActionManager.
     """
+
     def __init__(self, *submanagers: object | ActionManager):
         self.submanagers: list[object | ActionManager] = list(submanagers)
         self.actions: list[Action] = {}
         self.actions = self.extract(self)
         self.submanagers.clear()
-        
+
     def extract(self, item: object) -> list[Action]:
         """
         Extracts actions from an item.

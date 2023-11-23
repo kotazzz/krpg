@@ -154,6 +154,7 @@ SPLASHES = [
 
 class Game:
     savers: dict[str, set[callable, callable]] = {}
+
     def __init__(self):
         self.version = __version__
         self.state = "none"
@@ -211,29 +212,29 @@ class Game:
 
     def new_game_init(self):
         self.start_time = self.save_time = self.timestamp()
+
         def init(obj: object) -> object:
             self.log.debug(f"Init [green]{obj.__class__.__name__}[/]: {obj}")
             return obj
 
-        self.scenario : Scenario = init(Scenario("scenario.krpg"))
-        self.actions : ActionManager = init(ActionManager(self))
-        self.events : EventHandler = init(EventHandler(self))
-        self.encoder : Encoder = init(Encoder())
-        self.random : RandomManager = init(RandomManager(self))
-        self.settings : Settings = init(Settings(self))
-        self.executer : Executer = init(Executer(self))
-        self.player : Player = init(Player(self))
-        self.diary : Diary = init(Diary(self))
-        self.presenter : Presenter = init(Presenter(self))
-        self.battle_manager : BattleManager = init(BattleManager(self))
-        self.bestiary : Bestiary = init(Bestiary(self))
-        self.stats : StatsManager = init(StatsManager(self))
-        self.clock : Clock = init(Clock(self))
-        self.npc_manager : NpcManager = init(NpcManager(self))
-        self.world : World = init(World(self))
-        self.quest_manager : QuestManager = init(QuestManager(self))
-        self.builder : Builder = init(Builder(self))
-        
+        self.scenario: Scenario = init(Scenario("scenario.krpg"))
+        self.actions: ActionManager = init(ActionManager(self))
+        self.events: EventHandler = init(EventHandler(self))
+        self.encoder: Encoder = init(Encoder())
+        self.random: RandomManager = init(RandomManager(self))
+        self.settings: Settings = init(Settings(self))
+        self.executer: Executer = init(Executer(self))
+        self.player: Player = init(Player(self))
+        self.diary: Diary = init(Diary(self))
+        self.presenter: Presenter = init(Presenter(self))
+        self.battle_manager: BattleManager = init(BattleManager(self))
+        self.bestiary: Bestiary = init(Bestiary(self))
+        self.stats: StatsManager = init(StatsManager(self))
+        self.clock: Clock = init(Clock(self))
+        self.npc_manager: NpcManager = init(NpcManager(self))
+        self.world: World = init(World(self))
+        self.quest_manager: QuestManager = init(QuestManager(self))
+        self.builder: Builder = init(Builder(self))
 
     def main_menu(self):
 

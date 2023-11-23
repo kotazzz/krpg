@@ -6,6 +6,7 @@ class Encoder:
     """
     Class for encoding and decoding data using various encoding schemes.
     """
+
     abc = {
         "base64 [green]\[Рекомендуется]": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
         "base871": (
@@ -79,5 +80,6 @@ class Encoder:
         for i, ch in enumerate(data):
             out_data = abc.index(ch) * (base**i) + out_data
         return out_data.to_bytes(ceil(out_data.bit_length() / 8), "big")[1:]
+
     def __repr__(self):
         return f"<Encoder codes={len(self.abc)}>"
