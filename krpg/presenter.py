@@ -45,6 +45,7 @@ class Presenter:
         Returns:
             str: The generated statistics string.
         """
+
         def _get(entity: Entity, free: bool):
             stats: tuple[str, str] = [
                 ("red", "strength"),
@@ -144,6 +145,7 @@ class Presenter:
         Args:
             item (Item): The item to present.
         """
+
         def get_effects_string(effects: dict[str, int]) -> str:
             if not effects:
                 return "[b red]Эффектов нет[/]\n"

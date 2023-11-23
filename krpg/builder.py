@@ -219,5 +219,6 @@ class Builder:
         for i in triggers.children:
             res.append((i.name, i.args, self.game.executer.create_block(i)))
         return res
+
     def __repr__(self):
         return "<Builder>"

@@ -126,6 +126,7 @@ class Multiline(Command):
     def __repr__(self) -> str:
         return f"Multiline('{self.name[:10]+'...'}', {self.args})"
 
+
 class Scenario(Section):
     """
     Represents a scenario in the game.
@@ -176,6 +177,7 @@ class Scenario(Section):
 
     def __repr__(self):
         return f"<Scenario {self.hash} c={len(self.children)}>"
+
 
 # TODO: def merge(*sections) -> section
 # sum(section.children for section in sections, [])

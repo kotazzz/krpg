@@ -45,6 +45,7 @@ class KrpgConsole:
         print_list(variants, view, title, empty): Prints a list of variants.
         menu(prompt, variants, exit_cmd, view, display, title, empty): Displays a menu and prompts the user for selection.
     """
+
     def __init__(self):
 
         self.console = Console()
@@ -108,17 +109,25 @@ class KrpgConsole:
             text (str): The bar text.
         """
         self.bar = rich(text)
-    def prompt(self, text, data: dict[str, str] = None, allow_empty: bool = False, raw: bool = False, check: bool = False) -> str:
+
+    def prompt(
+        self,
+        text,
+        data: dict[str, str] = None,
+        allow_empty: bool = False,
+        raw: bool = False,
+        check: bool = False,
+    ) -> str:
         """
         Prompts the user for input and returns the user's response.
 
         Args:
             text (str): The prompt text to display to the user.
-            data (dict[str, str], optional): A dictionary of possible completions for the input. 
+            data (dict[str, str], optional): A dictionary of possible completions for the input.
                 The keys represent the possible input values, and the values represent the corresponding descriptions.
                 Defaults to None.
-            allow_empty (bool, optional): Specifies whether an empty input is allowed. 
-                If True, an empty input will be returned as an empty string. 
+            allow_empty (bool, optional): Specifies whether an empty input is allowed.
+                If True, an empty input will be returned as an empty string.
                 If False, the user will be prompted again until a non-empty input is provided.
                 Defaults to False.
             raw (bool, optional): Specifies whether to return the user's input as is, without any processing.
@@ -133,10 +142,16 @@ class KrpgConsole:
         Returns:
             str: The user's input as a string.
         """
-        text = rich(text, console=self.console) if not isinstance(text, int) else self.levels[text]
+        text = (
+            rich(text, console=self.console)
+            if not isinstance(text, int)
+            else self.levels[text]
+        )
         kwargs = {"bottom_toolbar": self.bar}
         if data:
-            kwargs["completer"] = WordCompleter(list(data.keys()), meta_dict={i: rich(j) for i, j in data.items()})
+            kwargs["completer"] = WordCompleter(
+                list(data.keys()), meta_dict={i: rich(j) for i, j in data.items()}
+            )
         else:
             kwargs["completer"] = WordCompleter([])
         if not self.queue:
