@@ -5,7 +5,7 @@ import zlib
 import glob
 
 link = "https://raw.githubusercontent.com/kotazzz/krpg/master/"
-files = ["krpg/*.py", "scenario.krpg", "updater.py"]
+files = ["krpg/**/*.py", "krpg/*.py", "scenario.krpg", "updater.py"]
 
 
 def local_hashes():
