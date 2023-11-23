@@ -31,6 +31,7 @@ class StatsManager:
         on_kill(self, monster_id): Event handler for kill events.
         __repr__(self) -> str: Returns a string representation of the StatsManager object.
     """
+
     def __init__(self, game: Game):
         self.game = game
         # TODO: Добавить счетчик квестов

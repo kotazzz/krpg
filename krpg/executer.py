@@ -23,6 +23,7 @@ def executer_command(name):
         def my_callback():
             pass
     """
+
     def wrapper(callback):
         return ExecuterCommand(name, callback)
 
@@ -204,6 +205,7 @@ class Executer:
         Returns:
             function: The new execute method.
         """
+
         def execute(command: Command):
             ext = self.extensions
             self.extensions += extensions

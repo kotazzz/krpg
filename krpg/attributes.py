@@ -27,6 +27,7 @@ class Attributes:
     - load(data: list): Loads attribute values from a list.
     - update(): Updates attribute values based on provided arguments.
     """
+
     def __init__(
         self,
         strength: int = 0,
@@ -103,6 +104,7 @@ class Attributes:
             free (int | None): The new value for free attribute. Defaults to None.
             set (bool): If True, the attribute will be set to the new value. If False, the new value will be added to the current value. Defaults to False.
         """
+
         def action(a, b, set):
             if not b:
                 return a
