@@ -1,5 +1,4 @@
 from __future__ import annotations
-from itertools import groupby
 from krpg.actions import action
 from krpg.entity import Entity
 
@@ -16,6 +15,45 @@ if TYPE_CHECKING:
 
 
 class Player(Entity):
+    """
+    Represents a player in the game.
+
+    Args:
+        game (Game): The game instance.
+
+    Attributes:
+        game (Game): The game instance.
+        money (int): The amount of money the player has.
+        inventory (Inventory): The player's inventory.
+        attributes (Attributes): The player's attributes.
+        hp (int): The current health points of the player.
+        max_hp (int): The maximum health points of the player.
+
+    Methods:
+        pickup(item: Item, amount: int) -> bool: Picks up an item from the game world.
+        give_command(game: Game, item_id: str, amount: int = 1): Gives an item to the player.
+        add_money(amount: int): Adds money to the player's balance.
+        add_money_command(game: Game, money: int): Adds money to the player's balance.
+        add_free(amount: int): Adds free attribute points to the player.
+        add_free_command(game: Game, free: int): Adds free attribute points to the player.
+        heal(amount: int): Heals the player by the specified amount.
+        heal_command(game: Game, amount: int): Heals the player by the specified amount.
+        damage(amount: int): Damages the player by the specified amount.
+        damage_command(game: Game, amount: int): Damages the player by the specified amount.
+        apply(item: Item): Applies the effects of an item to the player.
+        apply_command(game: Game, item_id: str): Applies the effects of an item to the player.
+        has(item: Item | str) -> Slot | bool: Checks if the player has a specific item.
+        require_item(item_id: str, amount: int = 1, take: bool = True) -> bool: Checks if the player has a required item.
+        require_item_command(game: Game, item_id: str, amount: int = 1): Checks if the player has a required item.
+        move_command(game: Game, new_loc): Moves the player to a new location.
+        action_look(game: Game): Performs the "look" action.
+        action_pickup(game: Game): Performs the "pickup" action.
+        action_map(game: Game): Performs the "map" action.
+        action_me(game: Game): Performs the "me" action.
+        action_go(game: Game): Performs the "go" action.
+        action_inventory(game: Game): Performs the "inventory" action.
+        action_upgrade(game: Game): Performs the "upgrade" action.
+    """
     def __init__(self, game: Game):
         self.game = game
         super().__init__(game, "Player")

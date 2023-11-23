@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from krpg.actions import Action
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from krpg.events import Events
 from krpg.executer import Block, executer_command
@@ -46,6 +46,30 @@ class Location:
 
 
 class World:
+    """
+    Represents the game world containing locations and roads.
+
+    Attributes:
+    - locations: A list of Location objects representing the different locations in the world.
+    - roads: A list of tuples representing the roads between locations.
+    - current: The current location the player is in.
+    - game: The Game object associated with the world.
+    - _start: The starting location of the world.
+
+    Methods:
+    - save(): Saves the state of the world.
+    - load(data): Loads the state of the world from the given data.
+    - take(location, item_id, remain): Removes an item from a location.
+    - drop(item_id, count, location): Adds an item to a location.
+    - set(new_loc): Sets the current location to the specified location.
+    - extract(): Retrieves the list of actions available in the current location.
+    - add(location): Adds a new location to the world.
+    - get(*ids): Retrieves a location object based on the given ids.
+    - get_road(loc): Retrieves the list of locations connected to the given location.
+    - unlock(loc): Unlocks a locked location.
+    - road(loc1, loc2): Adds a road between two locations.
+    """
+
     def __init__(self, game: Game):
         self.locations: list[Location] = []
         self.roads: list[tuple[Location, Location]] = []

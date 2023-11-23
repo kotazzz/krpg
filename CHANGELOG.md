@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0]
+
+### Удалено
+
+- Удалена блокировка очереди событий
+
+### Изменено
+
+- Изменено поведение модулей, весь код из инициализации игры перенесен внутрь них
+
+### Добавлено
+
+- Добавлена документация к проекту
+
 ## [1.0.0]
 
 ### Изменено

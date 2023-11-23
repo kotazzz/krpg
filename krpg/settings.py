@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from krpg.actions import action
 from krpg.events import Events
@@ -36,6 +36,24 @@ def param(id: str, name: str, description: str, variants: dict[str, str] = None)
 
 
 class Settings:
+    """
+    Represents the settings of the game.
+
+    Args:
+        game (Game): The game instance.
+
+    Attributes:
+        params (list[Param]): The list of parameters.
+        game (Game): The game instance.
+
+    Methods:
+        save: Saves the settings.
+        load: Loads the settings.
+        change_debug: Changes the debug setting.
+        change_dummy: Changes the dummy setting.
+        settings_command: Executes the settings command.
+    """
+
     def __init__(self, game: Game):
         self.params: list[Param] = []
         self.game = game
@@ -47,9 +65,21 @@ class Settings:
                 self.params.append(val)
 
     def save(self):
+        """
+        Saves the settings.
+
+        Returns:
+            dict: The saved settings.
+        """
         return {i.id: i.value for i in self.params if i.value is not None}
 
     def load(self, data: dict):
+        """
+        Loads the settings.
+
+        Args:
+            data (dict): The settings data to load.
+        """
         for param in self.params:
             param.value = data.pop(param.id, None)
 
@@ -60,15 +90,37 @@ class Settings:
         {"enable": "Включить", "disable": "Выключить"},
     )
     def change_debug(param: Param, game: Game, new_value):
+        """
+        Changes the debug setting.
+
+        Args:
+            param (Param): The parameter instance.
+            game (Game): The game instance.
+            new_value: The new value for the debug setting.
+        """
         param.value = new_value == "enable"
         game.set_debug(param.value)
 
     @param("dummy", "Просто настройка", "Ничего не делает")
     def change_dummy(param: Param, game: Game, new_value):
+        """
+        Changes the dummy setting.
+
+        Args:
+            param (Param): The parameter instance.
+            game (Game): The game instance.
+            new_value: The new value for the dummy setting.
+        """
         game.log.debug(f"New dummy value: {new_value} | {param=}, {game=}")
 
     @action("settings", "Настройки игры", "Игра")
     def settings_command(game: Game):
+        """
+        Executes the settings command.
+
+        Args:
+            game (Game): The game instance.
+        """
         variants = game.settings.params
         view = (
             lambda x: f"[green]{x.name}[/] [yellow]\[{x.value if x.value is not None else 'По умолчанию'}][/] - {x.description}"

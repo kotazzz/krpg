@@ -5,13 +5,33 @@ import math
 import random
 import time
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from krpg.game import Game
 
 
 class RandomManager:
+    """
+    A class that manages random number generation and state saving.
+
+    Attributes:
+        game (Game): The game instance.
+        state (int): The current state of the random number generator.
+        seed (int): The seed used for random number generation.
+        rnd (random.Random): The random number generator instance.
+    
+    Methods:
+        __init__(self, game: Game): Initializes the RandomManager instance.
+        set_seed(self, seed: int): Sets the seed for random number generation.
+        save(self): Saves the current state of the random number generator.
+        load(self, data): Loads the saved state of the random number generator.
+        random(self): Generates a random float between 0 and 1.
+        randint(self, a, b): Generates a random integer between a and b (inclusive).
+        choice(self, options): Chooses a random item from a list of options.
+        choices(self, options, weights=None, k=1): Chooses multiple items from a list of options with optional weights.
+        __repr__(self): Returns a string representation of the RandomManager instance.
+    """
     def __init__(self, game: Game):
         self.game = game
         self.state = 0

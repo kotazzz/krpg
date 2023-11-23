@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from krpg.game import Game
 
-from krpg.actions import ActionManager, action
+from krpg.actions import action
 from krpg.executer import executer_command
 from krpg.events import Events
 
