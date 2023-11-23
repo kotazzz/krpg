@@ -59,7 +59,7 @@ class EventHandler:
             cb = getattr(obj, attr)
             if callable(cb):
                 self.listen(attr[3:], cb)
-    
+
     def dispatch(self, event: str, *args, **kwargs):
         for listener in self.listeners["*"] + self.listeners["event"]:
             listener(event, *args, **kwargs)

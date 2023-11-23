@@ -20,7 +20,7 @@ class RandomManager:
         state (int): The current state of the random number generator.
         seed (int): The seed used for random number generation.
         rnd (random.Random): The random number generator instance.
-    
+
     Methods:
         __init__(self, game: Game): Initializes the RandomManager instance.
         set_seed(self, seed: int): Sets the seed for random number generation.
@@ -32,6 +32,7 @@ class RandomManager:
         choices(self, options, weights=None, k=1): Chooses multiple items from a list of options with optional weights.
         __repr__(self): Returns a string representation of the RandomManager instance.
     """
+
     def __init__(self, game: Game):
         self.game = game
         self.state = 0

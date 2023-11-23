@@ -14,7 +14,8 @@ class Record:
         self.day = day
         self.text = text
 
-#TODO: rewrite this
+
+# TODO: rewrite this
 class Diary:
     """
     Represents a diary in a game.
@@ -32,6 +33,7 @@ class Diary:
     - action_diary(game: Game): Performs actions related to managing the diary.
     - __repr__(self) -> str: Returns a string representation of the Diary object.
     """
+
     def __init__(self, game: Game):
         self.records: list[Record] = []  # (Day #, text)
         self.game = game

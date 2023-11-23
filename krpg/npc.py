@@ -65,6 +65,7 @@ class NpcManager:
     - set_state(npc, state): Set the state of an NPC.
     - trade_command(game, block): Execute the "trade" command.
     """
+
     def __init__(self, game: Game):
         self.game = game
         self.npcs: list[Npc] = []

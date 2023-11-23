@@ -51,13 +51,13 @@ class Builder:
     def save(self):
         # Save game data
         g = self.game
-        return [g.scenario_hash, g.version, g.start_time, g.save_time]
+        return [g.scenario.hash, g.version, g.start_time, g.save_time]
 
     def load(self, data):
         # Load game data
         g = self.game
-        if data[0] != g.scenario_hash:
-            raise Exception(f"save:{data[0]} != game:{g.scenario_hash}")
+        if data[0] != g.scenario.hash:
+            raise Exception(f"save:{data[0]} != game:{g.scenario.hash}")
         if data[1] != g.version:
             raise Exception(f"save:{data[1]} != game:{g.version}")
 
@@ -219,5 +219,6 @@ class Builder:
         for i in triggers.children:
             res.append((i.name, i.args, self.game.executer.create_block(i)))
         return res
+
     def __repr__(self):
         return "<Builder>"
