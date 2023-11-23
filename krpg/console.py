@@ -47,7 +47,6 @@ class KrpgConsole:
         menu(prompt, variants, exit_cmd, view, display, title, empty): Displays a menu and prompts the user for selection.
     """
 
-
     def __init__(self):
         self.console = Console()
         self.session = PromptSession()
@@ -80,31 +79,38 @@ class KrpgConsole:
             4: rich("[bold blue]>>>> [/]", console=self.console),
             5: rich("[bold magenta]>>>>> [/]", console=self.console),
         }
+
     def reset_theme(self):
         try:
             self.console.pop_theme()
         except ThemeStackError:
             pass
+
     def set_theme(self, colors: list[str]):
         self.reset_theme()
-        self.console.push_theme(Theme({
-"black": colors[0],
-"red": colors[1],
-"green": colors[2],
-"yellow": colors[3],
-"blue": colors[4],
-"magenta": colors[5],
-"cyan": colors[6],
-"white": colors[7],
-"bright_black": colors[8],
-"bright_red": colors[9],
-"bright_green": colors[10],
-"bright_yellow": colors[11],
-"bright_blue": colors[12],
-"bright_magenta": colors[13],
-"bright_cyan": colors[14],
-"bright_white": colors[15],
-        }))
+        self.console.push_theme(
+            Theme(
+                {
+                    "black": colors[0],
+                    "red": colors[1],
+                    "green": colors[2],
+                    "yellow": colors[3],
+                    "blue": colors[4],
+                    "magenta": colors[5],
+                    "cyan": colors[6],
+                    "white": colors[7],
+                    "bright_black": colors[8],
+                    "bright_red": colors[9],
+                    "bright_green": colors[10],
+                    "bright_yellow": colors[11],
+                    "bright_blue": colors[12],
+                    "bright_magenta": colors[13],
+                    "bright_cyan": colors[14],
+                    "bright_white": colors[15],
+                }
+            )
+        )
+
     def get_history(self) -> list[str | Any]:
         """
         Returns the command history.
