@@ -1,5 +1,7 @@
 {
-    "krpg/data/themes.py": 293141722,
+    "krpg/data/info.py": 1063757521,
+    "krpg/data/splashes.py": 3002711283,
+    "krpg/data/themes.py": 356794350,
     "krpg/actions.py": 3733885510,
     "krpg/attributes.py": 2073086704,
     "krpg/battle.py": 3668888552,
@@ -12,7 +14,7 @@
     "krpg/entity.py": 3897723985,
     "krpg/events.py": 4171029130,
     "krpg/executer.py": 503883975,
-    "krpg/game.py": 3836738540,
+    "krpg/game.py": 3569937235,
     "krpg/inventory.py": 595626846,
     "krpg/npc.py": 3593265216,
     "krpg/player.py": 2976961875,
@@ -20,10 +22,10 @@
     "krpg/quests.py": 2420092156,
     "krpg/random.py": 3197041407,
     "krpg/scenario.py": 1170049007,
-    "krpg/settings.py": 507230405,
+    "krpg/settings.py": 696084081,
     "krpg/stats.py": 20367474,
     "krpg/world.py": 2615255789,
-    "krpg/__main__.py": 4049967376,
+    "krpg/__main__.py": 4101783493,
     "scenario.krpg": 2386517687,
     "updater.py": 1004320952
 }

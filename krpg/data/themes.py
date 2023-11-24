@@ -1,4 +1,4 @@
-themes = [
+THEMES = [
     "090300 db2d20 01a252 fded02 01a0e4 a16a94 b5e4f4 a5a2a2 5c5855 e8bbd0 3a3432 4a4543 807d7c d6d5d4 cdab53 f7f7f7 3024_day",
     "000000 cd0000 00cd00 cdcd00 1093f5 cd00cd 00cdcd faebd7 404040 ff0000 00ff00 ffff00 11b5f6 ff00ff 00ffff ffffff abernathy",
     "363636 ff0883 83ff08 ff8308 0883ff 8308ff 08ff83 b6b6b6 424242 ff1e8e 8eff1e ff8e1e 1e8eff 8e1eff 1eff8e c2c2c2 aci",

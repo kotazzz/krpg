@@ -1,8 +1,12 @@
+[build-system]
+requires = [ "poetry-core",]
+build-backend = "poetry.core.masonry.api"
+
 [tool.poetry]
 name = "krpg"
-version = "0.8"
+version = "1.2.0"
 description = "**KRPG** - захватывающая приключенческая игра, где вы, исследователь-путешественник, направляетесь в деревню с целью пополнения запасов. Однако прибытие в деревню сталкивает вас с загадочными событиями, заставляя вас задержаться и помочь разгадать тайны и решить проблемы. Ваш выбор остаться открывает двери к опасным приключениям, и вы сталкиваетесь с разнообразными персонажами, каждый из которых несет свои собственные секреты. Ваше путешествие станет важным моментом в судьбе деревни, выяснить происходящее"
-authors = ["Kotaz"]
+authors = [ "Kotaz",]
 license = "MIT"
 readme = "README.md"
 
@@ -14,7 +18,5 @@ prompt-toolkit = "^3.0.41"
 requests = "^2.31.0"
 urllib3 = "^2.1.0"
 
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.poetry.group.dev.dependencies]
+black = "^23.11.0"

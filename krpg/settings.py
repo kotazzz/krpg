@@ -2,8 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from krpg.actions import action
-from krpg.events import Events
-from krpg.data.themes import themes
+from krpg.data.themes import THEMES
 from rich.table import Table
 
 if TYPE_CHECKING:
@@ -69,7 +68,7 @@ class ThemeManager(ComplexParam):
         collumns = 3
         page = 0
 
-        data = [parse(i) for i in themes]
+        data = [parse(i) for i in THEMES]
         pages = [data[i : i + page_size] for i in range(0, len(data), page_size)]
 
         while True:
@@ -112,7 +111,7 @@ class ThemeManager(ComplexParam):
                 game.console.print("Тема успешно изменена")
 
     def change_theme(self, game: Game, name: str):
-        colors = {i[-1]: [f"#{j}" for j in i[:-1]] for i in [i.split() for i in themes]}
+        colors = {i[-1]: [f"#{j}" for j in i[:-1]] for i in [i.split() for i in THEMES]}
         print(colors[name])
         game.console.set_theme(colors[name])
 
