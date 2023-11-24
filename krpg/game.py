@@ -18,7 +18,7 @@ from krpg.bestiary import Bestiary
 from krpg.builder import Builder
 from krpg.clock import Clock
 from krpg.console import KrpgConsole
-from krpg.data.info import BRAND_COLORS, TIMESHIFT, __version__
+from krpg.data.info import BRAND_COLORS, TIMESHIFT, __version__, ABOUT_TEXT, FAQ
 from krpg.data.splashes import SPLASHES
 from krpg.diary import Diary
 from krpg.encoder import Encoder
@@ -43,7 +43,7 @@ class Game:
         self.state = "none"
         self.console = KrpgConsole()
         self.log = self.console.log
-        self.set_debug()
+        self.set_debug(debug_mode)
         self.main()
 
     def set_debug(self, value: bool):
@@ -330,28 +330,11 @@ class Game:
             for cmd in cmds:
                 game.console.print(f" [green]{cmd.name}[/] - {cmd.description}")
 
-    @action("credits", "Авторы и благодарности", "Игра")
+    @action("about", "Авторы, благодарности и об игре", "Игра")
     def action_credits(game: Game):
         game.show_logo()
         game.console.print(
-            f"[b black on green]"
-            f"Вас ждет увлекательное путешествие по миру, где Вы               \n"
-            f"будете сражаться с монстрами, выполнять квесты и становиться все \n"
-            f"сильнее и сильнее. Сможете ли Вы стать настоящим героем?         [/][green]\n\n"
-            f"Автор:             [magenta]Kotaz[/]\n"
-            f"Сайт:              [blue u]https://kotazzz.github.io/ [/]\n"
-            f"Репозиторий:       [blue u]https://github.com/kotazzz/krpg [/]\n"
-            f"                   [blue  ]Дайте ⭐ плиз [/]\n"
-            f"Discord:           [blue u]https://discord.gg/FKcURWZsMW [/]\n"
-            f"                   [blue  ]@kot_az[/]\n"
-            f"Telegram:          [blue  ]@kot_az[/]\n"
-            f"Язык:              [magenta]Python 3[/]\n"
-            f"Библиотеки:        [red]rich[/], [red]prompt_toolkit[/], [red]msgpack[/]\n"
-            f"Кол-во строк кода: [magenta]2000+[/]\n\n"
-            f"Лицензия:          [magenta]MIT[/][/]\n\n"
-            f"[bold green]Отдельная благодарность:[/]\n"
-            f"  [green]Никто (извините.)[/]\n"
-            f"  [red]Конец[/]\n"
+            ABOUT_TEXT
         )
 
     @action("info", "Об текущей игре", "Игра")
@@ -371,31 +354,10 @@ class Game:
 
     @action("guide", "Игровая справка", "Игра")
     def action_guide(game: Game):
-        passages = {
-            "FAQ": ("Тут пусто :("),
-            "Changelog": ("Мне [red]лень[/] тут что-то писать... :( \n"),
-            "Мне нужна помощь по командам": (
-                "Используйте [green]help[/] или [green]guide[/] для получения справки\n"
-            ),
-            "[blue][AUTO][/] и аргументы": (
-                "В игре все действия используют лишь одну фразу или слово. "
-                "У них нет аргументов или какого либо синтаксиса. "
-                "Если для определенного действия требуются аргументы - "
-                "они будут запрошенные через отдельные поля ввода. Теперь "
-                "вам не надо заучивать сложный синтаксис дял простых действий. "
-                "Хотите ввести аргументы сразу? Разделяйте свои действия пробелом. "
-                "Игра запоминает каждое слово отдельно и как только понадобится что-то "
-                "ввести она сама вставит то, что вы вводили ранее. "
-                "Таким образом вы можете одновременно вводить множество "
-                "команд за раз и они все исполнятся сами\n"
-                "Попробуйте ввести [green]e guide 1[/] и вы выйдете из "
-                "справки и вернетесь, открыв первую страницу"
-            ),
-        }
         while True:
             game.console.print("[bold green]Гайды и справка[/]")
             game.console.print("[green]Выберите секцию (e - Выход)[/]")
-            select = game.console.menu(2, list(passages.items()), "e", lambda x: x[0])
+            select = game.console.menu(2, list(FAQ.items()), "e", lambda x: x[0])
             if not select:
                 return
             else:
