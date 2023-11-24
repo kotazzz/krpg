@@ -1,5 +1,6 @@
 import argparse
 from krpg.game import Game
+from krpg.data.info import __version__
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
