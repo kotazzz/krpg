@@ -333,9 +333,7 @@ class Game:
     @action("about", "Авторы, благодарности и об игре", "Игра")
     def action_credits(game: Game):
         game.show_logo()
-        game.console.print(
-            ABOUT_TEXT
-        )
+        game.console.print(ABOUT_TEXT)
 
     @action("info", "Об текущей игре", "Игра")
     def action_about(game: Game):
