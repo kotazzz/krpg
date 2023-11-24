@@ -42,6 +42,7 @@ class GameState(Enum):
     EXIT = 2
     DEAD = 3
 
+
 class Game:
     savers: dict[str, set[callable, callable]] = {}
 
