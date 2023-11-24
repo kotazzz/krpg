@@ -7,7 +7,7 @@ import updater
 
 
 def python_set(filename, variable, new_value):
-    with open(filename, "r") as file:
+    with open(filename, "r", encoding='utf-8') as file:
         tree = ast.parse(file.read())
     for node in ast.walk(tree):
         if (
@@ -17,12 +17,12 @@ def python_set(filename, variable, new_value):
             and node.targets[0].id == variable
         ):
             node.value = ast.Str(s=new_value)
-    with open(filename, "w") as file:
+    with open(filename, "w", encoding='utf-8') as file:
         file.write(ast.unparse(tree))
 
 
 def python_get(filename, variable):
-    with open(filename, "r") as file:
+    with open(filename, "r", encoding='utf-8') as file:
         tree = ast.parse(file.read())
     for node in ast.walk(tree):
         if (
@@ -36,17 +36,17 @@ def python_get(filename, variable):
 
 def poetry_set(value):
     filename = "pyproject.toml"
-    with open(filename, "r") as file:
+    with open(filename, "r", encoding='utf-8') as file:
         data = toml.load(file)
         # [tool.poetry] - version = value
         data["tool"]["poetry"]["version"] = value
-    with open(filename, "w") as file:
+    with open(filename, "w", encoding='utf-8') as file:
         toml.dump(data, file)
 
 
 def poetry_get():
     file = "pyproject.toml"
-    with open(file, "r") as file:
+    with open(file, "r", encoding='utf-8') as file:
         data = toml.load(file)
         # [tool.poetry] - version = value
         return data["tool"]["poetry"]["version"]
@@ -70,7 +70,7 @@ def build_hashes(args):
         print(*[f"{i}: {hashes[i]}" for i in hashes], sep="\n")
     else:
         print(f"Writing to {filename}")
-        with open(filename, "w") as f:
+        with open(filename, "w", encoding='utf-8') as f:
             json.dump(hashes, f, indent=4)
 
 
