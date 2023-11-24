@@ -109,10 +109,9 @@ class ActionManager:
         actions.extend(self.actions)
         names = {}
         for action in actions:
-            if action.name not in names:
-                names[action.name] = action
-            else:
+            if action.name in names:
                 raise Exception(f"Same names: {names[action.name]} and {action}")
+            names[action.name] = action
         return actions
 
     def __repr__(self):

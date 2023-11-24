@@ -206,10 +206,7 @@ class Builder:
         name, description = command.args
         block = self.game.executer.create_block(command)
 
-        def new_command(game: Game):
-            block.run()
-
-        return action(name, description)(new_command)
+        return action(name, description)(block.run)
 
     def build_triggers(self, triggers: Section | None):
         # Build triggers for a location in the game
