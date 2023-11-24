@@ -9,7 +9,7 @@ build:
 
 release:
 	git commit -am "Release version $(VERSION)"
-	git tag -a v$(VERSION) -m "$(VERSION)"
+	git tag -a $(VERSION) -m "$(VERSION)"
 
 changelog:
 	head -n 7 CHANGELOG.md > TEMP_CHANGELOG.md
