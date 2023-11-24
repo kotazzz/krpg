@@ -33,14 +33,21 @@ from krpg.scenario import Scenario
 from krpg.settings import Settings
 from krpg.stats import StatsManager
 from krpg.world import World
+from enum import Enum
 
+
+class GameState(Enum):
+    NONE = 0
+    PLAYING = 1
+    EXIT = 2
+    DEAD = 3
 
 class Game:
     savers: dict[str, set[callable, callable]] = {}
 
     def __init__(self, debug_mode: bool = False):
         self.version = __version__
-        self.state = "none"
+        self.state = GameState.NONE
         self.console = KrpgConsole()
         self.log = self.console.log
         self.set_debug(debug_mode)
@@ -128,7 +135,7 @@ class Game:
         self.console.set_bar(
             f"[magenta]K[/][red]-[/][blue]R[/][yellow]P[/][green]G[/] {random.choice(BRAND_COLORS)}{self.version}[/]"
         )
-        while self.state != "playing":
+        while self.state != GameState.PLAYING:
             menu = {
                 "start": "Начать новую игру",
                 "load": "Загрузить сохранение",
@@ -172,7 +179,7 @@ class Game:
                 self.executer.create_block(init).run()
                 self.world.set()
                 self.world.current.locked = False
-                self.events.dispatch(Events.STATE_CHANGE, state="playing")
+                self.events.dispatch(Events.STATE_CHANGE, state=GameState.PLAYING)
 
             elif select == "load":
                 self.new_game()
@@ -185,7 +192,7 @@ class Game:
     def playing(self):
 
         try:
-            while self.state == "playing":
+            while self.state == GameState.PLAYING:
                 self.console.set_bar(f"[yellow]{self.player.name}[/]")
                 actions = self.actions.get_actions()
                 cmds_data = {cmd.name: cmd.description for cmd in actions}
@@ -193,7 +200,7 @@ class Game:
                 self.events.dispatch(Events.COMMAND, command=cmd)
         except KeyboardInterrupt:
             self.console.print("[red]Выход из игры[/]")
-            self.state = "None"
+            self.state = GameState.NONE
 
     def timestamp(self):
         return int(time.time()) - TIMESHIFT
@@ -219,12 +226,12 @@ class Game:
         )
 
     def on_dead(self):
-        self.events.dispatch(Events.STATE_CHANGE, "dead")
+        self.events.dispatch(Events.STATE_CHANGE, GameState.DEAD)
 
-    def on_state_change(self, state):
+    def on_state_change(self, state: GameState):
         old = self.state
         self.state = state
-        if old != "playing" and state == "playing":
+        if old != GameState.PLAYING and state == GameState.PLAYING:
             self.playing()
 
     def on_save(self):
@@ -273,7 +280,7 @@ class Game:
                     self.log.exception(e)
             else:
                 self.console.print("[green]Игра загружена[/]")
-                self.events.dispatch(Events.STATE_CHANGE, state="playing")
+                self.events.dispatch(Events.STATE_CHANGE, state=GameState.PLAYING)
                 return
 
     def on_event(self, event, *args, **kwargs):
@@ -306,7 +313,7 @@ class Game:
                 "{0}│     ╰─╮{1}       {2}│   ╭──╮ │{3}│   ╭───╯{4}│   ││  │\n"
                 "{0}│   ╭─╮ │{1}       {2}│   │  │ │{3}│   │    {4}│   ╰╯  │\n"
                 "{0}╰───╯ ╰─╯{1}       {2}╰───╯  ╰─╯{3}╰───╯    {4}╰───────╯\n".format(
-                    *clrs
+                    *BRAND_COLORS
                 )
             )
         )
@@ -364,7 +371,7 @@ class Game:
 
     @action("exit", "Выйти из игры", "Игра")
     def action_exit(game: Game):
-        game.state = "exit"
+        game.state = GameState.EXIT
 
     @action("save", "Сохранить игру", "Игра")
     def action_save(game: Game):

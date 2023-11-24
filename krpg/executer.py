@@ -91,7 +91,7 @@ class Block:
 
         self.print_block_command = print_block_command
 
-    def run(self, from_start: bool = True):
+    def run(self, from_start: bool = True, *args, **kwargs):
         """
         Runs the block of code.
 

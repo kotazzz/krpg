@@ -36,6 +36,7 @@ class BattleManager:
         # player, enemy - Entity
         # actions: 0 - attack, 1 - defend
         # Rule format: ([...expressions (str)], action, weight)
+        # TODO: Lambda functions
         rules = [
             # If enemy have 50%+ hp, then attack
             (["enemy.hp / enemy.max_hp >= 0.5"], 0, 1),
