@@ -67,16 +67,21 @@ class Builder:
 
     def build(self):
         # Build all components of the game
-        self.tag = "items"
-        self.build_items(self.scenario.first("items"))
-        self.tag = "entities"
-        self.build_entities(self.scenario.first("entities"))
-        self.tag = "npc"
-        self.build_npcs(self.scenario.first("npcs"))
-        self.tag = "quests"
-        self.build_quests(self.scenario.first("quests"))
-        self.tag = "world"
-        self.build_world(self.scenario.first("map"))
+        blocks = {
+            (self.build_items, "items"),
+            (self.build_entities, "entities"),
+            (self.build_npcs, "npcs"),
+            (self.build_quests, "quests"),
+            (self.build_world, "map"),
+        }
+        for func, tag in blocks:
+            self.tag = tag
+            section = self.scenario.first(tag)
+            if section:
+                self.debug(f"Building {tag}")
+                func(section)
+            else:
+                self.debug(f"[red]No {tag} found")
         self.tag = ""
 
     def build_items(self, items: Section):

@@ -1,7 +1,10 @@
 from __future__ import annotations
+import glob
+import os
 
 import random
 import time
+from typing import Literal
 import zlib
 from datetime import datetime
 from hashlib import sha512
@@ -12,6 +15,7 @@ import msgpack
 from rich.live import Live
 from rich.spinner import SPINNERS, Spinner
 
+import krpg.game
 from krpg.actions import ActionManager, action
 from krpg.battle import BattleManager
 from krpg.bestiary import Bestiary
@@ -108,7 +112,14 @@ class Game:
             self.log.debug(f"Init [green]{obj.__class__.__name__}[/]: {obj}")
             return obj
 
-        self.scenario: Scenario = init(Scenario("scenario.krpg"))
+        self.scenario: Scenario = init(Scenario())
+        game_path = os.path.dirname(krpg.game.__file__)
+        content_path = os.path.join(game_path, "content")
+        # list files in krpg/content/**/*.krpg
+        for filename in glob.glob(os.path.join(content_path, "**", "*.krpg"), recursive=True):
+            self.scenario.add_section(filename, content_path)
+            self.log.debug(f"Loaded scenario {filename}: {self.scenario}")
+        
         self.actions: ActionManager = init(ActionManager(self))
         self.events: EventHandler = init(EventHandler(self))
         self.encoder: Encoder = init(Encoder())
@@ -262,6 +273,7 @@ class Game:
             try:
                 if encoded == "e":
                     break
+                # TODO: Move to encoder
                 select, encoded = encoded[0], encoded[1:]
                 select = list(self.encoder.abc.keys())[int(select)]
                 zdata = self.encoder.decode(encoded, type=select)
@@ -298,13 +310,6 @@ class Game:
             self.console.print(f"[green]Доступные команды: {' '.join(cmds.keys())}[/]")
 
     def show_logo(self):
-        clrs = [
-            "[bold magenta]",
-            "[bold red]",
-            "[bold blue]",
-            "[bold yellow]",
-            "[bold green]",
-        ]
         self.console.print(
             (
                 "{0}╭───╮ ╭─╮{1}       {2}╭──────╮  {3}╭───────╮{4}╭───────╮\n"
@@ -382,5 +387,5 @@ class Game:
     def action_load(game: Game):
         game.events.dispatch(Events.LOAD)
 
-    def __repr__(self):
+    def __repr__(self) -> Literal['<Game>']:
         return "<Game>"

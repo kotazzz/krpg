@@ -1,7 +1,9 @@
 from __future__ import annotations
+import os
 
 import re
 import shlex
+from typing import Any, Self
 import zlib
 
 ALLOW_KWARGS = True
@@ -19,7 +21,7 @@ class Section:
         parent (Section, optional): The parent section of the current section. Defaults to None.
         children (list[Section | Command]): The children sections or commands of the current section.
     """
-
+    
     def __init__(self, name, args=None, parent=None):
         self.name = name
         self.children: list[Section | Command] = []
@@ -69,7 +71,25 @@ class Section:
                 if isinstance(child, Command) and command:
                     r.append(child)
         return r
-
+    def join(self, section: Section, inner_merge: bool = False) -> None:    
+        """
+        Joins the children of the current section with the children of the specified section.
+        Args:
+            section (Section): The section whose children will be joined with the current section's children.
+            inner_merge (bool, optional): Whether to perform inner merge for sections with the same name. Defaults to False.
+        """
+        if inner_merge:
+            for child in section.children:
+                if isinstance(child, Section):
+                    existing_section = self.first(child.name, section=True, command=False)
+                    if existing_section:
+                        existing_section.join(child, inner_merge=True)
+                    else:
+                        self.children.append(child)
+                else:
+                    self.children.append(child)
+        else:
+            self.children.extend(section.children)
     def __repr__(self):
         return f"Section({self.name!r}, {self.args}, {self.children})"
 
@@ -130,36 +150,54 @@ class Multiline(Command):
 class Scenario(Section):
     """
     Represents a scenario in the game.
-
-    Args:
-        file (str): The path to the scenario file.
-
+    
     Attributes:
-        file (str): The path to the scenario file.
         hash (str): The hash value of the scenario file.
+        name (str): The name of the section.
+        args (list, optional): The arguments of the section. Defaults to an empty list.
+        parent (Section, optional): The parent section of the current section. Defaults to None.
         children (list): The list of child sections in the scenario.
 
     Methods:
-        parse(): Parses the scenario file and builds the section hierarchy.
+        parse(str): Parses given content and appends children to the current section.
     """
 
-    def __init__(self, file):
+    def __init__(self) -> None:
         super().__init__("root")
-        self.file = file
-        self.hash = f"{zlib.crc32(open(file, 'rb').read()):x}"
-        self.parse()
-
-    def parse(self):
+        self.hash = {}
+    
+    def add_section(self, path: str, base_path: str = None) -> Self:
         """
-        Parses the scenario file and builds the section hierarchy.
+        Adds a section from a scenario file.
+        
+        Args:
+            path (str): The path to the scenario file.
+            base_path (str, optional): The base path to the scenario file. Defaults to None.
+        
+        Returns:
+            Self: The Scenario object.
         """
-        text = open(self.file, encoding="utf-8").read()
+        with open(path, "r", encoding="utf-8") as f:
+            text = f.read()
+        section = self.parse(text, path)
+        if base_path:
+            filename = os.path.relpath(path, base_path)
+        else:
+            filename = path
+        self.hash[filename] = f"{zlib.crc32(text.encode('utf-8')):x}"
+        self.join(section, True)
+        return self # for chaining
+    
+    def parse(self, text: str, section_name: str = "root") -> Section | Any | None:
+        """
+        Parses given content and appends children to the current section.
+        """
         regex = re.escape(MULOPEN) + r'[^"|.]*' + re.escape(MULCLOSE)
         text = re.sub(regex, lambda m: m.group(0).strip().replace("\n", "\\n"), text)
         text = text.replace("\n\n", "\n").replace("\\\n", "")
         lines = text.split("\n")
         lines = [r for line in lines if (r := line.split("#", 1)[0].strip())]
-        current = self
+        current = Section(section_name)
         for line in lines:
             if line == "}":
                 current = current.parent
@@ -174,7 +212,7 @@ class Scenario(Section):
                 else:
                     current.children.append(Command.from_raw(line))
         return current
-
+    
     def __repr__(self):
         return f"<Scenario {self.hash} c={len(self.children)}>"
 

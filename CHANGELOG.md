@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3]
+
+### Изменено
+
+- Теперь сценарий хранится внутри папки игры
+- Сценарий можно разделить на различные файлы
+- Оптимизирован builder, теперь он выводит сообщение, если не найдена определенная секция
+
+### Добавлено
+
+- Теперь для сценариев есть возможность соединять их в один
+- Соединение можно проводить как простым объединением, так и объединением внутренних элементов секций с одним названием
+
 ## [1.2.2] - 2023-11-24
 
 [1.2.2]: https://github.com/kotazzz/krpg/compare/1.2.1...1.2.2
