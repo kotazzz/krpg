@@ -5,7 +5,7 @@ import zlib
 import glob
 
 link = "https://raw.githubusercontent.com/kotazzz/krpg/master/"
-files = ["krpg/**/*.py", "krpg/*.py", "scenario.krpg", "updater.py"]
+files = ["krpg/**/*.*", "krpg/*.*", "updater.py"]
 
 
 def local_hashes():
@@ -13,7 +13,7 @@ def local_hashes():
     hashes = {}
     for i in files:
         # get all files by mask
-        for j in glob.glob(i):
+        for j in glob.glob(i, recursive=True):
             # get hash
             with open(j, "rb") as f:
                 j = j.replace("\\", "/")
