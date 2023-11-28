@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.3]
+## [1.3.0]
 
 ### Изменено
 
@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Добавлено
 
+- Добавлен 1 квест и 1 предмет
 - Теперь для сценариев есть возможность соединять их в один
 - Соединение можно проводить как простым объединением, так и объединением внутренних элементов секций с одним названием
 - Возможность скрывать действия с нпс при помощи action_req "python expr"
