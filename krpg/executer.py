@@ -258,6 +258,7 @@ class Executer:
             str: The processed text.
         """
         return self.evaluate(f"f'''{text}'''")
+
     def evaluate(self, text: str):
         """
         Evaluate the text in the execution environment.
@@ -271,6 +272,7 @@ class Executer:
         game = self.game
         env = game.executer.env | {"game": game, "env": game.executer.env}
         return eval(text, env)
+
     def __repr__(self):
         return (
             f"<Executer ext={len(self.extensions)} cmd={len(self.get_all_commands())}>"

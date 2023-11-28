@@ -63,7 +63,7 @@ class Player(Entity):
         self.game.executer.add_extension(self)
 
     def pickup(self, item: Item, amount: int):
-        total = self.inventory.count(item.id)+amount
+        total = self.inventory.count(item.id) + amount
         self.game.events.dispatch(Events.PICKUP, item=item, amount=amount, total=total)
         return self.inventory.pickup(item, amount)
 

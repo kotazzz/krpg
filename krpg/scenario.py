@@ -12,7 +12,6 @@ MULOPEN = "<|"
 MULCLOSE = "|>"
 
 
-
 class Section:
     """
     Represents a section in a scenario.
@@ -23,7 +22,7 @@ class Section:
         parent (Section, optional): The parent section of the current section. Defaults to None.
         children (list[Section | Command]): The children sections or commands of the current section.
     """
-    
+
     def __init__(self, name, args=None, parent=None):
         self.name = name
         self.children: list[Section | Command] = []
@@ -73,8 +72,8 @@ class Section:
                 if isinstance(child, Command) and command:
                     r.append(child)
         return r
-    
-    def join(self, section: Section, inner_merge: bool = False) -> None:    
+
+    def join(self, section: Section, inner_merge: bool = False) -> None:
         """
         Joins the children of the current section with the children of the specified section.
         Args:
@@ -84,7 +83,9 @@ class Section:
         if inner_merge:
             for child in section.children:
                 if isinstance(child, Section):
-                    existing_section = self.first(child.name, section=True, command=False)
+                    existing_section = self.first(
+                        child.name, section=True, command=False
+                    )
                     if existing_section:
                         existing_section.join(child, inner_merge=True)
                     else:
@@ -93,7 +94,7 @@ class Section:
                     self.children.append(child)
         else:
             self.children.extend(section.children)
-            
+
     def __repr__(self):
         return f"Section({self.name!r}, args={self.args!r}, children={self.children!r})"
 
@@ -101,6 +102,7 @@ class Section:
         yield self.name
         yield self.args
         yield self.children
+
 
 class Command:
     def __init__(self, name, args=None, kwargs=None):
@@ -153,7 +155,7 @@ class Multiline(Command):
 
     def __repr__(self) -> str:
         return f"Multiline('{self.name[:10]+'...'}', {self.args})"
-    
+
     def __rich_repr__(self):
         yield self.name
         yield self.args
@@ -162,7 +164,7 @@ class Multiline(Command):
 class Scenario(Section):
     """
     Represents a scenario in the game.
-    
+
     Attributes:
         hash (str): The hash value of the scenario file.
         name (str): The name of the section.
@@ -177,15 +179,15 @@ class Scenario(Section):
     def __init__(self) -> None:
         super().__init__("root")
         self.hash = {}
-    
+
     def add_section(self, path: str, base_path: str = None) -> Self:
         """
         Adds a section from a scenario file.
-        
+
         Args:
             path (str): The path to the scenario file.
             base_path (str, optional): The base path to the scenario file. Defaults to None.
-        
+
         Returns:
             Self: The Scenario object.
         """
@@ -198,8 +200,8 @@ class Scenario(Section):
             filename = path
         self.hash[filename] = f"{zlib.crc32(text.encode('utf-8')):x}"
         self.join(section, True)
-        return self # for chaining
-    
+        return self  # for chaining
+
     def parse(self, text: str, section_name: str = "root") -> Section | Any | None:
         """
         Parses given content and appends children to the current section.

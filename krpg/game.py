@@ -116,10 +116,12 @@ class Game:
         game_path = os.path.dirname(krpg.game.__file__)
         content_path = os.path.join(game_path, "content")
         # list files in krpg/content/**/*.krpg
-        for filename in glob.glob(os.path.join(content_path, "**", "*.krpg"), recursive=True):
+        for filename in glob.glob(
+            os.path.join(content_path, "**", "*.krpg"), recursive=True
+        ):
             self.scenario.add_section(filename, content_path)
             self.log.debug(f"Loaded scenario {filename}: {self.scenario}")
-        
+
         self.actions: ActionManager = init(ActionManager(self))
         self.events: EventHandler = init(EventHandler(self))
         self.encoder: Encoder = init(Encoder())
@@ -386,5 +388,5 @@ class Game:
     def action_load(game: Game):
         game.events.dispatch(Events.LOAD)
 
-    def __repr__(self) -> Literal['<Game>']:
+    def __repr__(self) -> Literal["<Game>"]:
         return "<Game>"
