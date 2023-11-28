@@ -3,7 +3,7 @@ from krpg.actions import action
 from krpg.entity import Entity
 
 from typing import TYPE_CHECKING
-from rich.tree import Tree
+from rich.tree import Tree  
 from krpg.executer import executer_command
 from krpg.inventory import Item, ItemType, Slot
 
@@ -67,6 +67,7 @@ class Player(Entity):
         self.game.events.dispatch(Events.PICKUP, item=item, amount=amount, total=total)
         return self.inventory.pickup(item, amount)
 
+    @staticmethod
     @executer_command("give")
     def give_command(game: Game, item_id: str, amount: int = 1):
         item = game.bestiary.get_item(item_id)
@@ -90,6 +91,7 @@ class Player(Entity):
         else:
             self.game.events.dispatch(Events.REMOVE_MONEY, **kw)
 
+    @staticmethod
     @executer_command("add_money")
     def add_money_command(game: Game, money):
         money = int(money)
@@ -106,6 +108,7 @@ class Player(Entity):
         else:
             self.game.events.dispatch(Events.REMOVE_FREE, **kw)
 
+    @staticmethod
     @executer_command("add_free")
     def add_free_command(game: Game, free: int):
         free = int(free)
@@ -118,6 +121,7 @@ class Player(Entity):
         self.hp += amount
         self.game.events.dispatch(Events.HEAL, amount=amount)
 
+    @staticmethod
     @executer_command("heal")
     def heal_command(game: Game, amount):
         amount = int(amount)
@@ -132,6 +136,7 @@ class Player(Entity):
         if self.hp <= 0:
             self.game.events.dispatch(Events.DEAD)
 
+    @staticmethod
     @executer_command("damage")
     def damage_command(game: Game, amount):
         amount = int(amount)
@@ -145,6 +150,7 @@ class Player(Entity):
             else:
                 raise ValueError(f"Unknown effect {name}")
 
+    @staticmethod
     @executer_command("apply")
     def apply_command(game: Game, item_id: str):
         item = game.bestiary.get_item(item_id)
@@ -152,14 +158,14 @@ class Player(Entity):
             raise ValueError(f"Unknown item {item_id}")
         game.player.apply(item)
 
-    def has(self, item: Item | str, has: int = 1) -> Slot | bool:
+    def has(self, item: Item | str, amount: int = 1) -> Slot | bool:
         item = item.id if isinstance(item, Item) else item
         for slot in self.inventory.slots:
-            if slot.id == item and slot.amount >= has:
+            if slot.id == item and slot.amount >= amount:
                 return slot
         return False
 
-    def require_item(self, item_id: str, amount: int = 1, take: bool = True):
+    def require_item(self, item_id: str, amount: int = 1, take: bool = True) -> bool:
         game = self.game
         slot = game.player.has(item_id)
         if not slot:
@@ -173,16 +179,19 @@ class Player(Entity):
                 slot.amount -= amount
         return True
 
+    @staticmethod
     @executer_command("require_item")
     def require_item_command(game: Game, item_id: str, amount: int = 1):
         amount = int(amount)
         game.player.require_item(item_id, amount)
 
+    @staticmethod
     @executer_command("move")
     def move_command(game: Game, new_loc):
         game.world.set(new_loc)
 
     # Actions
+    @staticmethod
     @action("look", "Информация об этом месте", "Информация")
     def action_look(game: Game):
         location = game.world.current
@@ -212,6 +221,7 @@ class Player(Entity):
             game.console.print(f"  [bold blue]{npc.name}[/]")
         game.console.print()
 
+    @staticmethod
     @action("pickup", "Подобрать предмет", "Действия")
     def action_pickup(game: Game):
         location = game.world.current
@@ -229,6 +239,7 @@ class Player(Entity):
             game.world.take(location, selected_id, remain)
             game.clock.wait(2)
 
+    @staticmethod
     @action("map", "Информация о карте", "Информация")
     def action_map(game: Game):
         tree = Tree(f"[green b]{game.world.current.name} [/][blue] <-- Вы тут[/]")
@@ -244,11 +255,13 @@ class Player(Entity):
         populate(tree, game.world.current)
         game.console.print(tree)
 
+    @staticmethod
     @action("me", "Информация о себе", "Игрок")
     def action_me(game: Game):
         game.presenter.presense(game.player)
         game.console.print(f"[yellow b]Баланс[/]: [yellow]{game.player.money}")
 
+    @staticmethod
     @action("go", "Отправиться", "Действия")
     def action_go(game: Game):
         w = game.world
@@ -260,6 +273,7 @@ class Player(Entity):
             if w.set(new_loc):
                 game.console.print(f"[yellow]Вы пришли в {new_loc.name}")
 
+    @staticmethod
     @action("inventory", "Управление инвентарем", "Игрок")
     def action_inventory(game: Game):
         console = game.console
@@ -327,6 +341,7 @@ class Player(Entity):
                 else:
                     console.print(f"[red]Вы не можете это выбросить")
 
+    @staticmethod
     @action("upgrade", "Улучшить персонажа", "Действия")
     def action_upgrade(game: Game):
         # [red]S[/], [green]P[/], [blue]E[/], [yellow]C[/], [magenta]I[/], [cyan]A[/], [white]W[/]

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from krpg.scenario import Command, Section, Multiline
 
@@ -44,28 +44,31 @@ class ExecuterCommand:
 
 
 class Base:
+    @staticmethod
     @executer_command("print")
     def builtin_print(game: Game, *args):
         text = " ".join(args)
         game.console.print("[blue]" + game.executer.process_text(text))
 
+    @staticmethod
     @executer_command("$")
-    def builtin_exec(game: Game, *code: list[str]):
+    def builtin_exec(game: Game, *code: str):
         code = " ".join(code)
         env = game.executer.env | {"game": game, "env": game.executer.env}
         exec(code, env)
 
+    @staticmethod
     @executer_command("set")
     def builtin_set(game: Game, name: str, expr: str):
         env = game.executer.env | {"game": game, "env": game.executer.env}
         game.executer.env[name] = eval(expr, env)
 
+    @staticmethod
     @executer_command("if")
     def builtin_if(game: Game, expr: str, block: Block):
         env = game.executer.env | {"game": game, "env": game.executer.env}
         if eval(expr, env):
             block.run()
-
 
 class Block:
     def __init__(self, executer: Executer, section: Section, parent=None):
@@ -131,7 +134,7 @@ class Executer:
     def __init__(self, game: Game):
         self.game = game
         self.extensions: list[object] = [Base()]
-        self.env = {}
+        self.env: dict[str, Any] = {}
         game.add_saver("env", self.save, self.load)
 
     def save(self):
@@ -152,7 +155,7 @@ class Executer:
         """
         self.env = data
 
-    def get_executer_additions(self, obj):
+    def get_executer_additions(self, obj: object):
         """
         Get the executer additions from an object.
 

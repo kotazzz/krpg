@@ -3,7 +3,7 @@ import os
 
 import re
 import shlex
-from typing import Any, Self
+from typing import Any, Optional, Self, Sequence
 import zlib
 import rich.repr
 
@@ -23,7 +23,7 @@ class Section:
         children (list[Section | Command]): The children sections or commands of the current section.
     """
 
-    def __init__(self, name, args=None, parent=None):
+    def __init__(self, name: str, args: Optional[list[str]]=None, parent: Optional[Section]=None):
         self.name = name
         self.children: list[Section | Command] = []
         self.args = args or []
@@ -33,7 +33,7 @@ class Section:
     def as_command(self):
         return Command(self.name, self.args)
 
-    def first(self, name, section=True, command=True) -> Section | Command | None:
+    def first(self, name: str, section: bool=True, command: bool=True) -> Section | Command | None:
         """
         Returns the first child section or command with the specified name.
 
@@ -51,6 +51,7 @@ class Section:
                     return child
                 if isinstance(child, Command) and command:
                     return child
+        return None
 
     def all(self, name, section=True, command=True) -> list[Section | Command]:
         """
@@ -64,7 +65,7 @@ class Section:
         Returns:
             list[Section | Command]: A list of all child sections or commands with the specified name.
         """
-        r = []
+        r: list[Section | Command] = []
         for child in self.children:
             if child.name == name:
                 if isinstance(child, Section) and section:
@@ -83,7 +84,7 @@ class Section:
         if inner_merge:
             for child in section.children:
                 if isinstance(child, Section):
-                    existing_section = self.first(
+                    existing_section: Section = self.first(
                         child.name, section=True, command=False
                     )
                     if existing_section:
@@ -150,7 +151,8 @@ class Command:
 
 
 class Multiline(Command):
-    def from_raw(string):
+    @staticmethod
+    def from_raw(string) -> Multiline:
         return Multiline(string[len(MULOPEN) : -len(MULCLOSE)])
 
     def __repr__(self) -> str:
@@ -178,9 +180,9 @@ class Scenario(Section):
 
     def __init__(self) -> None:
         super().__init__("root")
-        self.hash = {}
+        self.hash: dict[str, str] = {}
 
-    def add_section(self, path: str, base_path: str = None) -> Self:
+    def add_section(self, path: str, base_path: Optional[str] = None) -> Self:
         """
         Adds a section from a scenario file.
 
@@ -202,7 +204,7 @@ class Scenario(Section):
         self.join(section, True)
         return self  # for chaining
 
-    def parse(self, text: str, section_name: str = "root") -> Section | Any | None:
+    def parse(self, text: str, section_name: str = "root") -> Section:
         """
         Parses given content and appends children to the current section.
         """

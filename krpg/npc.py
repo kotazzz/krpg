@@ -88,7 +88,7 @@ class NpcManager:
         self.game.add_saver("npcs", self.save, self.load)
         self.game.add_actions(self)
         self.game.executer.add_extension(self)
-        self.talking: Npc | None = None
+        self.talking: Optional[Npc] = None
 
     def save(self):
         data = {}
@@ -109,6 +109,7 @@ class NpcManager:
                 return npc
         raise Exception(f"Npc {id} not found")
 
+    @staticmethod
     @action("talk", "Поговорить с доступными нпс", "Действия")
     def action_talk(game: Game):
         loc = game.world.current
@@ -144,23 +145,27 @@ class NpcManager:
             nametag = f"[#{hash&0xffffff:06x}]{name}"
         text = self.game.executer.process_text(text)
         self.game.console.print(f"{nametag}[white]: {text}")
-
+    
+    @staticmethod
     @executer_command("say")
-    def say_command(game: Game, *text):
+    def say_command(game: Game, text: str):
         text = " ".join(text)
         npc = game.npc_manager.talking
         game.npc_manager.say(npc.name if npc.known else "???", text)
-
+    
+    @staticmethod
     @executer_command("ans")
-    def ans_command(game: Game, *text):
+    def ans_command(game: Game, text: str):
         text = " ".join(text)
         game.npc_manager.say(game.player.name, text)
-
+    
+    @staticmethod
     @executer_command("meet")
     def meet_command(game: Game):
         game.npc_manager.talking.known = True
         game.events.dispatch(Events.NPC_MEET, npc_id=game.npc_manager.talking.id)
-
+    
+    @staticmethod
     @executer_command("set_state")
     def set_state_command(game: Game, state: str):
         game.npc_manager.set_state(game.npc_manager.talking, state)
@@ -168,7 +173,8 @@ class NpcManager:
     def set_state(self, npc: Npc, state: str):
         npc.state = state
         self.game.events.dispatch(Events.NPC_STATE, npc_id=npc.id, state=state)
-
+    
+    @staticmethod
     @executer_command("trade")
     def trade_command(game: Game, block: Block):
         allowed_sell = block.section.first("sell").args

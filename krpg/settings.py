@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from krpg.actions import action
 from krpg.data.themes import THEMES
@@ -11,14 +11,14 @@ if TYPE_CHECKING:
 
 class Param:
     def __init__(
-        self, id: str, name: str, description: str, variants: dict[str, str] = None
+        self, id: str, name: str, description: str, variants: Optional[dict[str, str]] = None
     ):
-        self.id = id
-        self.name = name
-        self.description = description
+        self.id: str = id
+        self.name: str = name
+        self.description: str = description
         self.on_change = None
-        self.variants = variants or {}
-        self.value = None
+        self.variants: dict[str, str] = variants or {}
+        self.value: Optional[str] = None
 
     def __call__(self, *args, **kwargs):
         self.on_change(self, *args, **kwargs)
@@ -33,6 +33,9 @@ class ComplexParam:
         self.name = name
         self.description = description
         self.value = None
+    
+    def callback(self, param: ComplexParam, game: Game):
+        raise NotImplementedError
 
     def save(self, game: Game):
         return self.value
@@ -117,7 +120,7 @@ class ThemeManager(ComplexParam):
         game.console.set_theme(colors[name])
 
 
-def param(id: str, name: str, description: str, variants: dict[str, str] = None):
+def param(id: str, name: str, description: str, variants: Optional[dict[str, str]] = None):
     def decorator(f):
         param = Param(id, name, description, variants)
         param.on_change = f
@@ -146,7 +149,7 @@ class Settings:
     """
 
     def __init__(self, game: Game):
-        self.params: list[Param] = []
+        self.params: list[Param | ComplexParam] = []
         self.game = game
         self.game.add_actions(self)
         self.game.add_saver("settings", self.save, self.load)
@@ -194,7 +197,7 @@ class Settings:
             new_value: The new value for the debug setting.
         """
         param.value = new_value == "enable"
-        game.set_debug(param.value)
+        game.set_debug(param.value if param.value else False)
 
         # game.console.set_theme(colors)
 

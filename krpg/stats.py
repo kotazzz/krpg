@@ -40,7 +40,7 @@ class StatsManager:
     def __init__(self, game: Game):
         self.game = game
         # TODO: Добавить счетчик квестов
-        self.counters = {
+        self.counters: dict[str, list[str | int]] = {
             "c": ["Исполнено команд", 0],
             "p": ["Поднято предметов", 0],
             "a": ["Получено денег", 0],
@@ -79,7 +79,8 @@ class StatsManager:
         """
         for i, c in enumerate(self.counters):
             self.counters[c][1] = data[i]
-
+    
+    @staticmethod
     @action("stats", "Посмотреть статистику", "Информация")
     def stats_action(game: Game):
         """
@@ -175,7 +176,7 @@ class StatsManager:
         """
         self.counters["d"][1] += amount
 
-    def on_quest_end(self, state: QuestState()):
+    def on_quest_end(self, state: QuestState):
         """
         Event handler for quest end events.
         """

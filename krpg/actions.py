@@ -69,7 +69,7 @@ class ActionManager:
 
     def __init__(self, *submanagers: object | ActionManager):
         self.submanagers: list[object | ActionManager] = list(submanagers)
-        self.actions: list[Action] = {}
+        self.actions: list[Action] = []
         self.actions = self.extract(self)
         self.submanagers.clear()
 
@@ -85,7 +85,7 @@ class ActionManager:
         """
         if isinstance(item, ActionManager):
             return item.get_actions()
-        if "extract" in dir(item):
+        if hasattr(item, "extract"):
             return item.extract()
         actions = []
         for name in dir(item):
@@ -105,7 +105,7 @@ class ActionManager:
         for submanager in self.submanagers:
             actions.extend(self.extract(submanager))
         actions.extend(self.actions)
-        names = {}
+        names: dict[str, Action] = {}
         for action in actions:
             if action.name in names:
                 raise Exception(f"Same names: {names[action.name]} and {action}")
