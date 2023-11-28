@@ -3,10 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List
 from krpg.actions import action
 from krpg.inventory import Item
-from krpg.world import Location
 
 if TYPE_CHECKING:
     from krpg.game import Game
+    from krpg.quests import QuestState
+    from krpg.world import Location
 
 
 class StatsManager:
@@ -29,8 +30,12 @@ class StatsManager:
         on_move(self, before: Location, after: Location): Event handler for move events.
         on_save(self): Event handler for save events.
         on_kill(self, monster_id): Event handler for kill events.
+        on_heal(self, amount: int): Event handler for heal events.
+        on_damage(self, amount: int): Event handler for damage events.
+        on_quest_end(self): Event handler for quest end events.
         __repr__(self) -> str: Returns a string representation of the StatsManager object.
     """
+
 
     def __init__(self, game: Game):
         self.game = game
@@ -43,6 +48,9 @@ class StatsManager:
             "m": ["Перемещений", 0],
             "s": ["Сохранений", 0],
             "k": ["Убийств", 0],
+            "h": ["Исцелений", 0],
+            "d": ["Получено урона", 0],
+            "q": ["Завершено квестов", 0],
         }
         game.add_saver("stats", self.save, self.load)
         game.add_actions(self)
@@ -148,6 +156,31 @@ class StatsManager:
         """
         self.counters["k"][1] += 1
 
+
+    def on_heal(self, amount: int):
+        """
+        Event handler for heal events.
+
+        Args:
+            amount (int): The amount of healing.
+        """
+        self.counters["h"][1] += amount
+
+    def on_damage(self, amount: int):
+        """
+        Event handler for damage events.
+
+        Args:
+            amount (int): The amount of damage.
+        """
+        self.counters["d"][1] += amount
+
+    def on_quest_end(self, state: QuestState()):
+        """
+        Event handler for quest end events.
+        """
+        self.counters["q"][1] += 1
+        
     def __repr__(self) -> str:
         """
         Returns a string representation of the StatsManager object.
@@ -156,3 +189,4 @@ class StatsManager:
             str: The string representation of the StatsManager object.
         """
         return "<StatsManger>"
+
