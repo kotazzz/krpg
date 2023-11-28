@@ -2,7 +2,7 @@ from __future__ import annotations
 from krpg.events import Events
 from krpg.inventory import Slot
 from krpg.actions import Action, action
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from zlib import crc32
 from krpg.executer import Block, executer_command
@@ -20,6 +20,7 @@ class Npc:
         state: str,
         location: str,
         actions: dict[str, list[Action]],
+        requirements: dict[str, str],
     ):
         self.id: str = id
         self.name: str = name
@@ -27,10 +28,24 @@ class Npc:
         self.description: str = description
         self.location: str = location
         self.actions: dict[str, list[Action]] = actions  # {state: [actions]}
+        self.requirements: dict[str, str] = requirements  # {state "." action: python_eval}
         self.known: bool = False
-
-    def get_actions(self):
-        return self.actions[self.state]
+        
+    def get_actions(self, game: Optional[Game] = None):
+        actions = self.actions[self.state]
+        if not game:
+            return actions
+        result = []
+        for a in actions:
+            debug0 = self.requirements
+            debug1 = f"{self.state}.{a.name}"
+            
+            req = self.requirements.get(f"{self.state}.{a.name}", "True")
+            res = game.executer.evaluate(req)
+            if res:
+                result.append(a)
+        return result
+            
 
     def save(self):
         return [self.state, self.known]
@@ -102,7 +117,7 @@ class NpcManager:
         )
         if not sel:
             return
-        actions = sel.get_actions()
+        actions = sel.get_actions(game=game)
         while True:
             sel_act: Action = game.console.menu(
                 2,
@@ -114,9 +129,10 @@ class NpcManager:
             if not sel_act:
                 return
             game.npc_manager.talking = sel
+            old_state = sel.state
             sel_act.callback(game)
             game.npc_manager.talking = None
-            if len(actions) == 1:
+            if len(actions) == 1 or old_state != sel.state:
                 return
 
     def say(self, name, text):
