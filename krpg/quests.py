@@ -226,6 +226,7 @@ class QuestState:
                 self.game.npc_manager.set_state(npc, args[1])
             elif type == "end":
                 self.done = True
+                self.game.events.dispatch(Events.QUEST_END, state=self)
 
     def __repr__(self):
         """Return a string representation of the QuestState.

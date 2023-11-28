@@ -37,6 +37,7 @@ class Events(StrEnum):
 
     # quests.py
     QUEST_START = auto()  # quest_id: str
+    QUEST_END = auto()  # state: QuestState
 
     # nps.py
     NPC_MEET = auto()  # npc_id: str
