@@ -63,7 +63,8 @@ class Player(Entity):
         self.game.executer.add_extension(self)
 
     def pickup(self, item: Item, amount: int):
-        self.game.events.dispatch(Events.PICKUP, item=item, amount=amount)
+        total = self.inventory.count(item.id)+amount
+        self.game.events.dispatch(Events.PICKUP, item=item, amount=amount, total=total)
         return self.inventory.pickup(item, amount)
 
     @executer_command("give")
@@ -151,10 +152,10 @@ class Player(Entity):
             raise ValueError(f"Unknown item {item_id}")
         game.player.apply(item)
 
-    def has(self, item: Item | str) -> Slot | bool:
+    def has(self, item: Item | str, has: int = 1) -> Slot | bool:
         item = item.id if isinstance(item, Item) else item
         for slot in self.inventory.slots:
-            if slot.id == item:
+            if slot.id == item and slot.amount >= has:
                 return slot
         return False
 
@@ -174,6 +175,7 @@ class Player(Entity):
 
     @executer_command("require_item")
     def require_item_command(game: Game, item_id: str, amount: int = 1):
+        amount = int(amount)
         game.player.require_item(item_id, amount)
 
     @executer_command("move")
