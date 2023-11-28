@@ -264,7 +264,7 @@ npcs {
           ans "Да, я собрал травы"
           say "Отлично, ты мне очень помог. Я буду ждать тебя тут, если что"
           require_item rare_herb 5
-          set_state wait
+          set_state info
         }
       }
     }
