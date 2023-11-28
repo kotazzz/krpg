@@ -143,11 +143,18 @@ class Builder:
             init_state = npc.first("init").args[0]
             location = npc.first("location").args[0]
             actions = {}
+            requirements = {}
             for state in npc.all("state"):
-                actions[state.args[0]] = []
-                for act in state.all("action"):
-                    actions[state.args[0]].append(self.build_action(act))
-            new_npc = Npc(id, name, description, init_state, location, actions)
+                state_name = state.args[0]
+                actions[state_name] = []
+                for req in state.all("action"):
+                    actions[state_name].append(self.build_action(req))
+                # action_req <action_name> <condition> 
+                for req in state.all("action_req"):
+                    # npc:
+                    # self.requirements: dict[str, str] = requirements  # {state "." action: python_eval}
+                    requirements[f"{state_name}.{req.args[0]}"] = req.args[1]
+            new_npc = Npc(id, name, description, init_state, location, actions, requirements)
             self.game.npc_manager.npcs.append(new_npc)
 
     def build_quests(self, quests: Section):
