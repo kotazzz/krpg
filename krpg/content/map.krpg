@@ -85,29 +85,29 @@ map {
   location forest Лес "Тут можно поискать приключений" {
     action explore "Изучать местность" {
       set _res "game.clock.in_range(7, 20)"
-      if "res" {
-        set _select "game.random.choices(range(4), weights=[0.1,0.1,0.2,0.6], k=1)[0]"
-        # 0 - найти монстра
-        # 1 - найти предмет
-        # 2 - найти монеты
-        # 3 - ничего не найти
-        if "select==0" {
-          fight_list goblin blue_goblin
+      if "_res" {
+        set _select "game.random.choices(range(3), weights=[0.7,0.25,0.05], k=1)[0]"
+        if "_select==0" {
+          print "Вы ничего не нашли"
         }
-        if "select==1" {
-          print Вы ничего не нашли # TODO: add items
+        if "_select==1" {
+          set _p "game.random.choice(['Что-то мерцает в высокой траве', 'Таинственное свечение в зарослях',\
+          'Ты обнаружил странную траву', 'В высокой зеленой траве что-то сверкает',\
+          'Твой взгляд притянул странный блеск в траве', 'Решив осмотреться, ты нашел необычную траву',\
+          'Ты решаешь покопаться в траве и находишь что-то интересное'])"
+          print "{_p}"
+          give rare_herb
         }
-        if "select==2" {
-          set _m "game.random.randint(1, 10)"
-          print Вы нашли {m} монет
-          $ game.player.add_money(m)
-        }
-        if "select==3" {
-          print Вы ничего не нашли
+        if "_select==2" {
+          set _m "game.random.randint(1, 20)"
+          print "Вы нашли {m} монет"
+          # NOTE: add_money command doesnt support variables
+          $ game.player.add_money(m) 
         }
       }
-      if "not res" {
-        print Вы ничего не нашли
+      if "not _res" {
+        print "Вы ничего не нашли"
+        print "Похоже, что сейчас уже ночь"
       }
       pass 60
     }

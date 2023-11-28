@@ -39,7 +39,11 @@ items {
   }
   item lydia_package "Посылка для Лидии" "Посылка с травами для Лидии" 
   item alvaro_package "Посылка для Альваро" "Посылка для Альваро"
-
+  item rare_herb "Редкая трава" "Редкая трава, часто используется в алхимии" {
+    use hp 3
+    stack 10
+    cost 1 10
+  }
   item sword "Меч" "Острая штука" {  
     wear WEAPON 10 0  0  0  0  0  0
     stack 1
