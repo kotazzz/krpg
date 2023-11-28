@@ -85,6 +85,7 @@ class Goal:
               the NPC ID matches the ID in the arguments.
             - For "state" type goals, the completion status is based on whether
               the NPC ID and state match the IDs and state in the arguments.
+            - For "abc" type goals
         """
         if self.type == "run" and event == Events.COMMAND:
             self.completed = self.args[0] == kwargs["command"]
@@ -99,6 +100,12 @@ class Goal:
             self.completed = (
                 self.args[0] == kwargs["npc_id"] and self.args[1] == kwargs["state"]
             )
+        
+        elif self.type == "collect" and event == Events.PICKUP:
+            #     PICKUP = auto()  # item: Item, amount: int
+            d = self.args
+            required = int(self.args[1]) 
+            self.completed = self.args[0] == kwargs["item"].id and required == kwargs["total"]
 
     def __repr__(self):
         """
@@ -326,7 +333,14 @@ class QuestManager:
         for active in self.active_quests:
             if not active.done:
                 active.check(event, *args, **kwargs)
-
+                
+    def is_done(self, id: str):
+        quest = self.get_quest(id)
+        if quest:
+            return quest.id in [q.quest.id for q in self.active_quests if q.done]
+        else:
+            raise Exception(f"Quest {id} not found")
+        
     @executer_command("quest")
     def quest_command(game: Game, id: str):
         game.quest_manager.start_quest(id)
