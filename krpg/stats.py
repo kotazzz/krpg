@@ -93,7 +93,7 @@ class StatsManager:
         """
         self.counters["c"][1] += 1
 
-    def on_pickup(self, item: Item, amount: int):
+    def on_pickup(self, item: Item, amount: int, total: int):
         """
         Event handler for pickup events.
 

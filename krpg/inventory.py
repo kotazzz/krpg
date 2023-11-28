@@ -331,3 +331,16 @@ class Inventory:
         if only_empty:
             res = [(i, slot) for i, slot in res if slot.empty]
         return res
+    
+    def count(self, item: Item | str) -> int:
+        """
+        Count the number of items in the inventory.
+
+        Args:
+            item (Item | str): The item to count.
+
+        Returns:
+            int: The number of items in the inventory.
+        """
+        item = item.id if isinstance(item, Item) else item
+        return sum(slot.amount for slot in self.slots if slot.id == item)
