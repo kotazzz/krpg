@@ -15,7 +15,7 @@ class Events(StrEnum):
     COMMAND = auto()  # command: str
 
     # player.py
-    PICKUP = auto()  # item: Item, amount: int
+    PICKUP = auto()  # item: Item, amount: int, total: int
     ADD_MONEY = auto()  # amount: int, new_balance: int
     REMOVE_MONEY = auto()  # amount: int, new_balance: int
     ADD_FREE = auto()  # amount: int, new_balance: int
