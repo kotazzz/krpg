@@ -5,10 +5,12 @@ import re
 import shlex
 from typing import Any, Self
 import zlib
+import rich.repr
 
 ALLOW_KWARGS = True
-MULOPEN = "[["
-MULCLOSE = "]]"
+MULOPEN = "<|"
+MULCLOSE = "|>"
+
 
 
 class Section:
@@ -71,6 +73,7 @@ class Section:
                 if isinstance(child, Command) and command:
                     r.append(child)
         return r
+    
     def join(self, section: Section, inner_merge: bool = False) -> None:    
         """
         Joins the children of the current section with the children of the specified section.
@@ -90,9 +93,14 @@ class Section:
                     self.children.append(child)
         else:
             self.children.extend(section.children)
+            
     def __repr__(self):
-        return f"Section({self.name!r}, {self.args}, {self.children})"
+        return f"Section({self.name!r}, args={self.args!r}, children={self.children!r})"
 
+    def __rich_repr__(self):
+        yield self.name
+        yield self.args
+        yield self.children
 
 class Command:
     def __init__(self, name, args=None, kwargs=None):
@@ -136,7 +144,7 @@ class Command:
         Returns:
             str: The string representation of the Command object.
         """
-        return f"Command({self.name!r}, {self.args})"
+        return f"Command({self.name!r}, args={self.args!r})"
 
 
 class Multiline(Command):
@@ -145,6 +153,10 @@ class Multiline(Command):
 
     def __repr__(self) -> str:
         return f"Multiline('{self.name[:10]+'...'}', {self.args})"
+    
+    def __rich_repr__(self):
+        yield self.name
+        yield self.args
 
 
 class Scenario(Section):
@@ -195,8 +207,7 @@ class Scenario(Section):
         regex = re.escape(MULOPEN) + r'[^"|.]*' + re.escape(MULCLOSE)
         text = re.sub(regex, lambda m: m.group(0).strip().replace("\n", "\\n"), text)
         text = text.replace("\n\n", "\n").replace("\\\n", "")
-        lines = text.split("\n")
-        lines = [r for line in lines if (r := line.split("#", 1)[0].strip())]
+        lines = [r for line in text.split("\n") if (r := line.split("#", 1)[0].strip())]
         current = Section(section_name)
         for line in lines:
             if line == "}":
@@ -212,7 +223,7 @@ class Scenario(Section):
                 else:
                     current.children.append(Command.from_raw(line))
         return current
-    
+
     def __repr__(self):
         return f"<Scenario {self.hash} c={len(self.children)}>"
 

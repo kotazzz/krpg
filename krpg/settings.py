@@ -40,7 +40,7 @@ class ComplexParam:
     def load(self, data: dict, game: Game):
         self.value = data
 
-
+# TODO: Улучшить менеджер тем
 class ThemeManager(ComplexParam):
     def __init__(self):
         super().__init__("theme", "Тема", "Изменяет тему консоли")

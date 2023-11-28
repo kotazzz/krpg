@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from krpg.actions import action
+from krpg.actions import Action
 from krpg.attributes import Attributes
 from krpg.bestiary import Meta
 from krpg.inventory import Item, ItemType
@@ -211,7 +211,7 @@ class Builder:
         name, description = command.args
         block = self.game.executer.create_block(command)
 
-        return action(name, description)(block.run)
+        return Action(name, description, "", block.run)
 
     def build_triggers(self, triggers: Section | None):
         # Build triggers for a location in the game
