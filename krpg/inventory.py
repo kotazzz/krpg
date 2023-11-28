@@ -1,5 +1,6 @@
 from __future__ import annotations
 from enum import Enum
+from typing import Optional
 from krpg.attributes import Attributes
 
 
@@ -139,8 +140,8 @@ class Slot:
             type (ItemType, optional): The type of the slot. Defaults to ItemType.ITEM.
         """
         self.type = type
-        self.id = None
-        self.amount = 0
+        self.id: Optional[str] = None
+        self.amount: int = 0
 
     def set(self, id, amount=1):
         """
@@ -227,7 +228,7 @@ class Slot:
 
 
 class Inventory:
-    def __init__(self, is_carrier=True, size=10):
+    def __init__(self, is_carrier: bool=True, size: int=10):
         """
         Initialize an Inventory object.
 

@@ -54,10 +54,12 @@ class Clock:
     def __repr__(self):
         return f"<Clock d={self.days} h={self.hours} m={self.minutes} ({self.global_minutes})>"
 
+    @staticmethod
     @executer_command("pass")
     def passtime(game: Game, minutes):
         game.clock.wait(int(minutes))
-
+    
+    @staticmethod
     @action("time", "Узнать, сколько время", "Информация")
     def time(game: Game):
         c = game.clock

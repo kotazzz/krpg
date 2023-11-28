@@ -40,7 +40,7 @@ class Diary:
         self.game.add_saver("diary", self.save, self.load)
         self.game.add_actions(self)
 
-    def save(self) -> dict:
+    def save(self) -> list[tuple[int, str]]:
         return [(record.day, record.text) for record in self.records]
 
     def load(self, data: dict):
@@ -58,7 +58,7 @@ class Diary:
         for i, line in enumerate(lines):
             console.print(f"  [green]{i}[white]) {line}")
         return lines
-
+    @staticmethod
     @action("diary", "Управление дневником", "Информация")
     def action_diary(game: Game):
         # v - view record

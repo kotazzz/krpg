@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from krpg.actions import Action
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from krpg.events import Events
 from krpg.executer import Block, executer_command
@@ -19,7 +19,7 @@ class Location:
         self.locked: bool = True
         self.env: dict = {}
         self.actions: list[Action] = []
-        self.items: list[str, int] = []
+        self.items: list[tuple[str, int]] = []
 
         self.triggers: list[tuple[str, list, Block]] = []
         self.visited: bool = False
@@ -73,7 +73,7 @@ class World:
     def __init__(self, game: Game):
         self.locations: list[Location] = []
         self.roads: list[tuple[Location, Location]] = []
-        self.current: Location | None = None
+        self.current: Optional[Location] = None
         self.game = game
         self.game.add_saver("world", self.save, self.load)
         self.game.add_actions(self)
@@ -105,13 +105,13 @@ class World:
                     loc.items.pop(i)
                 break
 
-    def drop(self, item_id: str, count: int = 0, location: str | Location = None):
+    def drop(self, item_id: str, count: int = 0, location: Optional[str | Location] = None):
         loc = self.get(location) if location else self.current
         self.game.events.dispatch(Events.WORLD_ITEM_DROP, item_id=item_id, count=count)
 
         loc.items.append((item_id, count))
 
-    def set(self, new_loc: str | Location | None = None) -> bool:
+    def set(self, new_loc: Optional[str | Location] = None) -> bool:
         new_loc = self.get(new_loc or self._start)
         if self.current:
             for *_, block in self.current.get_triggers("on_exit"):
@@ -136,7 +136,7 @@ class World:
     def add(self, location: Location):
         self.locations.append(location)
 
-    def get(self, *ids: list[str | Location]) -> Location:
+    def get(self, *ids: str | Location) -> Location | list[Location]:
         res = []
         for id in ids:
             if isinstance(id, str):
@@ -164,14 +164,14 @@ class World:
 
     @executer_command("unlock")
     def unlock(game: Game, loc: str):
-        loc = game.world.get(loc)
-        loc.locked = False
+        location = game.world.get(loc)
+        location.locked = False
 
     def road(self, loc1: str | Location, loc2: str | Location):
-        loc1, loc2 = self.get(loc1, loc2)
-        if loc2 in self.get_road(loc1):
-            raise Exception(f"Road from {loc1} to {loc2} already exist")
-        self.roads.append((loc1, loc2))
+        location1, location2 = self.get(loc1, loc2)
+        if location2 in self.get_road(location1):
+            raise Exception(f"Road from {location1} to {location2} already exist")
+        self.roads.append((location1, location2))
 
     def __repr__(self):
         return f"<World loc={len(self.locations)}>"

@@ -1,8 +1,9 @@
 from __future__ import annotations
 from itertools import groupby
+from krpg.attributes import Attributes
 from krpg.entity import Entity
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, Optional
 
 from krpg.inventory import Item, ItemType, Slot
 
@@ -46,8 +47,8 @@ class Presenter:
             str: The generated statistics string.
         """
 
-        def _get(entity: Entity, free: bool):
-            stats: tuple[str, str] = [
+        def _get(obj: Entity | Attributes, free: bool):
+            stats: list[tuple[str, str]] = [
                 ("red", "strength"),
                 ("green", "perception"),
                 ("blue", "endurance"),
@@ -58,11 +59,11 @@ class Presenter:
             ]
             full_stats = ""
             for c, stat in stats:
-                val = getattr(entity, stat)
+                val = getattr(obj, stat)
                 full_stats += f"[b {c}]{stat[0].upper():>2}{val}"
 
             if free:
-                return full_stats + f"   [b white]F{entity.attributes.free:>2}[/]"
+                return full_stats + f"   [b white]F{obj.attributes.free:>2}[/]"
             return full_stats
 
         if isinstance(source, Entity):
@@ -112,7 +113,7 @@ class Presenter:
             stats = self.get_stats(e)
             console.print(f"{stats} {name} {attack} {hp}")
 
-    def show_item(self, slot: Slot, show_amount=True, additional: callable = None):
+    def show_item(self, slot: Slot, show_amount=True, additional: Optional[Callable] = None):
         """
         Generates a string representation of the item in the given slot.
 
@@ -179,7 +180,7 @@ class Presenter:
         self,
         show_number=False,
         show_amount=True,
-        allow: list[ItemType] = None,
+        allow: Optional[list[ItemType]] = None,
         inverse: bool = False,
     ):
         """

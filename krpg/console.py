@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Callable, Optional, Sequence
 from prompt_toolkit.completion import WordCompleter
 from rich.console import Console
 from prompt_toolkit import ANSI
@@ -144,7 +144,7 @@ class KrpgConsole:
     def prompt(
         self,
         text,
-        data: dict[str, str] = None,
+        data: Optional[dict[str, str]] = None,
         allow_empty: bool = False,
         raw: bool = False,
         check: bool = False,
@@ -211,7 +211,7 @@ class KrpgConsole:
             return cmd
 
     def checked(
-        self, prompt, checker: bool, data: dict = {}, allow_empty=False, raw=False
+        self, prompt, checker: Callable[[str], bool], data: dict = {}, allow_empty: bool=False, raw: bool=False
     ):
         while True:
             res = self.prompt(prompt, data, allow_empty, raw)
@@ -237,8 +237,8 @@ class KrpgConsole:
     def print_list(
         self,
         variants: list,
-        view: callable = None,
-        title: str = None,
+        view: Optional[Callable[[str], str]] = None,
+        title: Optional[str] = None,
         empty: str = "Ничего нет",
     ):
         view = view or str
@@ -255,12 +255,12 @@ class KrpgConsole:
 
     def menu(
         self,
-        prompt,
-        variants: list,
+        prompt: int | str,
+        variants: Sequence,
         exit_cmd=None,
-        view: callable = None,
+        view: Optional[Callable] = None,
         display: bool = True,
-        title: str = None,
+        title: Optional[str] = None,
         empty: str = "Ничего нет",
     ):
         if not isinstance(variants, list):

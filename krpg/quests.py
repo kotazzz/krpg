@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from krpg.actions import action
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from rich.tree import Tree
 
 from krpg.executer import executer_command
@@ -34,7 +34,7 @@ class Goal:
         self.args = goal[1:-2]
         self.name = goal[-2]
         self.description = goal[-1]
-        self.meta = {}
+        self.meta: dict[Any, Any] = {}
 
     def save(self):
         """
@@ -120,18 +120,24 @@ class Goal:
 
 
 class Stage:
-    def __init__(self, data):
+    def __init__(self, data: dict[str, Any]):
         self.name: str = data["name"]
         self.goals: list[str] = data["goals"]
         self.rewards: list[str] = data["rewards"]
+    
+    def __repr__(self):
+        return f"<Stage name={self.name!r} goals={len(self.goals)}>"
 
 
 class Quest:
-    def __init__(self, id, name, description, stages):
-        self.id = id
-        self.name = name
-        self.description = description
+    def __init__(self, id: str, name: str, description: str, stages: dict[str | int, Stage]) -> None:
+        self.id: str = id
+        self.name: str = name
+        self.description: str = description
         self.stages: dict[str | int, Stage] = {i: Stage(j) for i, j in stages.items()}
+    
+    def __repr__(self):
+        return f"<Quest id={self.id!r} name={self.name!r} stages={len(self.stages)}>"
 
 
 class QuestState:
@@ -343,11 +349,13 @@ class QuestManager:
             return quest.id in [q.quest.id for q in self.active_quests if q.done]
         else:
             raise Exception(f"Quest {id} not found")
-
+    
+    @staticmethod
     @executer_command("quest")
     def quest_command(game: Game, id: str):
         game.quest_manager.start_quest(id)
-
+    
+    @staticmethod
     @action("quests", "Показать список квестов", "Информация")
     def show_quests(game: Game):
         tree = Tree("Квесты")
