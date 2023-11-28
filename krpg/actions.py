@@ -29,7 +29,6 @@ class Action:
     def __repr__(self):
         return f"<Action {self.name} from {self.category}>"
 
-    
 
 def action(
     name: str, description: str = "No description", category: str = ""

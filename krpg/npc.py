@@ -28,9 +28,11 @@ class Npc:
         self.description: str = description
         self.location: str = location
         self.actions: dict[str, list[Action]] = actions  # {state: [actions]}
-        self.requirements: dict[str, str] = requirements  # {state "." action: python_eval}
+        self.requirements: dict[
+            str, str
+        ] = requirements  # {state "." action: python_eval}
         self.known: bool = False
-        
+
     def get_actions(self, game: Optional[Game] = None):
         actions = self.actions[self.state]
         if not game:
@@ -39,13 +41,12 @@ class Npc:
         for a in actions:
             debug0 = self.requirements
             debug1 = f"{self.state}.{a.name}"
-            
+
             req = self.requirements.get(f"{self.state}.{a.name}", "True")
             res = game.executer.evaluate(req)
             if res:
                 result.append(a)
         return result
-            
 
     def save(self):
         return [self.state, self.known]

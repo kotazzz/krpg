@@ -331,7 +331,7 @@ class Inventory:
         if only_empty:
             res = [(i, slot) for i, slot in res if slot.empty]
         return res
-    
+
     def count(self, item: Item | str) -> int:
         """
         Count the number of items in the inventory.
