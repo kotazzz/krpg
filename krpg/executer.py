@@ -227,10 +227,9 @@ class Executer:
         commands = self.get_all_commands()
         if command.name in commands:
             self.game.log.debug(f"Executing {command.name} ")
+            kwargs = {}
             if isinstance(command, Section):
                 kwargs = {"block": self.create_block(command)}
-            else:
-                kwargs = command.kwargs
             commands[command.name].callback(self.game, *command.args, **kwargs)
         else:
             raise Exception(f"Unknown command: {command.name}")

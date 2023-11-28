@@ -304,7 +304,6 @@ class Game:
         cmds = {cmd.name: cmd for cmd in actions}
         if command in cmds:
             cmds[command].callback(self)
-            self.clock.wait(cmds[command].time)
         else:
             self.console.print(f"[red]Неизвестная команда {command}[/]")
             self.console.print(f"[green]Доступные команды: {' '.join(cmds.keys())}[/]")

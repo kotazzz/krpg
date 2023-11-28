@@ -102,18 +102,22 @@ class NpcManager:
         )
         if not sel:
             return
-        sel_act: Action = game.console.menu(
-            2,
-            sel.get_actions(),
-            "e",
-            lambda a: a.description,
-            title="Выберите действие",
-        )
-        if not sel_act:
-            return
-        game.npc_manager.talking = sel
-        sel_act.callback(game)
-        game.npc_manager.talking = None
+        actions = sel.get_actions()
+        while True:
+            sel_act: Action = game.console.menu(
+                2,
+                actions,
+                "e",
+                lambda a: a.description,
+                title="Выберите действие",
+            )
+            if not sel_act:
+                return
+            game.npc_manager.talking = sel
+            sel_act.callback(game)
+            game.npc_manager.talking = None
+            if len(actions) == 1:
+                return
 
     def say(self, name, text):
         if name == "???":

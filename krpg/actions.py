@@ -10,7 +10,6 @@ class Action:
         description: str,
         category: str,
         callback: Callable,
-        time: int = 0,
     ):
         """
         Represents an action in the game.
@@ -26,14 +25,14 @@ class Action:
         self.description = description
         self.category = category
         self.callback = callback
-        self.time = time
 
     def __repr__(self):
         return f"<Action {self.name} from {self.category}>"
 
+    
 
 def action(
-    name: str, description: str = "No description", category: str = "", time: int = 0
+    name: str, description: str = "No description", category: str = ""
 ) -> Callable[..., Action]:
     """
     Decorator function for creating actions.
@@ -49,7 +48,7 @@ def action(
     """
 
     def decorator(callback: Callable):
-        return Action(name, description, category, callback, time)
+        return Action(name, description, category, callback)
 
     return decorator
 
