@@ -149,14 +149,12 @@ class NpcManager:
     @staticmethod
     @executer_command("say")
     def say_command(game: Game, text: str):
-        text = " ".join(text)
         npc = game.npc_manager.talking
         game.npc_manager.say(npc.name if npc.known else "???", text)
     
     @staticmethod
     @executer_command("ans")
     def ans_command(game: Game, text: str):
-        text = " ".join(text)
         game.npc_manager.say(game.player.name, text)
     
     @staticmethod
