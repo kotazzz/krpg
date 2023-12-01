@@ -145,26 +145,26 @@ class NpcManager:
             nametag = f"[#{hash&0xffffff:06x}]{name}"
         text = self.game.executer.process_text(text)
         self.game.console.print(f"{nametag}[white]: {text}")
-    
+
     @executer_command("say")
     @staticmethod
     def say_command(game: Game, text: str):
         npc = game.npc_manager.talking
         assert npc
         game.npc_manager.say(npc.name if npc.known else "???", text)
-    
+
     @executer_command("ans")
     @staticmethod
     def ans_command(game: Game, text: str):
         game.npc_manager.say(game.player.name, text)
-    
+
     @executer_command("meet")
     @staticmethod
     def meet_command(game: Game):
         assert game.npc_manager.talking
         game.npc_manager.talking.known = True
         game.events.dispatch(Events.NPC_MEET, npc_id=game.npc_manager.talking.id)
-    
+
     @executer_command("set_state")
     @staticmethod
     def set_state_command(game: Game, state: str):
@@ -174,7 +174,7 @@ class NpcManager:
     def set_state(self, npc: Npc, state: str):
         npc.state = state
         self.game.events.dispatch(Events.NPC_STATE, npc_id=npc.id, state=state)
-    
+
     @executer_command("trade")
     @staticmethod
     def trade_command(game: Game, block: Block):

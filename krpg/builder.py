@@ -77,7 +77,7 @@ class Builder:
         }
         for func, tag in blocks:
             self.tag = tag
-            section = self.scenario.first_section(tag) 
+            section = self.scenario.first_section(tag)
             if section:
                 self.debug(f"Building {tag}")
                 func(section)
@@ -96,13 +96,27 @@ class Builder:
                 for cmd in item.children:
                     if cmd.name == "wear":
                         wear, attrs = cmd.args[0], list(int(i) for i in cmd.args[1:])
-                        
-                        assert wear in ItemType.__members__, Exception(f"Invalid item type: {wear}")
+
+                        assert wear in ItemType.__members__, Exception(
+                            f"Invalid item type: {wear}"
+                        )
                         assert len(attrs) == 7, Exception(
-                                f"Invalid amount of SPECIAW attrs ({len(attrs)})"
-                            )
-                        
-                        obj.set_wear(ItemType[wear], Attributes(attrs[0],attrs[1],attrs[2],attrs[3],attrs[4],attrs[5],attrs[6], holder=None))
+                            f"Invalid amount of SPECIAW attrs ({len(attrs)})"
+                        )
+
+                        obj.set_wear(
+                            ItemType[wear],
+                            Attributes(
+                                attrs[0],
+                                attrs[1],
+                                attrs[2],
+                                attrs[3],
+                                attrs[4],
+                                attrs[5],
+                                attrs[6],
+                                holder=None,
+                            ),
+                        )
                     elif cmd.name == "use":
                         act, am = cmd.args
                         obj.set_use(act, int(am))
@@ -125,11 +139,20 @@ class Builder:
             id, name, description = entity.args
             self.debug(f"  Assembling [blue]{id}:{name}")
             speciaw = [int(i) for i in entity.first_command("speciaw").args]
-            if money_data := entity.first_command("money"): 
+            if money_data := entity.first_command("money"):
                 money = int(money_data.args[0])
             else:
                 money = 0
-            attr = Attributes(speciaw[0],speciaw[1],speciaw[2],speciaw[3],speciaw[4],speciaw[5],speciaw[6], free=0)
+            attr = Attributes(
+                speciaw[0],
+                speciaw[1],
+                speciaw[2],
+                speciaw[3],
+                speciaw[4],
+                speciaw[5],
+                speciaw[6],
+                free=0,
+            )
             meta = Meta(id, name, description, attr, money)
             self.game.bestiary.entities.append(meta)
 
@@ -138,8 +161,8 @@ class Builder:
         for npc in npcs.all_sections("npc"):
             id, name, description = npc.args
             self.debug(f"  Creating [blue]{id}:{name}")
-            init_state = npc.first_command("init").args[0] 
-            location = npc.first_command("location").args[0] 
+            init_state = npc.first_command("init").args[0]
+            location = npc.first_command("location").args[0]
             actions: dict[str, list[Action]] = {}
             requirements = {}
             for state in npc.all_sections("state"):
@@ -175,7 +198,7 @@ class Builder:
     def build_world(self, world: Section):
         # Build the world map in the game
         locations = world.all_sections("location")
-        start = world.first_command("start") 
+        start = world.first_command("start")
         links = world.all_commands("link")
         self.debug(f"  Found {len(locations)} locations")
         self.debug(f"  Found {len(links)} links")
@@ -196,19 +219,17 @@ class Builder:
         # Build a location in the game
         id, name, description = locdata.args
         location = Location(id, name, description)
-        
+
         actions = [self.build_action(i) for i in locdata.all_sections("action")]
         location.actions = actions
-        
+
         items = [self.build_item(i) for i in locdata.all("item")]
         location.items = items
-        
+
         if locdata.has_section("triggers"):
-            triggers = self.build_triggers(locdata.first_section("triggers")) 
+            triggers = self.build_triggers(locdata.first_section("triggers"))
             location.triggers.extend(triggers)
-        
-        
-        
+
         self.debug(f"    Built [blue]{id}:{name}")
         return location
 

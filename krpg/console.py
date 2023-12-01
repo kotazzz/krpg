@@ -28,21 +28,22 @@ def rich_to_pt_ansi(*args, console=None, **kwargs):
 
 DEFAULT_LEVEL = 0
 
+
 class ConsoleHooked(Console):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._forced_reset = "\x1b[0m"
-        
+
     def print(self, *args, **kwargs):
         # Получаем вывод, который должен попасть в консоль
         with self.capture() as capture:
             super().print(*args, **kwargs)
         # Добавляем "сброс" в начало
-        text = '\x1b[0m'+capture.get()
+        text = "\x1b[0m" + capture.get()
         # Заменяем все сбросы на измененный стиль по умолчанию
         # _make_ansi_codes возвращает строку с кодами ANSI
-        text = text.replace('\x1b[0m', "\x1b[0m"+self._forced_reset)
-        text = text.replace('\n', '\x1b[K\n')
+        text = text.replace("\x1b[0m", "\x1b[0m" + self._forced_reset)
+        text = text.replace("\n", "\x1b[K\n")
         # Записываем в stdout
         sys.stdout.write(text)
 
@@ -51,20 +52,23 @@ class WrappedStdout(io.TextIOBase):
     def __init__(self, forced_reset):
         self._forced_reset = forced_reset
         super().__init__()
+
     def write(self, text):
-        text = text.replace('\x1b[0m', self._forced_reset)
+        text = text.replace("\x1b[0m", self._forced_reset)
         # text = text.replace('\n', '\x1b[K\n')
         # Записываем в stdout
         sys.stdout.write(text)
+
     def __call__(self, name) -> Any:
         # if it not __init__ or write - return from sys.stdout
-        if name not in ('__init__', 'write'):
+        if name not in ("__init__", "write"):
             return getattr(sys.stdout, name)
-        
+
 
 class PromptSessionHooked(PromptSession):
     pass
-        
+
+
 class KrpgConsole:
     """
     A class representing a console for the KRPG game.
@@ -93,7 +97,7 @@ class KrpgConsole:
 
     def __init__(self) -> None:
         self.console = ConsoleHooked()
-        
+
         self.session: PromptSession = PromptSession()
         self.bar = ""
 
@@ -133,15 +137,28 @@ class KrpgConsole:
     def set_theme(self, colors: list[str]):
         # Reset the theme to default
         self.reset_theme()
-        
+
         # Get the default theme
         default = self.console._theme_stack._entries[0]
 
         # Map color names to corresponding ANSI codes
         color_names = [
-            "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white",
-            "bright_black", "bright_red", "bright_green", "bright_yellow",
-            "bright_blue", "bright_magenta", "bright_cyan", "bright_white"
+            "black",
+            "red",
+            "green",
+            "yellow",
+            "blue",
+            "magenta",
+            "cyan",
+            "white",
+            "bright_black",
+            "bright_red",
+            "bright_green",
+            "bright_yellow",
+            "bright_blue",
+            "bright_magenta",
+            "bright_cyan",
+            "bright_white",
         ]
         new_colors = dict(zip(color_names, colors))
         new_theme = default.copy()
@@ -149,10 +166,10 @@ class KrpgConsole:
         for name in color_names:
             new_theme[name] = Style.parse(new_colors[name])
             new_theme[f"on {name}"] = Style.parse(f"on {new_colors[name]}")
-        
+
         for st in new_theme.values():
             if st.color and st.color.type == 1:
-                
+
                 # Перебираем все стили, по типу inspect.*, iso8601.*, repr.*, str.*
                 # Если есть цвет и он является стандартным - подменяем на свой
                 # С фоном по аналогии
@@ -162,16 +179,20 @@ class KrpgConsole:
                 bg_clr = new_colors[st.bgcolor.name]
                 st._bgcolor = Color.parse(bg_clr)
 
-        new_theme['reset']._color = Color.parse(new_colors['white']) # TODO: Сделать отдельный цвет фона
-        new_theme['reset']._bgcolor = Color.parse(new_colors['black'])
-        new_theme['none']._color = Color.parse(new_colors['white'])
-        new_theme['none']._bgcolor = Color.parse(new_colors['black'])
-        
+        new_theme["reset"]._color = Color.parse(
+            new_colors["white"]
+        )  # TODO: Сделать отдельный цвет фона
+        new_theme["reset"]._bgcolor = Color.parse(new_colors["black"])
+        new_theme["none"]._color = Color.parse(new_colors["white"])
+        new_theme["none"]._bgcolor = Color.parse(new_colors["black"])
+
         # Apply the updated theme
         self.console.push_theme(Theme(new_theme))
-        self.console._forced_reset = f"\x1b[{new_theme['none']._make_ansi_codes(ColorSystem.TRUECOLOR)}m"
+        self.console._forced_reset = (
+            f"\x1b[{new_theme['none']._make_ansi_codes(ColorSystem.TRUECOLOR)}m"
+        )
         self.console.clear()
-        
+
     def get_history(self) -> list[str | Any]:
         """
         Returns the command history.
@@ -243,7 +264,10 @@ class KrpgConsole:
         data = data or {}
         if data:
             kwargs["completer"] = WordCompleter(
-                list(data.keys()), meta_dict={i: rich_to_pt_ansi(j, console=self.console) for i, j in data.items()}
+                list(data.keys()),
+                meta_dict={
+                    i: rich_to_pt_ansi(j, console=self.console) for i, j in data.items()
+                },
             )
         else:
             kwargs["completer"] = WordCompleter([])
@@ -273,7 +297,12 @@ class KrpgConsole:
             return cmd
 
     def checked(
-        self, prompt, checker: Callable[[str], bool], data: dict = {}, allow_empty: bool=False, raw: bool=False
+        self,
+        prompt,
+        checker: Callable[[str], bool],
+        data: dict = {},
+        allow_empty: bool = False,
+        raw: bool = False,
     ):
         while True:
             res = self.prompt(prompt, data, allow_empty, raw)
@@ -324,7 +353,7 @@ class KrpgConsole:
         display: bool = True,
         title: Optional[str] = None,
         empty: str = "Ничего нет",
-     ) -> Any:
+    ) -> Any:
         if not isinstance(variants, list):
             variants = list(variants)
         view = view or str

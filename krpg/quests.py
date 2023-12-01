@@ -124,13 +124,19 @@ class Stage:
         self.name: str = data["name"]
         self.goals: list[list[str]] = data["goals"]
         self.rewards: list[str] = data["rewards"]
-    
+
     def __repr__(self):
         return f"<Stage name={self.name!r} goals={len(self.goals)}>"
 
 
 class Quest:
-    def __init__(self, id: str, name: str, description: str, stages: dict[str | int, dict[str, Any]]) -> None:
+    def __init__(
+        self,
+        id: str,
+        name: str,
+        description: str,
+        stages: dict[str | int, dict[str, Any]],
+    ) -> None:
         """Initialize a new instance of Quest.
 
         Parameters
@@ -153,7 +159,7 @@ class Quest:
         self.name: str = name
         self.description: str = description
         self.stages: dict[str | int, Stage] = {i: Stage(j) for i, j in stages.items()}
-    
+
     def __repr__(self):
         return f"<Quest id={self.id!r} name={self.name!r} stages={len(self.stages)}>"
 
@@ -367,12 +373,12 @@ class QuestManager:
             return quest.id in [q.quest.id for q in self.active_quests if q.done]
         else:
             raise Exception(f"Quest {id} not found")
-    
+
     @executer_command("quest")
     @staticmethod
     def quest_command(game: Game, id: str):
         game.quest_manager.start_quest(id)
-    
+
     @action("quests", "Показать список квестов", "Информация")
     @staticmethod
     def show_quests(game: Game):

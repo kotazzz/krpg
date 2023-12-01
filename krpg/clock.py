@@ -58,7 +58,7 @@ class Clock:
     @executer_command("pass")
     def passtime(game: Game, minutes):
         game.clock.wait(int(minutes))
-    
+
     @staticmethod
     @action("time", "Узнать, сколько время", "Информация")
     def time(game: Game):

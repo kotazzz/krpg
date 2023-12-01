@@ -52,7 +52,7 @@ class BattleManager:
         # for rule in rules:
         #     if all(eval(expr, env) for expr in rule[0]):
         #         results.append((rule[1], rule[2]))
-        
+
         # [ ] TODO: int to IntEnum
         rules: list[tuple[Callable[[Entity, Entity], bool], int, float]] = [
             # If enemy have 50%+ hp, then attack
@@ -64,26 +64,25 @@ class BattleManager:
             # If player have 50%- hp, then attack
             (lambda player, enemy: player.hp / player.max_hp < 0.5, 0, 1.0),
         ]
-            
-        results = cast(list[tuple[int, float]], [
-            (rule[1], rule[2]) for rule in rules if rule[0](player, enemy)
-        ])
-        
+
+        results = cast(
+            list[tuple[int, float]],
+            [(rule[1], rule[2]) for rule in rules if rule[0](player, enemy)],
+        )
+
         assert results, Exception("No rules matched")
         chaos = 0.2  # random action chance and distance from best action
-        
+
         # Select best action
         best_action = max(results, key=lambda x: x[1])[0]
         # Select random action
-        random_action = self.game.random.choice([0, 1]) # [0, 1] - actions
+        random_action = self.game.random.choice([0, 1])  # [0, 1] - actions
         # TODO: replace best+random to weighted choice for all cases
         action = self.game.random.choices(
             [best_action, random_action], weights=[1 - chaos, chaos]
         )[0]
         return action
-        
 
-    
     @executer_command("fight_list")
     @staticmethod
     def command_fight_list(game: Game, *monster_ids: str):

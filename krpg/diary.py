@@ -8,8 +8,6 @@ from krpg.actions import action
 if TYPE_CHECKING:
     from krpg.game import Game
 
-    
-    
 
 # TODO: rewrite this
 class DiaryManager:
@@ -40,7 +38,7 @@ class DiaryManager:
 
     def load(self, data: dict):
         pass
-    
+
     @action("diary", "Управление дневником", "Информация")
     @staticmethod
     def action_diary(game: Game):
@@ -51,6 +49,6 @@ class DiaryManager:
         # l - list records
         # e - exit
         pass
-        
+
     def __repr__(self) -> str:
         return f"<Diary>"

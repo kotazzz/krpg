@@ -144,7 +144,7 @@ class Slot:
         self.id: str = ""
         self.amount: int = 0
 
-    def set(self, id: str, amount: int=1):
+    def set(self, id: str, amount: int = 1):
         """
         Sets the id and amount of the slot.
 
@@ -229,7 +229,7 @@ class Slot:
 
 
 class Inventory:
-    def __init__(self, is_carrier: bool=True, size: int=10):
+    def __init__(self, is_carrier: bool = True, size: int = 10):
         """
         Initialize an Inventory object.
 

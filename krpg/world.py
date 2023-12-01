@@ -84,7 +84,7 @@ class World(HasExtract):
     def current(self) -> Location:
         assert self._current
         return self._current
-    
+
     def save(self) -> dict[str, list[Any] | str]:
         assert self.current
         return {loc.id: loc.save() for loc in self.locations} | {
@@ -111,7 +111,9 @@ class World(HasExtract):
                     loc.items.pop(i)
                 break
 
-    def drop(self, item_id: str, count: int = 0, location: Optional[str | Location] = None):
+    def drop(
+        self, item_id: str, count: int = 0, location: Optional[str | Location] = None
+    ):
         loc = self.get(location) if location else self.current
         assert loc
         self.game.events.dispatch(Events.WORLD_ITEM_DROP, item_id=item_id, count=count)
@@ -121,11 +123,11 @@ class World(HasExtract):
     def set(self, new_loc: Optional[str | Location] = None) -> bool:
         assert (new_loc := new_loc or self._start)
         new_loc = self.get(new_loc)
-        
+
         if self._current:
             for *_, block in self.current.get_triggers("on_exit"):
                 block.run()
-                
+
         for *_, block in new_loc.get_triggers("on_enter"):
             block.run()
 
@@ -135,7 +137,7 @@ class World(HasExtract):
         if not new_loc.visited:
             for *_, block in new_loc.get_triggers("first_visit"):
                 block.run()
-                
+
         new_loc.visited = True
         self.game.events.dispatch(Events.MOVE, before=self._current, after=new_loc)
         self._current = new_loc
@@ -171,7 +173,6 @@ class World(HasExtract):
         if len(res) != len(ids):
             raise Exception(f"Not all locations found for {ids}")
         return res
-
 
     def get_road(self, loc: str | Location) -> list[Location]:
         loc = self.get(loc)

@@ -3,7 +3,7 @@ from krpg.actions import action
 from krpg.entity import Entity
 
 from typing import TYPE_CHECKING
-from rich.tree import Tree  
+from rich.tree import Tree
 from krpg.executer import executer_command
 from krpg.inventory import Item, ItemType, Slot
 
@@ -197,7 +197,6 @@ class Player(Entity):
     def move_command(game: Game, new_loc):
         game.world.set(new_loc)
 
-    
     @action("look", "Информация об этом месте", "Информация")
     @staticmethod
     def action_look(game: Game):

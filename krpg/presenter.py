@@ -61,7 +61,7 @@ class Presenter:
             for c, stat in stats:
                 val = getattr(obj, stat)
                 full_stats += f"[b {c}]{stat[0].upper():>2}{val}"
-            
+
             if free:
                 return full_stats + f"   [b white]F{obj.free:>2}[/]"
             return full_stats
@@ -113,7 +113,9 @@ class Presenter:
             stats = self.get_stats(e)
             console.print(f"{stats} {name} {attack} {hp}")
 
-    def show_item(self, slot: Slot, show_amount=True, additional: Optional[Callable] = None):
+    def show_item(
+        self, slot: Slot, show_amount=True, additional: Optional[Callable] = None
+    ):
         """
         Generates a string representation of the item in the given slot.
 
