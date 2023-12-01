@@ -11,7 +11,7 @@ from hashlib import sha512
 from itertools import groupby
 from textwrap import wrap
 
-import msgpack # type: ignore
+import msgpack  # type: ignore
 from rich.live import Live
 from rich.spinner import Spinner
 from rich._spinners import SPINNERS
@@ -87,8 +87,9 @@ class Game:
             spin_size = len(SPINNERS[spinner]["frames"][0]) + 1
             spin = Spinner(spinner, text="test", style="green")
             _reserve = self.console.log.debug
-            
+
             lines = []
+
             def func(msg, *args, **kwargs):
                 nonlocal lines
                 lines.append(msg)

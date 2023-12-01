@@ -11,7 +11,11 @@ if TYPE_CHECKING:
 
 class Param:
     def __init__(
-        self, id: str, name: str, description: str, variants: Optional[dict[str, str]] = None
+        self,
+        id: str,
+        name: str,
+        description: str,
+        variants: Optional[dict[str, str]] = None,
     ):
         self.id: str = id
         self.name: str = name
@@ -43,7 +47,7 @@ class ComplexParam:
         self.name = name
         self.description = description
         self.value: Any = None
-    
+
     def callback(self, param: ComplexParam, game: Game):
         raise NotImplementedError
 
@@ -55,7 +59,7 @@ class ComplexParam:
 
 
 # TODO: Улучшить менеджер тем
-class ThemeManager(ComplexParam): # TODO: replace ComplexParam with Param?
+class ThemeManager(ComplexParam):  # TODO: replace ComplexParam with Param?
     def __init__(self):
         super().__init__("theme", "Тема", "Изменяет тему консоли")
 
@@ -129,7 +133,9 @@ class ThemeManager(ComplexParam): # TODO: replace ComplexParam with Param?
         game.console.set_theme(colors[name])
 
 
-def param(id: str, name: str, description: str, variants: Optional[dict[str, str]] = None):
+def param(
+    id: str, name: str, description: str, variants: Optional[dict[str, str]] = None
+):
     def decorator(f):
         param = Param(id, name, description, variants)
         param.on_change = f

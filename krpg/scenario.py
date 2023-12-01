@@ -23,7 +23,12 @@ class Section:
         children (list[Section | Command]): The children sections or commands of the current section.
     """
 
-    def __init__(self, name: str, args: Optional[list[str]]=None, parent: Optional[Section]=None):
+    def __init__(
+        self,
+        name: str,
+        args: Optional[list[str]] = None,
+        parent: Optional[Section] = None,
+    ):
         self.name = name
         self.children: list[Section | Command] = []
         self.args = args or []
@@ -54,7 +59,7 @@ class Section:
         #         if isinstance(child, Command) and command:
         #             return child
         # return None
-    
+
     def first_command(self, name: str) -> Command:
         """
         Returns the first child command with the specified name.
@@ -64,15 +69,15 @@ class Section:
 
         Returns:
             Command: The first child command with the specified name.
-            
+
         Raises:
             Exception: If the command with the specified name is not found.
         """
         for child in self.children:
             if child.name == name and isinstance(child, Command):
-                    return child
+                return child
         raise Exception(f"Command {name} not found")
-    
+
     def has_command(self, name: str) -> bool:
         """
         Returns whether the section has a child command with the specified name.
@@ -85,9 +90,9 @@ class Section:
         """
         for child in self.children:
             if child.name == name and isinstance(child, Command):
-                    return True
+                return True
         return False
-    
+
     def first_section(self, name: str) -> Section:
         """
         Returns the first child section with the specified name.
@@ -100,9 +105,9 @@ class Section:
         """
         for child in self.children:
             if child.name == name and isinstance(child, Section):
-                    return child
+                return child
         raise Exception(f"Section {name} not found")
-    
+
     def has_section(self, name: str) -> bool:
         """
         Returns whether the section has a child section with the specified name.
@@ -115,18 +120,18 @@ class Section:
         """
         for child in self.children:
             if child.name == name and isinstance(child, Section):
-                    return True
+                return True
         return False
 
     def all(self, name, section=True, command=True) -> list[Section | Command]:
         """
         Returns a list of all child sections or commands with the specified name.
-    
+
         Args:
             name (str): The name of the child sections or commands.
             section (bool, optional): Whether to consider child sections. Defaults to True.
             command (bool, optional): Whether to consider child commands. Defaults to True.
-    
+
         Returns:
             list[Section | Command]: A list of all child sections or commands with the specified name.
         """
@@ -155,7 +160,7 @@ class Section:
             if (not name or child.name == name) and isinstance(child, Command):
                 r.append(child)
         return r
-    
+
     def all_sections(self, name: str = "") -> list[Section]:
         """
         Returns a list of all child sections with the specified name.
@@ -171,7 +176,7 @@ class Section:
             if (not name or child.name == name) and isinstance(child, Section):
                 r.append(child)
         return r
-    
+
     def join(self, section: Section, inner_merge: bool = False) -> None:
         """
         Joins the children of the current section with the children of the specified section.
@@ -202,7 +207,12 @@ class Section:
 
 
 class Command:
-    def __init__(self, name, args: Optional[list[str]]=None, kwargs: Optional[dict[str, Any]]=None):
+    def __init__(
+        self,
+        name,
+        args: Optional[list[str]] = None,
+        kwargs: Optional[dict[str, Any]] = None,
+    ):
         """
         Initializes a Command object.
 

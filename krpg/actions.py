@@ -51,9 +51,12 @@ def action(
 
     return decorator
 
+
 class HasExtract:
     def extract(self) -> list[Action]:
         raise NotImplementedError
+
+
 class ActionManager:
     """
     ActionManager class represents a manager for actions in a game.
@@ -87,7 +90,7 @@ class ActionManager:
         """
         if isinstance(item, ActionManager):
             return item.get_actions()
-        
+
         if hasattr(item, "extract"):
             assert isinstance(item, HasExtract)
             return item.extract()
