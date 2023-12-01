@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Изменено
 
 - Изменена логика достижений
+- Улучшен менеджер тем. Все еще работает нестабильно
+- Полный рефакторинг проекта с проверкой mypy
+
+### Удалено
+
+- first удален. Вместо него используется first_command и first_section
 
 ### Добавлено
 

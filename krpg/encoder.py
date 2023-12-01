@@ -8,7 +8,7 @@ class Encoder:
     """
 
     abc = {
-        "base64 [green]\[Рекомендуется]": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+        "base64 [green]\\[Рекомендуется]": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
         "base871": (
             "ƸƨǽƩҩΫеÙʘčΝϾĩ0Ê'=ңwǻSīǅҚҡǢəcƵΜʡŹǟǭÁĆɻЇ3Аǔɿ²ȅчɔщȳÖΟĳɲōǵ[ҥXɖʓɭƎŽƏɘҝɨ"
             "ƥtțśѩбҘЕșăhőáѸɫґäϧíBÅK&ŕƌ§нǩҠʫQфƲǒŜιD>ǦРΑϚЀǍΦш1ǨěϳǝѮȺÉêǊňϰϲģʞ;ЬȆХОяĉ"

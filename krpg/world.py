@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from krpg.actions import Action
+from krpg.actions import Action, HasExtract
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from krpg.events import Events
 from krpg.executer import Block, executer_command
@@ -17,17 +17,17 @@ class Location:
         self.name = name
         self.description = description
         self.locked: bool = True
-        self.env: dict = {}
+        self.env: dict[str, Any] = {}
         self.actions: list[Action] = []
         self.items: list[tuple[str, int]] = []
 
         self.triggers: list[tuple[str, list, Block]] = []
         self.visited: bool = False
 
-    def save(self):
+    def save(self) -> list[Any]:
         return [self.env, self.items, self.visited, self.locked]
 
-    def load(self, data):
+    def load(self, data) -> None:
         self.env = data[0]
         self.items = data[1]
         self.visited = data[2]
@@ -45,7 +45,7 @@ class Location:
         return f"<Location name={self.id!r}>"
 
 
-class World:
+class World(HasExtract):
     """
     Represents the game world containing locations and roads.
 
@@ -73,20 +73,26 @@ class World:
     def __init__(self, game: Game):
         self.locations: list[Location] = []
         self.roads: list[tuple[Location, Location]] = []
-        self.current: Optional[Location] = None
+        self._current: Optional[Location] = None
         self.game = game
         self.game.add_saver("world", self.save, self.load)
         self.game.add_actions(self)
         self.game.executer.add_extension(self)
-        self._start = None
+        self._start: Optional[str] = None
 
-    def save(self):
+    @property
+    def current(self) -> Location:
+        assert self._current
+        return self._current
+    
+    def save(self) -> dict[str, list[Any] | str]:
+        assert self.current
         return {loc.id: loc.save() for loc in self.locations} | {
             "CURRENT": self.current.id
         }
 
-    def load(self, data):
-        self.current = self.get(data.pop("CURRENT"))
+    def load(self, data: dict):
+        self._current = self.get(data.pop("CURRENT"))
         for id, locdata in data.items():
             self.get(id).load(locdata)
 
@@ -107,15 +113,19 @@ class World:
 
     def drop(self, item_id: str, count: int = 0, location: Optional[str | Location] = None):
         loc = self.get(location) if location else self.current
+        assert loc
         self.game.events.dispatch(Events.WORLD_ITEM_DROP, item_id=item_id, count=count)
 
         loc.items.append((item_id, count))
 
     def set(self, new_loc: Optional[str | Location] = None) -> bool:
-        new_loc = self.get(new_loc or self._start)
-        if self.current:
+        assert (new_loc := new_loc or self._start)
+        new_loc = self.get(new_loc)
+        
+        if self._current:
             for *_, block in self.current.get_triggers("on_exit"):
                 block.run()
+                
         for *_, block in new_loc.get_triggers("on_enter"):
             block.run()
 
@@ -125,18 +135,30 @@ class World:
         if not new_loc.visited:
             for *_, block in new_loc.get_triggers("first_visit"):
                 block.run()
+                
         new_loc.visited = True
-        self.game.events.dispatch(Events.MOVE, before=self.current, after=new_loc)
-        self.current = new_loc
+        self.game.events.dispatch(Events.MOVE, before=self._current, after=new_loc)
+        self._current = new_loc
+        self._current.locked = False
         return True
 
     def extract(self) -> list[Action]:
+        assert self.current
         return self.current.actions
 
     def add(self, location: Location):
         self.locations.append(location)
 
-    def get(self, *ids: str | Location) -> Location | list[Location]:
+    def get(self, id: str | Location) -> Location:
+        if isinstance(id, str):
+            for loc in self.locations:
+                if loc.id == id:
+                    return loc
+        elif isinstance(id, Location):
+            return id
+        raise Exception(f"No location found for {id}")
+
+    def get_list(self, *ids: str | Location) -> list[Location]:
         res = []
         for id in ids:
             if isinstance(id, str):
@@ -147,10 +169,9 @@ class World:
             elif isinstance(id, Location):
                 res.append(id)
         if len(res) != len(ids):
-            raise Exception(f"{res} != {ids}")
-        if len(res) == 1:
-            return res[0]
+            raise Exception(f"Not all locations found for {ids}")
         return res
+
 
     def get_road(self, loc: str | Location) -> list[Location]:
         loc = self.get(loc)
@@ -163,12 +184,13 @@ class World:
         return res
 
     @executer_command("unlock")
+    @staticmethod
     def unlock(game: Game, loc: str):
         location = game.world.get(loc)
         location.locked = False
 
     def road(self, loc1: str | Location, loc2: str | Location):
-        location1, location2 = self.get(loc1, loc2)
+        location1, location2 = self.get_list(loc1, loc2)
         if location2 in self.get_road(location1):
             raise Exception(f"Road from {location1} to {location2} already exist")
         self.roads.append((location1, location2))

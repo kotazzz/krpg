@@ -51,7 +51,9 @@ def action(
 
     return decorator
 
-
+class HasExtract:
+    def extract(self) -> list[Action]:
+        raise NotImplementedError
 class ActionManager:
     """
     ActionManager class represents a manager for actions in a game.
@@ -67,13 +69,13 @@ class ActionManager:
         __repr__(): Returns a string representation of ActionManager.
     """
 
-    def __init__(self, *submanagers: object | ActionManager):
-        self.submanagers: list[object | ActionManager] = list(submanagers)
+    def __init__(self, *submanagers: ActionManager | HasExtract | object):
+        self.submanagers: list[ActionManager | HasExtract | object] = list(submanagers)
         self.actions: list[Action] = []
         self.actions = self.extract(self)
         self.submanagers.clear()
 
-    def extract(self, item: object) -> list[Action]:
+    def extract(self, item: ActionManager | HasExtract | object) -> list[Action]:
         """
         Extracts actions from an item.
 
@@ -85,7 +87,9 @@ class ActionManager:
         """
         if isinstance(item, ActionManager):
             return item.get_actions()
+        
         if hasattr(item, "extract"):
+            assert isinstance(item, HasExtract)
             return item.extract()
         actions = []
         for name in dir(item):
