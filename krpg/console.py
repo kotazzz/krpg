@@ -1,3 +1,8 @@
+import io
+from prompt_toolkit.data_structures import Size
+from prompt_toolkit.output.windows10 import Windows10_Output
+import sys
+from rich.color import Color
 from typing import Any, Callable, Optional, Sequence
 from prompt_toolkit.completion import WordCompleter
 from rich.console import Console
@@ -7,9 +12,10 @@ from rich.logging import RichHandler
 import shlex
 from prompt_toolkit.shortcuts import PromptSession
 from rich.theme import Theme, ThemeStackError
+from rich.style import Style
 
 
-def rich(*args, console=None, **kwargs):
+def rich_to_pt_ansi(*args, console=None, **kwargs):
     kwargs["end"] = kwargs.get("end", "")
     console = console or Console(markup=True)
     console = Console()
@@ -20,7 +26,43 @@ def rich(*args, console=None, **kwargs):
 
 DEFAULT_LEVEL = 0
 
+class ConsoleHooked(Console):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._forced_reset = "\x1b[0m"
+        
+    def print(self, *args, **kwargs):
+        # Получаем вывод, который должен попасть в консоль
+        with self.capture() as capture:
+            super().print(*args, **kwargs)
+        # Добавляем "сброс" в начало
+        text = '\x1b[0m'+capture.get()
+        # Заменяем все сбросы на измененный стиль по умолчанию
+        # _make_ansi_codes возвращает строку с кодами ANSI
+        text = text.replace('\x1b[0m', "\x1b[0m"+self._forced_reset)
+        text = text.replace('\n', '\x1b[K\n')
+        # Записываем в stdout
+        sys.stdout.write(text)
 
+
+class WrappedStdout(io.TextIOBase):
+    def __init__(self, forced_reset):
+        self._forced_reset = forced_reset
+        super().__init__()
+    def write(self, text):
+        text = text.replace('\x1b[0m', self._forced_reset)
+        # text = text.replace('\n', '\x1b[K\n')
+        # Записываем в stdout
+        sys.stdout.write(text)
+    def __call__(self, name) -> Any:
+        # if it not __init__ or write - return from sys.stdout
+        if name not in ('__init__', 'write'):
+            return getattr(sys.stdout, name)
+        
+
+class PromptSessionHooked(PromptSession):
+    pass
+        
 class KrpgConsole:
     """
     A class representing a console for the KRPG game.
@@ -48,7 +90,8 @@ class KrpgConsole:
     """
 
     def __init__(self):
-        self.console = Console()
+        self.console = ConsoleHooked()
+        
         self.session = PromptSession()
         self.bar = ""
         self.log: logging.Logger = None
@@ -73,11 +116,11 @@ class KrpgConsole:
         self.history = []
 
         self.levels: dict[int, ANSI] = {
-            1: rich("[bold red]> [/]"),
-            2: rich("[bold yellow]>> [/]", console=self.console),
-            3: rich("[bold green]>>> [/]", console=self.console),
-            4: rich("[bold blue]>>>> [/]", console=self.console),
-            5: rich("[bold magenta]>>>>> [/]", console=self.console),
+            1: rich_to_pt_ansi("[bold red]> [/]", console=self.console),
+            2: rich_to_pt_ansi("[bold yellow]>> [/]", console=self.console),
+            3: rich_to_pt_ansi("[bold green]>>> [/]", console=self.console),
+            4: rich_to_pt_ansi("[bold blue]>>>> [/]", console=self.console),
+            5: rich_to_pt_ansi("[bold magenta]>>>>> [/]", console=self.console),
         }
 
     def reset_theme(self):
@@ -87,30 +130,46 @@ class KrpgConsole:
             pass
 
     def set_theme(self, colors: list[str]):
+        # Reset the theme to default
         self.reset_theme()
-        self.console.push_theme(
-            Theme(
-                {
-                    "black": colors[0],
-                    "red": colors[1],
-                    "green": colors[2],
-                    "yellow": colors[3],
-                    "blue": colors[4],
-                    "magenta": colors[5],
-                    "cyan": colors[6],
-                    "white": colors[7],
-                    "bright_black": colors[8],
-                    "bright_red": colors[9],
-                    "bright_green": colors[10],
-                    "bright_yellow": colors[11],
-                    "bright_blue": colors[12],
-                    "bright_magenta": colors[13],
-                    "bright_cyan": colors[14],
-                    "bright_white": colors[15],
-                }
-            )
-        )
 
+        # Get the default theme
+        default = self.console._theme_stack._entries[0]
+
+        # Map color names to corresponding ANSI codes
+        color_names = [
+            "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white",
+            "bright_black", "bright_red", "bright_green", "bright_yellow",
+            "bright_blue", "bright_magenta", "bright_cyan", "bright_white"
+        ]
+        new_colors = dict(zip(color_names, colors))
+        new_theme = default.copy()
+        # Replace color values in the theme
+        for name in color_names:
+            new_theme[name] = Style.parse(new_colors[name])
+            new_theme[f"on {name}"] = Style.parse(f"on {new_colors[name]}")
+        
+        for st in new_theme:
+            if new_theme[st].color and new_theme[st].color.type == 1:
+                # Перебираем все стили, по типу inspect.*, iso8601.*, repr.*, str.*
+                # Если есть цвет и он является стандартным - подменяем на свой
+                # С фоном по аналогии
+                clr = new_colors[new_theme[st].color.name]
+                new_theme[st]._color = Color.parse(clr)
+            if new_theme[st].bgcolor and new_theme[st].bgcolor.type == 1:
+                bg_clr = new_colors[new_theme[st].bgcolor.name]
+                new_theme[st]._bgcolor = Color.parse(bg_clr)
+
+        new_theme['reset']._color = Color.parse(new_colors['white']) # TODO: Сделать отдельный цвет фона
+        new_theme['reset']._bgcolor = Color.parse(new_colors['black'])
+        new_theme['none']._color = Color.parse(new_colors['white'])
+        new_theme['none']._bgcolor = Color.parse(new_colors['black'])
+        
+        # Apply the updated theme
+        self.console.push_theme(Theme(new_theme))
+        self.console._forced_reset = f"\x1b[{new_theme['none']._make_ansi_codes(3)}m"
+        self.console.clear()
+        
     def get_history(self) -> list[str | Any]:
         """
         Returns the command history.
@@ -139,7 +198,7 @@ class KrpgConsole:
         Parameters:
             text (str): The bar text.
         """
-        self.bar = rich(text)
+        self.bar = rich_to_pt_ansi(text, console=self.console)
 
     def prompt(
         self,
@@ -174,14 +233,14 @@ class KrpgConsole:
             str: The user's input as a string.
         """
         text = (
-            rich(text, console=self.console)
+            rich_to_pt_ansi(text, console=self.console)
             if not isinstance(text, int)
             else self.levels[text]
         )
         kwargs = {"bottom_toolbar": self.bar}
         if data:
             kwargs["completer"] = WordCompleter(
-                list(data.keys()), meta_dict={i: rich(j) for i, j in data.items()}
+                list(data.keys()), meta_dict={i: rich_to_pt_ansi(j, console=self.console) for i, j in data.items()}
             )
         else:
             kwargs["completer"] = WordCompleter([])

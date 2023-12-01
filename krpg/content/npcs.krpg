@@ -251,7 +251,7 @@ npcs {
         say "Привет, {game.player.name}. Ты уже собрал травы?"
         if "not game.player.has('rare_herb', 5)" {
           ans "Нет, я еще не собрал травы"
-          set _count "game.player.has('rare_herb')"
+          set _count "game.player.inventory.count('rare_herb')"
           if "_count==0" {
             say "Я скоро приступлю к сбору"
           }
