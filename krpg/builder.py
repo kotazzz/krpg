@@ -1,8 +1,9 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable
 from krpg.actions import Action
 from krpg.attributes import Attributes
 from krpg.bestiary import Meta
+from krpg.executer import Block
 from krpg.inventory import Item, ItemType
 from krpg.npc import Npc
 from krpg.quests import Quest
@@ -63,7 +64,7 @@ class Builder:
 
     def debug(self, msg: str):
         # Log a debug message
-        self.game.log.debug(f"[cyan]\[{self.tag:^10}] {msg}", stacklevel=2)
+        self.game.log.debug(f"[cyan]\\[{self.tag:^10}] {msg}", stacklevel=2)
 
     def build(self):
         # Build all components of the game
@@ -76,7 +77,7 @@ class Builder:
         }
         for func, tag in blocks:
             self.tag = tag
-            section = self.scenario.first(tag)
+            section = self.scenario.first_section(tag) 
             if section:
                 self.debug(f"Building {tag}")
                 func(section)
@@ -94,19 +95,17 @@ class Builder:
             if not isinstance(item, Command):
                 for cmd in item.children:
                     if cmd.name == "wear":
-                        wear, *attrs = cmd.args
-                        attrs = list(map(int, attrs))
-                        if wear not in ItemType.__members__:
-                            raise Exception(f"Invalid item type: {wear}")
-                        if len(attrs) != 7:
-                            raise Exception(
+                        wear, attrs = cmd.args[0], list(int(i) for i in cmd.args[1:])
+                        
+                        assert wear in ItemType.__members__, Exception(f"Invalid item type: {wear}")
+                        assert len(attrs) == 7, Exception(
                                 f"Invalid amount of SPECIAW attrs ({len(attrs)})"
                             )
-                        obj.set_wear(ItemType[wear], Attributes(*attrs))
+                        
+                        obj.set_wear(ItemType[wear], Attributes(attrs[0],attrs[1],attrs[2],attrs[3],attrs[4],attrs[5],attrs[6], holder=None))
                     elif cmd.name == "use":
                         act, am = cmd.args
-                        am = int(am)
-                        obj.set_use(act, am)
+                        obj.set_use(act, int(am))
                     elif cmd.name == "stack":
                         obj.set_stack(int(cmd.args[0]))
                     elif cmd.name == "cost":
@@ -122,35 +121,34 @@ class Builder:
 
     def build_entities(self, entities: Section):
         # Build the entities in the game
-        for entity in entities.all("entity"):
+        for entity in entities.all_sections("entity"):
             id, name, description = entity.args
             self.debug(f"  Assembling [blue]{id}:{name}")
-            speciaw = entity.first("speciaw")
-            speciaw = map(int, speciaw.args)
-            if money := entity.first("money"):
-                money = int(money.args[0])
+            speciaw = [int(i) for i in entity.first_command("speciaw").args]
+            if money_data := entity.first_command("money"): 
+                money = int(money_data.args[0])
             else:
                 money = 0
-            attr = Attributes(*speciaw, free=0)
+            attr = Attributes(speciaw[0],speciaw[1],speciaw[2],speciaw[3],speciaw[4],speciaw[5],speciaw[6], free=0)
             meta = Meta(id, name, description, attr, money)
             self.game.bestiary.entities.append(meta)
 
     def build_npcs(self, npcs: Section):
         # Build the NPCs in the game
-        for npc in npcs.all("npc"):
+        for npc in npcs.all_sections("npc"):
             id, name, description = npc.args
             self.debug(f"  Creating [blue]{id}:{name}")
-            init_state = npc.first("init").args[0]
-            location = npc.first("location").args[0]
-            actions = {}
+            init_state = npc.first_command("init").args[0] 
+            location = npc.first_command("location").args[0] 
+            actions: dict[str, list[Action]] = {}
             requirements = {}
-            for state in npc.all("state"):
+            for state in npc.all_sections("state"):
                 state_name = state.args[0]
                 actions[state_name] = []
-                for req in state.all("action"):
-                    actions[state_name].append(self.build_action(req))
+                for act in state.all_sections("action"):
+                    actions[state_name].append(self.build_action(act))
                 # action_req <action_name> <condition>
-                for req in state.all("action_req"):
+                for req in state.all_commands("action_req"):
                     # npc:
                     # self.requirements: dict[str, str] = requirements  # {state "." action: python_eval}
                     requirements[f"{state_name}.{req.args[0]}"] = req.args[1]
@@ -161,13 +159,13 @@ class Builder:
 
     def build_quests(self, quests: Section):
         # Build the quests in the game
-        for quest in quests.all("quest"):
+        for quest in quests.all_sections("quest"):
             id, name, description = quest.args
             self.debug(f"  Building [blue]{id}:{name}")
-            stages = {}
-            for stage in quest.all("stage"):
-                sid, sname = stage.args
-                sid = int(sid) if sid.isdigit() else sid
+            stages: dict[str | int, dict[str, Any]] = {}
+            for stage in quest.all_sections("stage"):
+                sid_str, sname = stage.args
+                sid: int | str = int(sid_str) if sid_str.isdigit() else sid_str
                 stages[sid] = {}
                 stages[sid]["name"] = sname
                 stages[sid]["goals"] = [i.args for i in stage.all("goal")]
@@ -176,9 +174,9 @@ class Builder:
 
     def build_world(self, world: Section):
         # Build the world map in the game
-        locations = world.all("location")
-        start = world.first("start")
-        links = world.all("link")
+        locations = world.all_sections("location")
+        start = world.first_command("start") 
+        links = world.all_commands("link")
         self.debug(f"  Found {len(locations)} locations")
         self.debug(f"  Found {len(links)} links")
         self.debug(f"  Found start={start.args[0]}")
@@ -197,23 +195,30 @@ class Builder:
     def build_location(self, locdata: Section):
         # Build a location in the game
         id, name, description = locdata.args
-        actions = [self.build_action(i) for i in locdata.all("action")]
-        items = [self.build_item(i) for i in locdata.all("item")]
-        triggers = self.build_triggers(locdata.first("triggers"))
         location = Location(id, name, description)
+        
+        actions = [self.build_action(i) for i in locdata.all_sections("action")]
         location.actions = actions
+        
+        items = [self.build_item(i) for i in locdata.all("item")]
         location.items = items
-        location.triggers = triggers
+        
+        if locdata.has_section("triggers"):
+            triggers = self.build_triggers(locdata.first_section("triggers")) 
+            location.triggers.extend(triggers)
+        
+        
+        
         self.debug(f"    Built [blue]{id}:{name}")
         return location
 
-    def build_item(self, item: Section):
+    def build_item(self, item: Section | Command) -> tuple[str, int]:
         # Build an item in the game
-        id, amo = item.args
-        self.debug
+        id: str = item.args[0]
+        amo: int = int(item.args[1])
+        self.debug(f"    Item [blue]{id}[/blue] x{amo}")
         self.game.bestiary.get_item(id)  # Check if item exists
-        amo = int(amo)
-        return [id, amo]
+        return (id, amo)
 
     def build_action(self, command: Section):
         # Build an action in the game
@@ -222,12 +227,10 @@ class Builder:
 
         return Action(name, description, "", block.run)
 
-    def build_triggers(self, triggers: Section | None):
+    def build_triggers(self, triggers: Section) -> list[tuple[str, list[str], Block]]:
         # Build triggers for a location in the game
-        res = []
-        if not triggers:
-            return res
-        for i in triggers.children:
+        res: list[tuple[str, list[str], Block]] = []
+        for i in triggers.all_sections():
             res.append((i.name, i.args, self.game.executer.create_block(i)))
         return res
 

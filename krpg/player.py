@@ -3,7 +3,7 @@ from krpg.actions import action
 from krpg.entity import Entity
 
 from typing import TYPE_CHECKING
-from rich.tree import Tree
+from rich.tree import Tree  
 from krpg.executer import executer_command
 from krpg.inventory import Item, ItemType, Slot
 
@@ -68,6 +68,7 @@ class Player(Entity):
         return self.inventory.pickup(item, amount)
 
     @executer_command("give")
+    @staticmethod
     def give_command(game: Game, item_id: str, amount: int = 1):
         item = game.bestiary.get_item(item_id)
         amount = int(amount)
@@ -91,6 +92,7 @@ class Player(Entity):
             self.game.events.dispatch(Events.REMOVE_MONEY, **kw)
 
     @executer_command("add_money")
+    @staticmethod
     def add_money_command(game: Game, money):
         money = int(money)
         game.player.add_money(money)
@@ -107,6 +109,7 @@ class Player(Entity):
             self.game.events.dispatch(Events.REMOVE_FREE, **kw)
 
     @executer_command("add_free")
+    @staticmethod
     def add_free_command(game: Game, free: int):
         free = int(free)
         game.player.add_free(free)
@@ -119,6 +122,7 @@ class Player(Entity):
         self.game.events.dispatch(Events.HEAL, amount=amount)
 
     @executer_command("heal")
+    @staticmethod
     def heal_command(game: Game, amount):
         amount = int(amount)
         game.player.heal(amount)
@@ -133,6 +137,7 @@ class Player(Entity):
             self.game.events.dispatch(Events.DEAD)
 
     @executer_command("damage")
+    @staticmethod
     def damage_command(game: Game, amount):
         amount = int(amount)
         game.player.damage(amount)
@@ -146,23 +151,31 @@ class Player(Entity):
                 raise ValueError(f"Unknown effect {name}")
 
     @executer_command("apply")
+    @staticmethod
     def apply_command(game: Game, item_id: str):
         item = game.bestiary.get_item(item_id)
         if not item:
             raise ValueError(f"Unknown item {item_id}")
         game.player.apply(item)
 
-    def has(self, item: Item | str, has: int = 1) -> Slot | bool:
+    def has(self, item: Item | str, amount: int = 1) -> Slot | bool:
         item = item.id if isinstance(item, Item) else item
         for slot in self.inventory.slots:
-            if slot.id == item and slot.amount >= has:
+            if slot.id == item and slot.amount >= amount:
                 return slot
         return False
 
-    def require_item(self, item_id: str, amount: int = 1, take: bool = True):
+    def require_item(self, item_id: str, amount: int = 1, take: bool = True) -> bool:
         game = self.game
-        slot = game.player.has(item_id)
-        if not slot:
+        # slot = game.player.has(item_id)
+        # # if not slot:
+        # #     raise ValueError(f"Unknown item {item_id}")
+        # assert isinstance(slot, Slot), f"Unknown item {item_id}"
+        for slot in self.inventory.slots:
+            if slot.id == item_id:
+                slot = slot
+                break
+        else:
             raise ValueError(f"Unknown item {item_id}")
         if slot.amount < amount:
             return False
@@ -174,25 +187,28 @@ class Player(Entity):
         return True
 
     @executer_command("require_item")
+    @staticmethod
     def require_item_command(game: Game, item_id: str, amount: int = 1):
         amount = int(amount)
         game.player.require_item(item_id, amount)
 
     @executer_command("move")
+    @staticmethod
     def move_command(game: Game, new_loc):
         game.world.set(new_loc)
 
-    # Actions
+    
     @action("look", "Информация об этом месте", "Информация")
+    @staticmethod
     def action_look(game: Game):
         location = game.world.current
-        sub = game.world.get_road(location)
+        subs = game.world.get_road(location)
         game.console.print(
             f"[bold green]Ваша позиция: [bold white]{location.name} - {location.description}\n[green]Доступно:[/]"
         )
-        if not sub:
+        if not subs:
             game.console.print("  [bold red]Нет доступных направлений[/]")
-        for sub in sub:
+        for sub in subs:
             game.console.print(f"  [bold blue]{sub.name}[/]")
         game.console.print()
 
@@ -213,6 +229,7 @@ class Player(Entity):
         game.console.print()
 
     @action("pickup", "Подобрать предмет", "Действия")
+    @staticmethod
     def action_pickup(game: Game):
         location = game.world.current
         variants = [(c, game.bestiary.get_item(i)) for i, c in location.items]
@@ -230,6 +247,7 @@ class Player(Entity):
             game.clock.wait(2)
 
     @action("map", "Информация о карте", "Информация")
+    @staticmethod
     def action_map(game: Game):
         tree = Tree(f"[green b]{game.world.current.name} [/][blue] <-- Вы тут[/]")
         visited = [game.world.current]
@@ -245,11 +263,13 @@ class Player(Entity):
         game.console.print(tree)
 
     @action("me", "Информация о себе", "Игрок")
+    @staticmethod
     def action_me(game: Game):
         game.presenter.presense(game.player)
         game.console.print(f"[yellow b]Баланс[/]: [yellow]{game.player.money}")
 
     @action("go", "Отправиться", "Действия")
+    @staticmethod
     def action_go(game: Game):
         w = game.world
         roads = w.get_road(w.current)
@@ -261,6 +281,7 @@ class Player(Entity):
                 game.console.print(f"[yellow]Вы пришли в {new_loc.name}")
 
     @action("inventory", "Управление инвентарем", "Игрок")
+    @staticmethod
     def action_inventory(game: Game):
         console = game.console
         inventory = game.player.inventory
@@ -328,11 +349,12 @@ class Player(Entity):
                     console.print(f"[red]Вы не можете это выбросить")
 
     @action("upgrade", "Улучшить персонажа", "Действия")
+    @staticmethod
     def action_upgrade(game: Game):
         # [red]S[/], [green]P[/], [blue]E[/], [yellow]C[/], [magenta]I[/], [cyan]A[/], [white]W[/]
         c = game.console
         a = game.player.attributes
-        stats: tuple[str, str, str] = [
+        stats: list[tuple[str, str, str]] = [
             ("red", "strength", "сила"),
             ("green", "perception", "восприятие"),
             ("blue", "endurance", "выносливость"),
@@ -355,7 +377,7 @@ class Player(Entity):
             if char == "exit":
                 break
             elif char in chars:
-                a.update(**{chars[char]: 1})
+                a.update(**{chars[char]: 1}, set=False)
             else:
                 continue
             a.free -= 1

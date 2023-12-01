@@ -8,7 +8,7 @@ class Encoder:
     """
 
     abc = {
-        "base64 [green]\[Рекомендуется]": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+        "base64 [green]\\[Рекомендуется]": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
         "base871": (
             "ƸƨǽƩҩΫеÙʘčΝϾĩ0Ê'=ңwǻSīǅҚҡǢəcƵΜʡŹǟǭÁĆɻЇ3Аǔɿ²ȅчɔщȳÖΟĳɲōǵ[ҥXɖʓɭƎŽƏɘҝɨ"
             "ƥtțśѩбҘЕșăhőáѸɫґäϧíBÅK&ŕƌ§нǩҠʫQфƲǒŜιD>ǦРΑϚЀǍΦш1ǨěϳǝѮȺÉêǊňϰϲģʞ;ЬȆХОяĉ"
@@ -39,7 +39,7 @@ class Encoder:
         ),
     }
 
-    def encode(self, data: bytes, type: int = 1, base: Optional[int] = None) -> str:
+    def encode(self, data: bytes, type: str, base: Optional[int] = None) -> str:
         """
         Encode data using the specified encoding scheme.
 
@@ -62,7 +62,7 @@ class Encoder:
             out_data.append(abc[d])
         return "".join(out_data)
 
-    def decode(self, data: str, type: int = 1, base: Optional[int] = None) -> bytes:
+    def decode(self, data: str, type: str, base: Optional[int] = None) -> bytes:
         """
         Decode data using the specified encoding scheme.
 

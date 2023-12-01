@@ -4,16 +4,17 @@ import os
 
 import random
 import time
-from typing import Literal
+from typing import Any, Callable, Literal
 import zlib
 from datetime import datetime
 from hashlib import sha512
 from itertools import groupby
 from textwrap import wrap
 
-import msgpack
+import msgpack # type: ignore
 from rich.live import Live
-from rich.spinner import SPINNERS, Spinner
+from rich.spinner import Spinner
+from rich._spinners import SPINNERS
 
 import krpg.game
 from krpg.actions import ActionManager, action
@@ -24,7 +25,7 @@ from krpg.clock import Clock
 from krpg.console import KrpgConsole
 from krpg.data.info import BRAND_COLORS, TIMESHIFT, __version__, ABOUT_TEXT, FAQ
 from krpg.data.splashes import SPLASHES
-from krpg.diary import Diary
+from krpg.diary import DiaryManager
 from krpg.encoder import Encoder
 from krpg.events import EventHandler, Events
 from krpg.executer import Executer
@@ -48,7 +49,7 @@ class GameState(Enum):
 
 
 class Game:
-    savers: dict[str, set[callable, callable]] = {}
+    savers: dict[str, tuple[Callable, Callable]] = {}
 
     def __init__(self, debug_mode: bool = False):
         self.version = __version__
@@ -86,11 +87,11 @@ class Game:
             spin_size = len(SPINNERS[spinner]["frames"][0]) + 1
             spin = Spinner(spinner, text="test", style="green")
             _reserve = self.console.log.debug
+            
             lines = []
-
-            def func(t, **_):
+            def func(msg, *args, **kwargs):
                 nonlocal lines
-                lines.append(t)
+                lines.append(msg)
                 lines = lines[-3:]
                 spin.update(text=f"\n{' '*spin_size}".join(lines))
                 time.sleep(random.random() / 10)
@@ -105,10 +106,10 @@ class Game:
         else:
             self.new_game_init()
 
-    def new_game_init(self):
+    def new_game_init(self) -> None:
         self.start_time = self.save_time = self.timestamp()
 
-        def init(obj: object) -> object:
+        def init(obj: Any) -> Any:
             self.log.debug(f"Init [green]{obj.__class__.__name__}[/]: {obj}")
             return obj
 
@@ -120,7 +121,7 @@ class Game:
             os.path.join(content_path, "**", "*.krpg"), recursive=True
         ):
             self.scenario.add_section(filename, content_path)
-            self.log.debug(f"Loaded scenario {filename}: {self.scenario}")
+            self.log.debug(f"Loaded scenario {filename}")
 
         self.actions: ActionManager = init(ActionManager(self))
         self.events: EventHandler = init(EventHandler(self))
@@ -129,7 +130,7 @@ class Game:
         self.settings: Settings = init(Settings(self))
         self.executer: Executer = init(Executer(self))
         self.player: Player = init(Player(self))
-        self.diary: Diary = init(Diary(self))
+        self.diary: DiaryManager = init(DiaryManager(self))
         self.presenter: Presenter = init(Presenter(self))
         self.battle_manager: BattleManager = init(BattleManager(self))
         self.bestiary: Bestiary = init(Bestiary(self))
@@ -189,10 +190,9 @@ class Game:
                     self.random.set_seed(seed)
                 else:
                     self.log.debug(f"Using by default: {self.random.seed}")
-                init = self.scenario.first("init")
+                init = self.scenario.first_section("init")
                 self.executer.create_block(init).run()
                 self.world.set()
-                self.world.current.locked = False
                 self.events.dispatch(Events.STATE_CHANGE, state=GameState.PLAYING)
 
             elif select == "load":
@@ -225,7 +225,7 @@ class Game:
         )
         self.actions.submanagers.append(obj)
 
-    def add_saver(self, name: str, save: callable, load: callable):
+    def add_saver(self, name: str, save: Callable, load: Callable):
         def add_message(func, message):
             def deco(*args, **kwargs):
                 self.log.debug(message)
@@ -256,6 +256,7 @@ class Game:
             i[1] for i in sorted(data.items(), key=lambda item: item[0])
         ]  # EXPEREMENTAL
         bdata = msgpack.packb(data)
+        assert isinstance(bdata, bytes)
         zdata = zlib.compress(bdata, level=9)
         select = self.console.menu(5, list(self.encoder.abc.keys()))
         encoded = self.encoder.encode(zdata, type=select)

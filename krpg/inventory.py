@@ -1,9 +1,10 @@
 from __future__ import annotations
-from enum import Enum
+from enum import IntEnum
+from typing import Optional
 from krpg.attributes import Attributes
 
 
-class ItemType(Enum):
+class ItemType(IntEnum):
     ITEM = 0
     # шлем нагрудник поножи ботинки перчатки щит оружие кольца амулет
     HELMET = 1
@@ -16,6 +17,7 @@ class ItemType(Enum):
     RING = 8
     AMULET = 9
 
+    @staticmethod
     def description(itemtype):
         """Describe the item type"""
         return ITEM_DESCRIPTIONS[itemtype]
@@ -139,10 +141,10 @@ class Slot:
             type (ItemType, optional): The type of the slot. Defaults to ItemType.ITEM.
         """
         self.type = type
-        self.id = None
-        self.amount = 0
+        self.id: str = ""
+        self.amount: int = 0
 
-    def set(self, id, amount=1):
+    def set(self, id: str, amount: int=1):
         """
         Sets the id and amount of the slot.
 
@@ -194,7 +196,7 @@ class Slot:
         """
         Clears the slot.
         """
-        self.id = None
+        self.id = ""
         self.amount = 0
 
     def optimize(self):
@@ -202,7 +204,7 @@ class Slot:
         Optimizes the slot by removing unnecessary data.
         """
         if not self.amount:
-            self.id = None
+            self.id = ""
         if not self.id:
             self.amount = 0
 
@@ -227,7 +229,7 @@ class Slot:
 
 
 class Inventory:
-    def __init__(self, is_carrier=True, size=10):
+    def __init__(self, is_carrier: bool=True, size: int=10):
         """
         Initialize an Inventory object.
 
