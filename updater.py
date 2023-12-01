@@ -1,5 +1,4 @@
 import urllib3
-import requests
 import os
 import zlib
 import glob
@@ -24,9 +23,10 @@ def local_hashes():
 
 
 def get_hashes():
-    r = requests.get(link + "hashes.json")
-    if r.status_code == 200:
-        return r.json()
+    http = urllib3.PoolManager()
+    r = http.request("GET", link + "hashes.json")
+    if r.status == 200:
+        return r.data
     else:
         raise Exception("Can't get hashes")
 
