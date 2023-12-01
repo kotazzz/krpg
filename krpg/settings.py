@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Optional
 
 from krpg.actions import action
 from krpg.data.themes import THEMES
@@ -11,14 +11,24 @@ if TYPE_CHECKING:
 
 class Param:
     def __init__(
-        self, id: str, name: str, description: str, variants: dict[str, str] = None
+        self, id: str, name: str, description: str, variants: Optional[dict[str, str]] = None
     ):
-        self.id = id
-        self.name = name
-        self.description = description
-        self.on_change = None
-        self.variants = variants or {}
-        self.value = None
+        self.id: str = id
+        self.name: str = name
+        self.description: str = description
+        self.variants: dict[str, str] = variants or {}
+        self.value: Optional[str] = None
+
+    def on_change(self, param: Param, game: Game, new_value: str):
+        """
+        Changes the parameter value.
+
+        Args:
+            param (Param): The parameter instance.
+            game (Game): The game instance.
+            new_value: The new value for the parameter.
+        """
+        raise NotImplementedError
 
     def __call__(self, *args, **kwargs):
         self.on_change(self, *args, **kwargs)
@@ -32,24 +42,26 @@ class ComplexParam:
         self.id = id
         self.name = name
         self.description = description
-        self.value = None
+        self.value: Any = None
+    
+    def callback(self, param: ComplexParam, game: Game):
+        raise NotImplementedError
 
     def save(self, game: Game):
         return self.value
 
-    def load(self, data: dict, game: Game):
+    def load(self, data: Any, game: Game):
         self.value = data
 
 
 # TODO: Улучшить менеджер тем
-class ThemeManager(ComplexParam):
+class ThemeManager(ComplexParam): # TODO: replace ComplexParam with Param?
     def __init__(self):
         super().__init__("theme", "Тема", "Изменяет тему консоли")
 
-    def load(self, data: dict, game: Game):
-        self.value = data.pop(self.id, None)
-        print(data)
-        if self.value is not None:
+    def load(self, data: str, game: Game):
+        self.value = data
+        if self.value:
             self.change_theme(game, self.value)
 
     def callback(self, param: ComplexParam, game: Game):
@@ -117,7 +129,7 @@ class ThemeManager(ComplexParam):
         game.console.set_theme(colors[name])
 
 
-def param(id: str, name: str, description: str, variants: dict[str, str] = None):
+def param(id: str, name: str, description: str, variants: Optional[dict[str, str]] = None):
     def decorator(f):
         param = Param(id, name, description, variants)
         param.on_change = f
@@ -146,7 +158,7 @@ class Settings:
     """
 
     def __init__(self, game: Game):
-        self.params: list[Param] = []
+        self.params: list[Param | ComplexParam] = []
         self.game = game
         self.game.add_actions(self)
         self.game.add_saver("settings", self.save, self.load)
@@ -174,7 +186,7 @@ class Settings:
         """
         for param in self.params:
             if isinstance(param, ComplexParam):
-                param.load(data, self.game)
+                param.load(data[param.id], self.game)
             else:
                 param.value = data.pop(param.id, None)
 
@@ -184,6 +196,7 @@ class Settings:
         "Включает или отключает вывод отладки",
         {"enable": "Включить", "disable": "Выключить"},
     )
+    @staticmethod
     def change_debug(param: Param, game: Game, new_value):
         """
         Changes the debug setting.
@@ -194,11 +207,12 @@ class Settings:
             new_value: The new value for the debug setting.
         """
         param.value = new_value == "enable"
-        game.set_debug(param.value)
+        game.set_debug(new_value == "enable")
 
         # game.console.set_theme(colors)
 
     @action("settings", "Настройки игры", "Игра")
+    @staticmethod
     def settings_command(game: Game):
         """
         Executes the settings command.
@@ -208,7 +222,7 @@ class Settings:
         """
         variants = game.settings.params
         view = (
-            lambda x: f"[green]{x.name}[/] [yellow]\[{x.value if x.value is not None else 'По умолчанию'}][/] - {x.description}"
+            lambda x: f"[green]{x.name}[/] [yellow]\\[{x.value if x.value is not None else 'По умолчанию'}][/] - {x.description}"
             if isinstance(x, Param) | isinstance(x, ComplexParam)
             else "-"
         )

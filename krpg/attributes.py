@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 
 if TYPE_CHECKING:
@@ -38,7 +38,7 @@ class Attributes:
         charisma: int = 0,
         perception: int = 0,
         free: int = 0,
-        holder: Entity = None,
+        holder: Optional[Entity] = None,
     ):
         self.strength = strength  # Сила
         self.wisdom = wisdom  # Мудрость

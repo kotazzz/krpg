@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from krpg.actions import action
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from rich.tree import Tree
 
 from krpg.executer import executer_command
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 class Goal:
-    def __init__(self, goal: list):
+    def __init__(self, goal: list[str]):
         """
         Initializes a Goal object.
 
@@ -34,7 +34,7 @@ class Goal:
         self.args = goal[1:-2]
         self.name = goal[-2]
         self.description = goal[-1]
-        self.meta = {}
+        self.meta: dict[Any, Any] = {}
 
     def save(self):
         """
@@ -120,18 +120,42 @@ class Goal:
 
 
 class Stage:
-    def __init__(self, data):
+    def __init__(self, data: dict[str, Any]):
         self.name: str = data["name"]
-        self.goals: list[str] = data["goals"]
+        self.goals: list[list[str]] = data["goals"]
         self.rewards: list[str] = data["rewards"]
+    
+    def __repr__(self):
+        return f"<Stage name={self.name!r} goals={len(self.goals)}>"
 
 
 class Quest:
-    def __init__(self, id, name, description, stages):
-        self.id = id
-        self.name = name
-        self.description = description
+    def __init__(self, id: str, name: str, description: str, stages: dict[str | int, dict[str, Any]]) -> None:
+        """Initialize a new instance of Quest.
+
+        Parameters
+        ----------
+        id : str
+            id of the quest
+        name : str
+            name of the quest
+        description : str
+            description of the quest
+        stages : dict[str  |  int, dict[str, Any]]
+            stages of the quest:
+            key: stage id
+            value: dict with keys:
+                name: name of the stage
+                goals: list of goals
+                rewards: list of rewards
+        """
+        self.id: str = id
+        self.name: str = name
+        self.description: str = description
         self.stages: dict[str | int, Stage] = {i: Stage(j) for i, j in stages.items()}
+    
+    def __repr__(self):
+        return f"<Quest id={self.id!r} name={self.name!r} stages={len(self.stages)}>"
 
 
 class QuestState:
@@ -343,12 +367,14 @@ class QuestManager:
             return quest.id in [q.quest.id for q in self.active_quests if q.done]
         else:
             raise Exception(f"Quest {id} not found")
-
+    
     @executer_command("quest")
+    @staticmethod
     def quest_command(game: Game, id: str):
         game.quest_manager.start_quest(id)
-
+    
     @action("quests", "Показать список квестов", "Информация")
+    @staticmethod
     def show_quests(game: Game):
         tree = Tree("Квесты")
         for active in game.quest_manager.active_quests:
