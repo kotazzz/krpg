@@ -109,8 +109,8 @@ class NpcManager:
                 return npc
         raise Exception(f"Npc {id} not found")
 
-    @staticmethod
     @action("talk", "Поговорить с доступными нпс", "Действия")
+    @staticmethod
     def action_talk(game: Game):
         loc = game.world.current
         npcs = game.npc_manager.get_npcs(loc.id)
@@ -137,7 +137,7 @@ class NpcManager:
             if len(actions) == 1 or old_state != sel.state:
                 return
 
-    def say(self, name, text):
+    def say(self, name: str, text: str):
         if name == "???":
             nametag = "[grey]???"
         else:
@@ -146,37 +146,40 @@ class NpcManager:
         text = self.game.executer.process_text(text)
         self.game.console.print(f"{nametag}[white]: {text}")
     
-    @staticmethod
     @executer_command("say")
+    @staticmethod
     def say_command(game: Game, text: str):
         npc = game.npc_manager.talking
+        assert npc
         game.npc_manager.say(npc.name if npc.known else "???", text)
     
-    @staticmethod
     @executer_command("ans")
+    @staticmethod
     def ans_command(game: Game, text: str):
         game.npc_manager.say(game.player.name, text)
     
-    @staticmethod
     @executer_command("meet")
+    @staticmethod
     def meet_command(game: Game):
+        assert game.npc_manager.talking
         game.npc_manager.talking.known = True
         game.events.dispatch(Events.NPC_MEET, npc_id=game.npc_manager.talking.id)
     
-    @staticmethod
     @executer_command("set_state")
+    @staticmethod
     def set_state_command(game: Game, state: str):
+        assert game.npc_manager.talking
         game.npc_manager.set_state(game.npc_manager.talking, state)
 
     def set_state(self, npc: Npc, state: str):
         npc.state = state
         self.game.events.dispatch(Events.NPC_STATE, npc_id=npc.id, state=state)
     
-    @staticmethod
     @executer_command("trade")
+    @staticmethod
     def trade_command(game: Game, block: Block):
-        allowed_sell = block.section.first("sell").args
-        allowed_buy = block.section.first("buy").args
+        allowed_sell = block.section.first_command("sell").args
+        allowed_buy = block.section.first_command("buy").args
 
         inventory = game.player.inventory
         console = game.console
@@ -184,12 +187,12 @@ class NpcManager:
         can_sell = lambda i: i.id in allowed_sell
         can_buy = lambda i: i.id in allowed_buy
         additional = (
-            lambda i: f"\[[green]{'S' if can_sell(i) else ' '}[red]{'B' if can_buy(i) else ' '}[cyan]]"
+            lambda i: f"\\[[green]{'S' if can_sell(i) else ' '}[red]{'B' if can_buy(i) else ' '}[cyan]]"
         )
         slot_filter = lambda i: can_sell(i) or can_buy(i)
 
         slots = list(filter(slot_filter, inventory.slots)) + [
-            Slot().set(i, 0.1)
+            Slot().set(i, -1)
             for i in allowed_buy + allowed_sell
             if i not in (x.id for x in inventory.slots)
         ]
@@ -250,7 +253,7 @@ class NpcManager:
                     console.print("[red]У вас нет столько денег")
                     continue
                 game.player.add_money(-money)
-                game.player.pickup(slot.id, amount)
+                game.player.pickup(item, amount)
             elif action == 2:
                 item = game.bestiary.get_item(slot.id)
                 presenter.presence_item(item)

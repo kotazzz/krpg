@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 class Goal:
-    def __init__(self, goal: list):
+    def __init__(self, goal: list[str]):
         """
         Initializes a Goal object.
 
@@ -122,7 +122,7 @@ class Goal:
 class Stage:
     def __init__(self, data: dict[str, Any]):
         self.name: str = data["name"]
-        self.goals: list[str] = data["goals"]
+        self.goals: list[list[str]] = data["goals"]
         self.rewards: list[str] = data["rewards"]
     
     def __repr__(self):
@@ -130,7 +130,25 @@ class Stage:
 
 
 class Quest:
-    def __init__(self, id: str, name: str, description: str, stages: dict[str | int, Stage]) -> None:
+    def __init__(self, id: str, name: str, description: str, stages: dict[str | int, dict[str, Any]]) -> None:
+        """Initialize a new instance of Quest.
+
+        Parameters
+        ----------
+        id : str
+            id of the quest
+        name : str
+            name of the quest
+        description : str
+            description of the quest
+        stages : dict[str  |  int, dict[str, Any]]
+            stages of the quest:
+            key: stage id
+            value: dict with keys:
+                name: name of the stage
+                goals: list of goals
+                rewards: list of rewards
+        """
         self.id: str = id
         self.name: str = name
         self.description: str = description
@@ -350,13 +368,13 @@ class QuestManager:
         else:
             raise Exception(f"Quest {id} not found")
     
-    @staticmethod
     @executer_command("quest")
+    @staticmethod
     def quest_command(game: Game, id: str):
         game.quest_manager.start_quest(id)
     
-    @staticmethod
     @action("quests", "Показать список квестов", "Информация")
+    @staticmethod
     def show_quests(game: Game):
         tree = Tree("Квесты")
         for active in game.quest_manager.active_quests:

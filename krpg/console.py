@@ -11,7 +11,9 @@ import logging
 from rich.logging import RichHandler
 import shlex
 from prompt_toolkit.shortcuts import PromptSession
-from rich.theme import Theme, ThemeStackError
+from rich.color import ColorSystem
+from rich.theme import Theme
+from rich.theme import ThemeStackError
 from rich.style import Style
 
 
@@ -89,12 +91,11 @@ class KrpgConsole:
         menu(prompt, variants, exit_cmd, view, display, title, empty): Displays a menu and prompts the user for selection.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.console = ConsoleHooked()
         
-        self.session = PromptSession()
+        self.session: PromptSession = PromptSession()
         self.bar = ""
-        self.log: logging.Logger = None
 
         self.handler = RichHandler(
             level=DEFAULT_LEVEL,
@@ -112,8 +113,8 @@ class KrpgConsole:
         self.log = logging.getLogger("console")
         self.setlevel(0)
 
-        self.queue = []
-        self.history = []
+        self.queue: list[str] = []
+        self.history: list[str] = []
 
         self.levels: dict[int, ANSI] = {
             1: rich_to_pt_ansi("[bold red]> [/]", console=self.console),
@@ -132,7 +133,7 @@ class KrpgConsole:
     def set_theme(self, colors: list[str]):
         # Reset the theme to default
         self.reset_theme()
-
+        
         # Get the default theme
         default = self.console._theme_stack._entries[0]
 
@@ -149,16 +150,17 @@ class KrpgConsole:
             new_theme[name] = Style.parse(new_colors[name])
             new_theme[f"on {name}"] = Style.parse(f"on {new_colors[name]}")
         
-        for st in new_theme:
-            if new_theme[st].color and new_theme[st].color.type == 1:
+        for st in new_theme.values():
+            if st.color and st.color.type == 1:
+                
                 # Перебираем все стили, по типу inspect.*, iso8601.*, repr.*, str.*
                 # Если есть цвет и он является стандартным - подменяем на свой
                 # С фоном по аналогии
-                clr = new_colors[new_theme[st].color.name]
-                new_theme[st]._color = Color.parse(clr)
-            if new_theme[st].bgcolor and new_theme[st].bgcolor.type == 1:
-                bg_clr = new_colors[new_theme[st].bgcolor.name]
-                new_theme[st]._bgcolor = Color.parse(bg_clr)
+                clr = new_colors[st.color.name]
+                st._color = Color.parse(clr)
+            if st.bgcolor is not None and st.bgcolor.type == 1:
+                bg_clr = new_colors[st.bgcolor.name]
+                st._bgcolor = Color.parse(bg_clr)
 
         new_theme['reset']._color = Color.parse(new_colors['white']) # TODO: Сделать отдельный цвет фона
         new_theme['reset']._bgcolor = Color.parse(new_colors['black'])
@@ -167,7 +169,7 @@ class KrpgConsole:
         
         # Apply the updated theme
         self.console.push_theme(Theme(new_theme))
-        self.console._forced_reset = f"\x1b[{new_theme['none']._make_ansi_codes(3)}m"
+        self.console._forced_reset = f"\x1b[{new_theme['none']._make_ansi_codes(ColorSystem.TRUECOLOR)}m"
         self.console.clear()
         
     def get_history(self) -> list[str | Any]:
@@ -237,7 +239,8 @@ class KrpgConsole:
             if not isinstance(text, int)
             else self.levels[text]
         )
-        kwargs = {"bottom_toolbar": self.bar}
+        kwargs: dict[str, Any] = {"bottom_toolbar": self.bar}
+        data = data or {}
         if data:
             kwargs["completer"] = WordCompleter(
                 list(data.keys()), meta_dict={i: rich_to_pt_ansi(j, console=self.console) for i, j in data.items()}
@@ -265,8 +268,8 @@ class KrpgConsole:
                         return el
         else:
             cmd = self.queue.pop(0)
-            cmdr = cmd.replace("[", "\[")
-            self.console.print(f"[bold blue]\[AUTO][/] [blue]{cmdr}[/]")
+            cmdr = cmd.replace("[", "\\[")
+            self.console.print(f"[bold blue]\\[AUTO][/] [blue]{cmdr}[/]")
             return cmd
 
     def checked(
@@ -321,7 +324,7 @@ class KrpgConsole:
         display: bool = True,
         title: Optional[str] = None,
         empty: str = "Ничего нет",
-    ):
+     ) -> Any:
         if not isinstance(variants, list):
             variants = list(variants)
         view = view or str

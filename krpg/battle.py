@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, cast
 from krpg.entity import Entity
 from krpg.events import Events
 
@@ -29,50 +29,69 @@ class BattleManager:
         Returns:
             int: The predicted action for the player. 0 represents attack, 1 represents defend.
         """
-        # Rest of the code...
-
-    def predict(self, player: Entity, enemy: Entity) -> int:
         # Rule expressions:
         # player, enemy - Entity
         # actions: 0 - attack, 1 - defend
         # Rule format: ([...expressions (str)], action, weight)
-        # TODO: Lambda functions
-        rules = [
+        # [v] TODO: Lambda functions
+        # rules = [
+        #     # If enemy have 50%+ hp, then attack
+        #     (["enemy.hp / enemy.max_hp >= 0.5"], 0, 1),
+        #     # If enemy have 50%- hp, then defend
+        #     (["enemy.hp / enemy.max_hp < 0.5"], 1, 1),
+        #     # If player have 50%+ hp, then attack
+        #     (["player.hp / player.max_hp >= 0.5"], 0, 0.5),
+        #     # If player have 50%- hp, then attack
+        #     (["player.hp / player.max_hp < 0.5"], 0, 1),
+        # ]
+        # results: list[tuple[int, int]] = []
+        # env = {
+        #     "player": player,
+        #     "enemy": enemy,
+        # }
+        # for rule in rules:
+        #     if all(eval(expr, env) for expr in rule[0]):
+        #         results.append((rule[1], rule[2]))
+        
+        # [ ] TODO: int to IntEnum
+        rules: list[tuple[Callable[[Entity, Entity], bool], int, float]] = [
             # If enemy have 50%+ hp, then attack
-            (["enemy.hp / enemy.max_hp >= 0.5"], 0, 1),
+            (lambda player, enemy: enemy.hp / enemy.max_hp >= 0.5, 0, 1.0),
             # If enemy have 50%- hp, then defend
-            (["enemy.hp / enemy.max_hp < 0.5"], 1, 1),
+            (lambda player, enemy: enemy.hp / enemy.max_hp < 0.5, 1, 1.0),
             # If player have 50%+ hp, then attack
-            (["player.hp / player.max_hp >= 0.5"], 0, 0.5),
+            (lambda player, enemy: player.hp / player.max_hp >= 0.5, 0, 0.5),
             # If player have 50%- hp, then attack
-            (["player.hp / player.max_hp < 0.5"], 0, 1),
+            (lambda player, enemy: player.hp / player.max_hp < 0.5, 0, 1.0),
         ]
-        results: list[tuple[int, int]] = []
-        env = {
-            "player": player,
-            "enemy": enemy,
-        }
-        for rule in rules:
-            if all(eval(expr, env) for expr in rule[0]):
-                results.append((rule[1], rule[2]))
+            
+        results = cast(list[tuple[int, float]], [
+            (rule[1], rule[2]) for rule in rules if rule[0](player, enemy)
+        ])
+        
+        assert results, Exception("No rules matched")
         chaos = 0.2  # random action chance and distance from best action
-        if results:
-            # Select best action
-            best_action = max(results, key=lambda x: x[1])[0]
-            # Select random action
-            random_action = self.game.random.choice([0, 1])
-            # Select action
-            action = self.game.random.choices(
-                [best_action, random_action], weights=[1 - chaos, chaos]
-            )[0]
+        
+        # Select best action
+        best_action = max(results, key=lambda x: x[1])[0]
+        # Select random action
+        random_action = self.game.random.choice([0, 1]) # [0, 1] - actions
+        # TODO: replace best+random to weighted choice for all cases
+        action = self.game.random.choices(
+            [best_action, random_action], weights=[1 - chaos, chaos]
+        )[0]
         return action
+        
 
+    
     @executer_command("fight_list")
+    @staticmethod
     def command_fight_list(game: Game, *monster_ids: str):
         monster = game.random.choice(monster_ids)
         game.battle_manager.fight(monster)
 
     @executer_command("fight")
+    @staticmethod
     def command_fight(game: Game, monster_id: str):
         game.battle_manager.fight(monster_id)
 
@@ -94,7 +113,7 @@ class BattleManager:
         spread = lambda s=5: self.game.random.randint(-s, s) / 100 + 1
         while True:
             presenter.presenses([player, monster])
-            select = console.menu(
+            select: int = console.menu(
                 2,
                 [
                     ("Атаковать", 0),

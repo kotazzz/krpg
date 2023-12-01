@@ -47,7 +47,7 @@ class Presenter:
             str: The generated statistics string.
         """
 
-        def _get(obj: Entity | Attributes, free: bool):
+        def _get(obj: Attributes, free: bool):
             stats: list[tuple[str, str]] = [
                 ("red", "strength"),
                 ("green", "perception"),
@@ -61,13 +61,13 @@ class Presenter:
             for c, stat in stats:
                 val = getattr(obj, stat)
                 full_stats += f"[b {c}]{stat[0].upper():>2}{val}"
-
+            
             if free:
-                return full_stats + f"   [b white]F{obj.attributes.free:>2}[/]"
+                return full_stats + f"   [b white]F{obj.free:>2}[/]"
             return full_stats
 
         if isinstance(source, Entity):
-            return _get(source, True)
+            return _get(source.attributes, True)
         return _get(source.attributes, False)
 
     def presense(self, e: Entity, minimal=False):
@@ -196,9 +196,9 @@ class Presenter:
         inventory = self.game.player.inventory
         console.print("[bold green]Инвентарь[/]")
         last = None
-        slots = groupby(inventory.slots, lambda i: i.type)
+        grouped_slots = groupby(inventory.slots, lambda i: i.type)
         counter = 1
-        for slot_type, slots in slots:
+        for slot_type, slots in grouped_slots:
             if allow:
                 # whitelist
                 if not inverse and slot_type not in allow:
@@ -209,7 +209,7 @@ class Presenter:
             console.print("[yellow b]" + ItemType.description(slot_type), end=" ")
             for slot in slots:
                 if show_number:
-                    console.print(f"[blue]\[{counter}][/]", end="")
+                    console.print(f"[blue]\\[{counter}][/]", end="")
                     counter += 1
                 console.print(self.show_item(slot, show_amount), end="")
             console.print()

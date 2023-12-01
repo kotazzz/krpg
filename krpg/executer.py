@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 from krpg.scenario import Command, Section, Multiline
 
@@ -44,27 +44,27 @@ class ExecuterCommand:
 
 
 class Base:
-    @staticmethod
     @executer_command("print")
+    @staticmethod
     def builtin_print(game: Game, *args):
         text = " ".join(args)
         game.console.print("[blue]" + game.executer.process_text(text))
 
-    @staticmethod
     @executer_command("$")
-    def builtin_exec(game: Game, *code: str):
-        code = " ".join(code)
-        env = game.executer.env | {"game": game, "env": game.executer.env}
-        exec(code, env)
-
     @staticmethod
+    def builtin_exec(game: Game, *code: str):
+        exec_str = " ".join(code)
+        env = game.executer.env | {"game": game, "env": game.executer.env}
+        exec(exec_str, env)
+
     @executer_command("set")
+    @staticmethod
     def builtin_set(game: Game, name: str, expr: str):
         env = game.executer.env | {"game": game, "env": game.executer.env}
         game.executer.env[name] = eval(expr, env)
 
-    @staticmethod
     @executer_command("if")
+    @staticmethod
     def builtin_if(game: Game, expr: str, block: Block):
         env = game.executer.env | {"game": game, "env": game.executer.env}
         if eval(expr, env):
@@ -167,9 +167,13 @@ class Executer:
         """
         cmds: dict[str, ExecuterCommand] = {}
         for i in dir(obj):
-            attr = getattr(obj, i)
-            if isinstance(attr, ExecuterCommand):
-                cmds[attr.name] = attr
+            try:
+                attr = getattr(obj, i)
+            except Exception:
+                continue
+            else:
+                if isinstance(attr, ExecuterCommand):
+                    cmds[attr.name] = attr
         return cmds
 
     def add_extension(self, ext: object):
@@ -197,7 +201,7 @@ class Executer:
             commands |= self.get_executer_additions(ext)
         return commands
 
-    def create_execute(self, extensions: list[object]):
+    def create_execute(self, extensions: list[object]) -> Callable[..., None]:
         """
         Create a new execute method that extends the extension list before running
         the command and returns it back after.
@@ -209,7 +213,7 @@ class Executer:
             function: The new execute method.
         """
 
-        def execute(command: Command):
+        def execute(command: Command | Section | Multiline):
             ext = self.extensions
             self.extensions += extensions
             self.execute(command)
@@ -237,7 +241,7 @@ class Executer:
         else:
             raise Exception(f"Unknown command: {command.name}")
 
-    def create_block(self, section: Section):
+    def create_block(self, section: Section) -> Block:
         """
         Create a block for a section.
 
