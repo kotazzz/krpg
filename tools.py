@@ -16,7 +16,7 @@ def python_set(filename, variable, new_value):
             and isinstance(node.targets[0], ast.Name)
             and node.targets[0].id == variable
         ):
-            node.value = ast.Str(s=new_value)
+            node.value = ast.Constant(s=new_value)
     with open(filename, "w", encoding="utf-8") as file:
         file.write(ast.unparse(tree))
 
