@@ -55,19 +55,19 @@ class Base:
     def builtin_exec(game: Game, *code: str):
         exec_str = " ".join(code)
         env = game.executer.env | {"game": game, "env": game.executer.env}
-        exec(exec_str, env)
+        exec(exec_str, env) # nosec
 
     @executer_command("set")
     @staticmethod
     def builtin_set(game: Game, name: str, expr: str):
         env = game.executer.env | {"game": game, "env": game.executer.env}
-        game.executer.env[name] = eval(expr, env)
+        game.executer.env[name] = eval(expr, env) # nosec
 
     @executer_command("if")
     @staticmethod
     def builtin_if(game: Game, expr: str, block: Block):
         env = game.executer.env | {"game": game, "env": game.executer.env}
-        if eval(expr, env):
+        if eval(expr, env): # nosec
             block.run()
 
 
@@ -170,7 +170,7 @@ class Executer:
         for i in dir(obj):
             try:
                 attr = getattr(obj, i)
-            except Exception:
+            except AttributeError:
                 continue
             else:
                 if isinstance(attr, ExecuterCommand):
@@ -265,7 +265,8 @@ class Executer:
         Returns:
             str: The processed text.
         """
-        return self.evaluate(f"f'''{text}'''")
+        # Scenario allowed to use python code
+        return self.evaluate(f"f'''{text}'''") # nosec
 
     def evaluate(self, text: str):
         """
@@ -279,7 +280,8 @@ class Executer:
         """
         game = self.game
         env = game.executer.env | {"game": game, "env": game.executer.env}
-        return eval(text, env)
+        # Scenario allowed to use python code
+        return eval(text, env) # nosec
 
     def __repr__(self):
         return (

@@ -10,6 +10,8 @@ from krpg.executer import Block, executer_command
 if TYPE_CHECKING:
     from krpg.game import Game
 
+class NpcError(Exception):
+    pass
 
 class Npc:
     def __init__(
@@ -150,7 +152,8 @@ class NpcManager:
     @staticmethod
     def say_command(game: Game, text: str):
         npc = game.npc_manager.talking
-        assert npc
+        if not npc:
+            raise NpcError("No npc talking")
         game.npc_manager.say(npc.name if npc.known else "???", text)
 
     @executer_command("ans")
@@ -161,14 +164,16 @@ class NpcManager:
     @executer_command("meet")
     @staticmethod
     def meet_command(game: Game):
-        assert game.npc_manager.talking
+        if not game.npc_manager.talking:
+            raise NpcError("No npc talking")
         game.npc_manager.talking.known = True
         game.events.dispatch(Events.NPC_MEET, npc_id=game.npc_manager.talking.id)
 
     @executer_command("set_state")
     @staticmethod
     def set_state_command(game: Game, state: str):
-        assert game.npc_manager.talking
+        if not game.npc_manager.talking:
+            raise NpcError("No npc talking")
         game.npc_manager.set_state(game.npc_manager.talking, state)
 
     def set_state(self, npc: Npc, state: str):

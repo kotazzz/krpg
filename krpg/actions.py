@@ -92,7 +92,8 @@ class ActionManager:
             return item.get_actions()
 
         if hasattr(item, "extract"):
-            assert isinstance(item, HasExtract)
+            if not isinstance(item, HasExtract):
+                raise ValueError(f"Item {item} does not have extract method")
             return item.extract()
         actions = []
         for name in dir(item):

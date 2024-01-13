@@ -70,7 +70,9 @@ class BattleManager:
             [(rule[1], rule[2]) for rule in rules if rule[0](player, enemy)],
         )
 
-        assert results, Exception("No rules matched")
+        if not results:
+            raise ValueError("No rules matched")
+        
         chaos = 0.2  # random action chance and distance from best action
 
         # Select best action

@@ -19,6 +19,8 @@
 ](https://discord.gg/FKcURWZsMW)
 [![Telegram](https://img.shields.io/badge/%D0%A2%D0%B5%D0%BB%D0%B5%D0%B3%D1%80%D0%B0%D0%BC-%D0%BA%D0%B0%D0%BD%D0%B0%D0%BB-blue?logo=telegram)
 ](https://t.me/krpgd)
+[![security: bandit](https://img.shields.io/badge/security-bandit-yellow.svg)](https://github.com/PyCQA/bandit)
+
 </div>
 
 ---

@@ -257,7 +257,8 @@ class Game:
             i[1] for i in sorted(data.items(), key=lambda item: item[0])
         ]  # EXPEREMENTAL
         bdata = msgpack.packb(data)
-        assert isinstance(bdata, bytes)
+        if not isinstance(bdata, bytes):
+            raise TypeError(f"msgpack.packb return {type(bdata)}")
         zdata = zlib.compress(bdata, level=9)
         select = self.console.menu(5, list(self.encoder.abc.keys()))
         encoded = self.encoder.encode(zdata, type=select)

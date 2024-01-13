@@ -283,7 +283,7 @@ class KrpgConsole:
                 elif user:
                     try:
                         split = shlex.split(user)
-                    except:
+                    except ValueError:
                         continue
                     self.queue.extend(split)
                     self.history.extend(split)
