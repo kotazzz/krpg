@@ -47,27 +47,31 @@ class Base:
     @executer_command("print")
     @staticmethod
     def builtin_print(game: Game, *args):
+        """Builtin print"""
         text = " ".join(args)
         game.console.print("[blue]" + game.executer.process_text(text))
 
     @executer_command("$")
     @staticmethod
     def builtin_exec(game: Game, *code: str):
+        """Builtin exec"""
         exec_str = " ".join(code)
         env = game.executer.env | {"game": game, "env": game.executer.env}
-        exec(exec_str, env) # nosec
+        exec(exec_str, env)  # noqa
 
     @executer_command("set")
     @staticmethod
     def builtin_set(game: Game, name: str, expr: str):
+        """Builtin set"""
         env = game.executer.env | {"game": game, "env": game.executer.env}
-        game.executer.env[name] = eval(expr, env) # nosec
+        game.executer.env[name] = eval(expr, env)  # noqa
 
     @executer_command("if")
     @staticmethod
     def builtin_if(game: Game, expr: str, block: Block):
+        """Builtin if"""
         env = game.executer.env | {"game": game, "env": game.executer.env}
-        if eval(expr, env): # nosec
+        if eval(expr, env):  # noqa
             block.run()
 
 
@@ -95,7 +99,7 @@ class Block:
 
         self.print_block_command = print_block_command
 
-    def run(self, from_start: bool = True, *args, **kwargs):
+    def run(self, *_, from_start: bool = True, **__):
         """
         Runs the block of code.
 
@@ -230,7 +234,7 @@ class Executer:
             command (Command | Section): The command or section to execute.
 
         Raises:
-            Exception: If the command is unknown.
+            ValueError: If the command is unknown.
         """
         commands = self.get_all_commands()
         if command.name in commands:
@@ -240,7 +244,7 @@ class Executer:
                 kwargs = {"block": self.create_block(command)}
             commands[command.name].callback(self.game, *command.args, **kwargs)
         else:
-            raise Exception(f"Unknown command: {command.name}")
+            raise ValueError(f"Unknown command: {command.name}")
 
     def create_block(self, section: Section) -> Block:
         """
@@ -266,7 +270,7 @@ class Executer:
             str: The processed text.
         """
         # Scenario allowed to use python code
-        return self.evaluate(f"f'''{text}'''") # nosec
+        return self.evaluate(f"f'''{text}'''")  # noqa
 
     def evaluate(self, text: str):
         """
@@ -281,7 +285,7 @@ class Executer:
         game = self.game
         env = game.executer.env | {"game": game, "env": game.executer.env}
         # Scenario allowed to use python code
-        return eval(text, env) # nosec
+        return eval(text, env)  # noqa
 
     def __repr__(self):
         return (

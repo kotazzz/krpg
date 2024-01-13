@@ -1,30 +1,22 @@
+"""
+Actions module contains classes and functions for actions in the game.
+"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Callable
 
 
+@dataclass()
 class Action:
-    def __init__(
-        self,
-        name: str,
-        description: str,
-        category: str,
-        callback: Callable,
-    ):
-        """
-        Represents an action in the game.
+    """
+    Main class for actions in the game
+    """
 
-        Args:
-            name (str): The name of the action.
-            description (str): The description of the action.
-            category (str): The category of the action.
-            callback (Callable): The callback function to be executed when the action is performed.
-            time (int, optional): The time required to perform the action. Defaults to 0.
-        """
-        self.name = name
-        self.description = description
-        self.category = category
-        self.callback = callback
+    name: str
+    description: str
+    category: str
+    callback: Callable
 
     def __repr__(self):
         return f"<Action {self.name} from {self.category}>"
@@ -53,7 +45,16 @@ def action(
 
 
 class HasExtract:
+    """Interface for classes that can extract actions."""
+
     def extract(self) -> list[Action]:
+        """Extracts actions from the class.
+
+        Returns
+        -------
+        list[Action]
+            A list of extracted actions.
+        """
         raise NotImplementedError
 
 
@@ -114,10 +115,10 @@ class ActionManager:
             actions.extend(self.extract(submanager))
         actions.extend(self.actions)
         names: dict[str, Action] = {}
-        for action in actions:
-            if action.name in names:
-                raise Exception(f"Same names: {names[action.name]} and {action}")
-            names[action.name] = action
+        for act in actions:
+            if act.name in names:
+                raise ValueError(f"Same names: {names[act.name]} and {act}")
+            names[act.name] = act
         return actions
 
     def __repr__(self):

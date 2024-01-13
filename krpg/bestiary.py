@@ -1,5 +1,9 @@
+"""
+Bestiary module. Represents a tools to create and manage monsters and items in the game.
+"""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from krpg.entity import Entity
@@ -11,30 +15,17 @@ from krpg.attributes import Attributes
 from krpg.inventory import Item
 
 
+@dataclass()
 class Meta:
-    def __init__(
-        self,
-        id: str,
-        name: str,
-        description: str,
-        attributes: Attributes,
-        money: int = 0,
-    ):
-        """
-        Represents the metadata of a creature in the bestiary.
+    """
+    Represents the metadata of a creature in the bestiary.
+    """
 
-        Args:
-            id (str): The unique identifier of the creature.
-            name (str): The name of the creature.
-            description (str): The description of the creature.
-            attributes (Attributes): The attributes of the creature.
-            money (int, optional): The amount of money the creature possesses. Defaults to 0.
-        """
-        self.id = id
-        self.name = name
-        self.description = description
-        self.attributes = attributes
-        self.money = money
+    identifier: str
+    name: str
+    description: str
+    attributes: Attributes
+    money: int = 0
 
 
 class Bestiary:
@@ -52,7 +43,7 @@ class Bestiary:
         self.entities: list[Meta] = []
         self.items: list[Item] = []
 
-    def get_item(self, id: str | Item):
+    def get_item(self, identifier: str | Item):
         """
         Get an item from the bestiary based on its ID or directly by passing the item object.
 
@@ -65,14 +56,14 @@ class Bestiary:
         Raises:
             Exception: If the item with the specified ID is not found.
         """
-        if isinstance(id, Item):
-            return id
+        if isinstance(identifier, Item):
+            return identifier
         for item in self.items:
-            if item.id == id:
+            if item.id == identifier:
                 return item
-        raise Exception(f"Item {id} not found")
+        raise ValueError(f"Item {identifier} not found")
 
-    def get_entity(self, id: str):
+    def get_entity(self, identifier: str):
         """
         Get an entity from the bestiary based on its ID.
 
@@ -86,9 +77,9 @@ class Bestiary:
             Exception: If the entity with the specified ID is not found.
         """
         for meta in self.entities:
-            if meta.id == id:
+            if meta.identifier == identifier:
                 return self.create_monster(meta)
-        raise Exception(f"Monster {id} not found")
+        raise ValueError(f"Monster {identifier} not found")
 
     def create_monster(self, meta: Meta):
         """

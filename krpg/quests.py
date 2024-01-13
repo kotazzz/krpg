@@ -64,13 +64,12 @@ class Goal:
         else:
             self.completed = data
 
-    def check(self, event, *args, **kwargs):
+    def check(self, event, *_, **kwargs):
         """
         Checks if the goal is completed based on the given event and arguments.
 
         Args:
             event (str): The event to check against.
-            *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
 
         Raises:
@@ -103,8 +102,6 @@ class Goal:
             )
 
         elif self.type == "collect" and event == Events.PICKUP:
-            #     PICKUP = auto()  # item: Item, amount: int
-            d = self.args
             required = int(self.args[1])
             self.completed = (
                 self.args[0] == kwargs["item"].id and required == kwargs["total"]
@@ -133,7 +130,7 @@ class Stage:
 class Quest:
     def __init__(
         self,
-        id: str,
+        identifier: str,
         name: str,
         description: str,
         stages: dict[str | int, dict[str, Any]],
@@ -156,7 +153,7 @@ class Quest:
                 goals: list of goals
                 rewards: list of rewards
         """
-        self.id: str = id
+        self.id: str = identifier
         self.name: str = name
         self.description: str = description
         self.stages: dict[str | int, Stage] = {i: Stage(j) for i, j in stages.items()}
@@ -248,14 +245,14 @@ class QuestState:
         """Process the rewards for completing the current stage."""
         rewards = self.rewards
         for reward in rewards:
-            type, *args = reward
-            if type == "stage":
+            reward_type, *args = reward
+            if reward_type == "stage":
                 new_stage = int(args[0]) if args[0].isdigit() else args[0]
                 self.update(new_stage)
-            elif type == "state":
+            elif reward_type == "state":
                 npc = self.game.npc_manager.get_npc(args[0])
                 self.game.npc_manager.set_state(npc, args[1])
-            elif type == "end":
+            elif reward_type == "end":
                 self.done = True
                 self.game.events.dispatch(Events.QUEST_END, state=self)
 
@@ -312,16 +309,16 @@ class QuestManager:
             data (dict): A dictionary containing the saved data for each active quest.
         """
         self.active_quests = []
-        for id, state in data.items():
-            quest = self.get_quest(id)
+        for identifier, state in data.items():
+            quest = self.get_quest(identifier)
             if quest:
                 new_state = QuestState(self.game, quest)
                 new_state.load(state)
                 self.active_quests.append(new_state)
             else:
-                raise Exception(f"Quest {id} not found")
+                raise ValueError(f"Quest {identifier} not found")
 
-    def get_quest(self, id: str | Quest):
+    def get_quest(self, identifier: str | Quest):
         """
         Get a quest by its ID.
 
@@ -331,14 +328,14 @@ class QuestManager:
         Returns:
             Quest | None: The quest instance if found, None otherwise.
         """
-        if isinstance(id, Quest):
-            return id
-        else:
-            for quest in self.quests:
-                if quest.id == id:
-                    return quest
+        if isinstance(identifier, Quest):
+            return identifier
+        for quest in self.quests:
+            if quest.id == identifier:
+                return quest
+        raise ValueError(f"Quest {identifier} not found")
 
-    def start_quest(self, id: str):
+    def start_quest(self, identifier: str):
         """
         Start a quest by its ID.
 
@@ -348,12 +345,12 @@ class QuestManager:
         Raises:
             Exception: If the quest with the given ID is not found.
         """
-        quest = self.get_quest(id)
+        quest = self.get_quest(identifier)
         if quest:
             self.active_quests.append(QuestState(self.game, quest))
             self.game.events.dispatch(Events.QUEST_START, quest.id)
         else:
-            raise Exception(f"Quest {id} not found")
+            raise ValueError(f"Quest {identifier} not found")
 
     def on_event(self, event, *args, **kwargs):
         """
@@ -368,21 +365,53 @@ class QuestManager:
             if not active.done:
                 active.check(event, *args, **kwargs)
 
-    def is_done(self, id: str):
-        quest = self.get_quest(id)
+    def is_done(self, identifier: str) -> bool:
+        """Check if a quest is done.
+
+        Parameters
+        ----------
+        identifier : str
+            The ID of the quest.
+
+        Returns
+        -------
+        bool
+            True if the quest is done, False otherwise.
+
+        Raises
+        ------
+        ValueError
+            If the quest with the given ID is not found.
+        """
+        quest = self.get_quest(identifier)
         if quest:
             return quest.id in [q.quest.id for q in self.active_quests if q.done]
-        else:
-            raise Exception(f"Quest {id} not found")
+        raise ValueError(f"Quest {identifier} not found")
 
     @executer_command("quest")
     @staticmethod
-    def quest_command(game: Game, id: str):
-        game.quest_manager.start_quest(id)
+    def quest_command(game: Game, identifier: str):
+        """Start a quest by its ID.
+
+        Parameters
+        ----------
+        game : Game
+            The game instance.
+        identifier : str
+            The ID of the quest.
+        """
+        game.quest_manager.start_quest(identifier)
 
     @action("quests", "Показать список квестов", "Информация")
     @staticmethod
     def show_quests(game: Game):
+        """Show the list of active quests.
+
+        Parameters
+        ----------
+        game : Game
+            The game instance.
+        """
         tree = Tree("Квесты")
         for active in game.quest_manager.active_quests:
             # QUEST_NAME 1/3 QUEST_DESCRIPTION

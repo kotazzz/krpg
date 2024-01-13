@@ -51,15 +51,38 @@ class EventHandler:
             self.lookup(obj)
 
     def listen(self, event: str, callback: Callable):
+        """Listen to an event.
+
+        Parameters
+        ----------
+        event : str
+            Event name.
+        callback : Callable
+            Callback function.
+        """
         self.listeners[event].append(callback)
 
     def lookup(self, obj: object):
+        """Lookup for event handlers in an object.
+
+        Parameters
+        ----------
+        obj : object
+            Object to lookup.
+        """
         for attr in filter(lambda x: x.startswith("on_"), dir(obj)):
             cb = getattr(obj, attr)
             if callable(cb):
                 self.listen(attr[3:], cb)
 
     def dispatch(self, event: str, *args, **kwargs):
+        """Dispatch an event.
+
+        Parameters
+        ----------
+        event : str
+            Event name.
+        """
         for listener in self.listeners["*"] + self.listeners["event"]:
             listener(event, *args, **kwargs)
         if event not in ["*", "event"]:

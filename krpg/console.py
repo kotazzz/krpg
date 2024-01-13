@@ -6,8 +6,6 @@ from typing import Any, Callable, Optional, Sequence
 
 from prompt_toolkit import ANSI
 from prompt_toolkit.completion import WordCompleter
-from prompt_toolkit.data_structures import Size
-from prompt_toolkit.output.windows10 import Windows10_Output
 from prompt_toolkit.shortcuts import PromptSession
 from rich.color import Color, ColorSystem
 from rich.console import Console
@@ -16,7 +14,19 @@ from rich.style import Style
 from rich.theme import Theme, ThemeStackError
 
 
-def rich_to_pt_ansi(*args, console=None, **kwargs):
+def rich_to_pt_ansi(*args, console: Optional[Console] = None, **kwargs):
+    """Converts rich text to prompt_toolkit ANSI.
+
+    Parameters
+    ----------
+    console : Console, optional
+        Console instance, by default None
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     kwargs["end"] = kwargs.get("end", "")
     console = console or Console(markup=True)
     console = Console()
@@ -62,6 +72,7 @@ class WrappedStdout(io.TextIOBase):
         # if it not __init__ or write - return from sys.stdout
         if name not in ("__init__", "write"):
             return getattr(sys.stdout, name)
+        return getattr(self, name)
 
 
 class PromptSessionHooked(PromptSession):
@@ -98,7 +109,7 @@ class KrpgConsole:
         self.console = ConsoleHooked()
 
         self.session: PromptSession = PromptSession()
-        self.bar = ""
+        self.bottom_bar = ""
 
         self.handler = RichHandler(
             level=DEFAULT_LEVEL,
@@ -128,17 +139,26 @@ class KrpgConsole:
         }
 
     def reset_theme(self):
+        """Resets the theme to default."""
         try:
             self.console.pop_theme()
         except ThemeStackError:
             pass
 
     def set_theme(self, colors: list[str]):
+        """Sets the theme.
+
+        Parameters
+        ----------
+        colors : list[str]
+            A list of color names.
+        """
+
         # Reset the theme to default
         self.reset_theme()
 
         # Get the default theme
-        default = self.console._theme_stack._entries[0]
+        default = self.console._theme_stack._entries[0]  # noqa
 
         # Map color names to corresponding ANSI codes
         color_names = [
@@ -168,27 +188,26 @@ class KrpgConsole:
 
         for st in new_theme.values():
             if st.color and st.color.type == 1:
-
                 # Перебираем все стили, по типу inspect.*, iso8601.*, repr.*, str.*
                 # Если есть цвет и он является стандартным - подменяем на свой
                 # С фоном по аналогии
                 clr = new_colors[st.color.name]
-                st._color = Color.parse(clr)
+                st._color = Color.parse(clr)  # noqa
             if st.bgcolor is not None and st.bgcolor.type == 1:
                 bg_clr = new_colors[st.bgcolor.name]
-                st._bgcolor = Color.parse(bg_clr)
+                st._bgcolor = Color.parse(bg_clr)  # noqa
 
-        new_theme["reset"]._color = Color.parse(
+        new_theme["reset"]._color = Color.parse(  # noqa
             new_colors["white"]
         )  # TODO: Сделать отдельный цвет фона
-        new_theme["reset"]._bgcolor = Color.parse(new_colors["black"])
-        new_theme["none"]._color = Color.parse(new_colors["white"])
-        new_theme["none"]._bgcolor = Color.parse(new_colors["black"])
+        new_theme["reset"]._bgcolor = Color.parse(new_colors["black"])  # noqa
+        new_theme["none"]._color = Color.parse(new_colors["white"])  # noqa
+        new_theme["none"]._bgcolor = Color.parse(new_colors["black"])  # noqa
 
         # Apply the updated theme
         self.console.push_theme(Theme(new_theme))
-        self.console._forced_reset = (
-            f"\x1b[{new_theme['none']._make_ansi_codes(ColorSystem.TRUECOLOR)}m"
+        self.console._forced_reset = (  # noqa
+            f"\x1b[{new_theme['none']._make_ansi_codes(ColorSystem.TRUECOLOR)}m"  # noqa
         )
         self.console.clear()
 
@@ -211,7 +230,8 @@ class KrpgConsole:
         self.handler.level = level
 
     def print(self, *args, **kwargs) -> None:
-        return self.console.print(*args, **kwargs, highlight=False)
+        """Prints the given arguments."""
+        self.console.print(*args, **kwargs, highlight=False)
 
     def set_bar(self, text: str) -> None:
         """
@@ -220,7 +240,7 @@ class KrpgConsole:
         Parameters:
             text (str): The bar text.
         """
-        self.bar = rich_to_pt_ansi(text, console=self.console)
+        self.bottom_bar = rich_to_pt_ansi(text, console=self.console)
 
     def prompt(
         self,
@@ -259,7 +279,7 @@ class KrpgConsole:
             if not isinstance(text, int)
             else self.levels[text]
         )
-        kwargs: dict[str, Any] = {"bottom_toolbar": self.bar}
+        kwargs: dict[str, Any] = {"bottom_toolbar": self.bottom_bar}
         data = data or {}
         if data:
             kwargs["completer"] = WordCompleter(
@@ -279,7 +299,7 @@ class KrpgConsole:
                 if not user and allow_empty:
                     self.history.append("")
                     return ""
-                elif user:
+                if user:
                     try:
                         split = shlex.split(user)
                     except ValueError:
@@ -299,16 +319,50 @@ class KrpgConsole:
         self,
         prompt,
         checker: Callable[[str], bool],
-        data: dict = {},
+        data: Optional[dict] = None,
         allow_empty: bool = False,
         raw: bool = False,
-    ):
+    ) -> str:
+        """Create a prompt with a checker function.
+
+        Parameters
+        ----------
+        prompt : str | int
+            The prompt text to display to the user.
+        checker : Callable[[str], bool]
+            The checker function. Should return True if the input is valid, False otherwise.
+        data : dict, optional
+            A dictionary of possible completions for the input.
+        allow_empty : bool, optional
+            Specifies whether an empty input is allowed.
+        raw : bool, optional
+            Specifies whether to return the user's input as is, without any processing.
+
+        Returns
+        -------
+        str
+            The user's input as a string.
+        """
         while True:
             res = self.prompt(prompt, data, allow_empty, raw)
             if checker(res):
                 return res
 
-    def confirm(self, prompt, exit_cmd=None):
+    def confirm(self, prompt, exit_cmd=None) -> bool | None:
+        """Prompts the user for confirmation.
+
+        Parameters
+        ----------
+        prompt : str | int
+            The prompt text to display to the user.
+        exit_cmd : str, optional
+            Command to exit, by default None
+
+        Returns
+        -------
+        bool | None
+            True if the user confirmed, False if the user declined, None if the user exited.
+        """
         data = {"y": "yes", "n": "no"}
         if exit_cmd:
             data[exit_cmd] = "cancel"
@@ -316,9 +370,9 @@ class KrpgConsole:
             res = self.prompt(prompt, data)
             if res == "y":
                 return True
-            elif res == "n":
+            if res == "n":
                 return False
-            elif res == exit_cmd:
+            if res == exit_cmd:
                 return None
 
     def __repr__(self):
@@ -331,6 +385,24 @@ class KrpgConsole:
         title: Optional[str] = None,
         empty: str = "Ничего нет",
     ):
+        """Prints a list of variants.
+
+        Parameters
+        ----------
+        variants : list
+            A list of variants.
+        view : Optional[Callable[[str], str]], optional
+            Function to convert variant to string, by default None
+        title : Optional[str], optional
+            Title of the list, by default None
+        empty : str, optional
+            Message to display if the list is empty, by default "Ничего нет"
+
+        Returns
+        -------
+        _type_
+            _description_
+        """
         view = view or str
         t = ""
         if title:
@@ -353,6 +425,30 @@ class KrpgConsole:
         title: Optional[str] = None,
         empty: str = "Ничего нет",
     ) -> Any:
+        """Displays a menu and prompts the user for selection.
+
+        Parameters
+        ----------
+        prompt : int | str
+            The prompt text to display to the user.
+        variants : Sequence
+            A sequence of variants.
+        exit_cmd : str, optional
+            Exit cmd, by default None
+        view : Optional[Callable], optional
+            Func to process, by default None
+        display : bool, optional
+            Bool, by default True
+        title : Optional[str], optional
+            Title, by default None
+        empty : str, optional
+            If nothing there, by default "Ничего нет"
+
+        Returns
+        -------
+        Any
+            Selected variant
+        """
         if not isinstance(variants, list):
             variants = list(variants)
         view = view or str
@@ -368,5 +464,5 @@ class KrpgConsole:
             res = self.prompt(prompt, data)
             if res == exit_cmd:
                 return None
-            elif res.isnumeric() and 1 <= int(res) <= len(variants):
+            if res.isnumeric() and 1 <= int(res) <= len(variants):
                 return variants[int(res) - 1]

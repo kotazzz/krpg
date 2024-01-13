@@ -1,17 +1,27 @@
+"""
+Updater for krpg
+"""
 import glob
 import os
 import zlib
 
 import urllib3
 
-link = "https://raw.githubusercontent.com/kotazzz/krpg/master/"
-files = ["krpg/**/*.py", "krpg/**/*.krpg", "krpg/*.*", "updater.py"]
+LINK = "https://raw.githubusercontent.com/kotazzz/krpg/master/"
+FILES = ["krpg/**/*.py", "krpg/**/*.krpg", "krpg/*.*", "updater.py"]
 
 
-def local_hashes():
+def local_hashes() -> dict[str, int]:
+    """Get local hashes of files
+
+    Returns
+    -------
+    dict[str, int]
+        dict with hashes
+    """
     # find all files
     hashes = {}
-    for i in files:
+    for i in FILES:
         # get all files by mask
         for j in glob.glob(i, recursive=True):
             # get hash
@@ -23,16 +33,34 @@ def local_hashes():
     return hashes
 
 
-def get_hashes():
+def get_hashes() -> dict[str, int]:
+    """Get hashes from github
+
+    Returns
+    -------
+    dict[str, int]
+        dict with hashes
+
+    Raises
+    ------
+    ValueError
+        Can't get hashes
+    """
     http = urllib3.PoolManager()
-    r = http.request("GET", link + "hashes.json")
+    r = http.request("GET", LINK + "hashes.json")
     if r.status == 200:
         return r.data
-    else:
-        raise Exception("Can't get hashes")
+    raise ValueError("Can't get hashes")
 
 
 def update():
+    """Update krpg
+
+    Raises
+    ------
+    ValueError
+        Can't download file
+    """
     # get hashes from both sides
     local = local_hashes()
     remote = get_hashes()
@@ -55,11 +83,11 @@ def update():
     for i in queue:
         print(f"Downloading: {i}")
         # download
-        url = link + i
+        url = LINK + i
         http = urllib3.PoolManager()
         r = http.request("GET", url)
         if r.status != 200:
-            raise Exception(f"Can't download {url}: {r.status}, {r.reason}")
+            raise ValueError(f"Can't download {url}: {r.status}, {r.reason}")
         # create folders
         try:
             os.makedirs(os.path.dirname(i), exist_ok=True)
@@ -70,6 +98,7 @@ def update():
 
 
 def main():
+    """Main function"""
     update()
 
 

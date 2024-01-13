@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from krpg.actions import Action
 from krpg.attributes import Attributes
@@ -14,6 +14,7 @@ from krpg.world import Location
 
 if TYPE_CHECKING:
     from krpg.game import Game
+
 
 class InvalidScenario(Exception):
     pass
@@ -55,23 +56,50 @@ class Builder:
         self.build()
 
     def save(self):
+        """Save game data.
+
+        Returns
+        -------
+        list[Any]
+            A list of game data.
+        """
         # Save game data
         g = self.game
         return [g.scenario.hash, g.version, g.start_time, g.save_time]
 
     def load(self, data):
+        """Load game data.
+
+        Parameters
+        ----------
+        data : list[Any]
+            A list of game data.
+
+        Raises
+        ------
+        ValueError
+            Scenario hash or game version mismatch
+        """
         # Load game data
         g = self.game
         if data[0] != g.scenario.hash:
-            raise Exception(f"save:{data[0]} != game:{g.scenario.hash}")
+            raise ValueError(f"save:{data[0]} != game:{g.scenario.hash}")
         if data[1] != g.version:
-            raise Exception(f"save:{data[1]} != game:{g.version}")
+            raise ValueError(f"save:{data[1]} != game:{g.version}")
 
     def debug(self, msg: str):
+        """Log a debug message.
+
+        Parameters
+        ----------
+        msg : str
+            The message to log.
+        """
         # Log a debug message
         self.game.log.debug(f"[cyan]\\[{self.tag:^10}] {msg}", stacklevel=2)
 
     def build(self):
+        """Build all components of the game."""
         # Build all components of the game
         blocks = {
             (self.build_items, "items"),
@@ -91,25 +119,35 @@ class Builder:
         self.tag = ""
 
     def build_items(self, items: Section):
+        """Build the items in the game.
+
+        Parameters
+        ----------
+        items : Section
+            The items section of the scenario.
+
+        Raises
+        ------
+        InvalidScenario
+            If the item type is invalid.
+        """
         # Build the items in the game
         item_list = items.all("item")
         for item in item_list:
-            id, name, description = item.args
-            obj = Item(id, name, description)
-            self.debug(f"  Building [blue]{id}:{name}")
+            identifier, name, description = item.args
+            obj = Item(identifier, name, description)
+            self.debug(f"  Building [blue]{identifier}:{name}")
             if not isinstance(item, Command):
                 for cmd in item.children:
                     if cmd.name == "wear":
                         wear, attrs = cmd.args[0], list(int(i) for i in cmd.args[1:])
 
                         if wear not in ItemType.__members__:
-                            raise InvalidScenario(
-                            f"Invalid item type: {wear}"
-                        )
+                            raise InvalidScenario(f"Invalid item type: {wear}")
                         if len(attrs) != 7:
                             raise InvalidScenario(
-                            f"Invalid amount of SPECIAW attrs ({len(attrs)})"
-                        )
+                                f"Invalid amount of SPECIAW attrs ({len(attrs)})"
+                            )
 
                         obj.set_wear(
                             ItemType[wear],
@@ -133,7 +171,6 @@ class Builder:
                         sell, buy = map(int, cmd.args)
                         obj.set_cost(sell, buy)
                     elif cmd.name == "throwable":
-                        #! true, not True
                         obj.throwable = cmd.args[0] == "true"
             else:
                 # "Краткая" запись предмета без уточнения аттрибутов чаще используется для квестовых предметов
@@ -141,10 +178,17 @@ class Builder:
             self.game.bestiary.items.append(obj)
 
     def build_entities(self, entities: Section):
+        """Build the entities in the game.
+
+        Parameters
+        ----------
+        entities : Section
+            The entities section of the scenario.
+        """
         # Build the entities in the game
         for entity in entities.all_sections("entity"):
-            id, name, description = entity.args
-            self.debug(f"  Assembling [blue]{id}:{name}")
+            identifier, name, description = entity.args
+            self.debug(f"  Assembling [blue]{identifier}:{name}")
             speciaw = [int(i) for i in entity.first_command("speciaw").args]
             if money_data := entity.first_command("money"):
                 money = int(money_data.args[0])
@@ -160,14 +204,21 @@ class Builder:
                 speciaw[6],
                 free=0,
             )
-            meta = Meta(id, name, description, attr, money)
+            meta = Meta(identifier, name, description, attr, money)
             self.game.bestiary.entities.append(meta)
 
     def build_npcs(self, npcs: Section):
+        """Build the NPCs in the game.
+
+        Parameters
+        ----------
+        npcs : Section
+            The NPCs section of the scenario.
+        """
         # Build the NPCs in the game
         for npc in npcs.all_sections("npc"):
-            id, name, description = npc.args
-            self.debug(f"  Creating [blue]{id}:{name}")
+            identifier, name, description = npc.args
+            self.debug(f"  Creating [blue]{identifier}:{name}")
             init_state = npc.first_command("init").args[0]
             location = npc.first_command("location").args[0]
             actions: dict[str, list[Action]] = {}
@@ -183,15 +234,28 @@ class Builder:
                     # self.requirements: dict[str, str] = requirements  # {state "." action: python_eval}
                     requirements[f"{state_name}.{req.args[0]}"] = req.args[1]
             new_npc = Npc(
-                id, name, description, init_state, location, actions, requirements
+                identifier,
+                name,
+                description,
+                init_state,
+                location,
+                actions,
+                requirements,
             )
             self.game.npc_manager.npcs.append(new_npc)
 
     def build_quests(self, quests: Section):
+        """Build the quests in the game.
+
+        Parameters
+        ----------
+        quests : Section
+            The quests section of the scenario.
+        """
         # Build the quests in the game
         for quest in quests.all_sections("quest"):
-            id, name, description = quest.args
-            self.debug(f"  Building [blue]{id}:{name}")
+            identifier, name, description = quest.args
+            self.debug(f"  Building [blue]{identifier}:{name}")
             stages: dict[str | int, dict[str, Any]] = {}
             for stage in quest.all_sections("stage"):
                 sid_str, sname = stage.args
@@ -200,9 +264,18 @@ class Builder:
                 stages[sid]["name"] = sname
                 stages[sid]["goals"] = [i.args for i in stage.all("goal")]
                 stages[sid]["rewards"] = [i.args for i in stage.all("reward")]
-            self.game.quest_manager.quests.append(Quest(id, name, description, stages))
+            self.game.quest_manager.quests.append(
+                Quest(identifier, name, description, stages)
+            )
 
     def build_world(self, world: Section):
+        """Build the world map in the game.
+
+        Parameters
+        ----------
+        world : Section
+            The world section of the scenario.
+        """
         # Build the world map in the game
         locations = world.all_sections("location")
         start = world.first_command("start")
@@ -220,12 +293,24 @@ class Builder:
             self.game.world.road(a, b)
             self.debug(f"  Road {a} <-> {b}")
 
-        self.game.world._start = start.args[0]
+        self.game.world.set_start(start.args[0])
 
-    def build_location(self, locdata: Section):
+    def build_location(self, locdata: Section) -> Location:
+        """Build a location in the game.
+
+        Parameters
+        ----------
+        locdata : Section
+            The location section of the scenario.
+
+        Returns
+        -------
+        Location
+            The created location object.
+        """
         # Build a location in the game
-        id, name, description = locdata.args
-        location = Location(id, name, description)
+        identifier, name, description = locdata.args
+        location = Location(identifier, name, description)
 
         actions = [self.build_action(i) for i in locdata.all_sections("action")]
         location.actions = actions
@@ -237,18 +322,42 @@ class Builder:
             triggers = self.build_triggers(locdata.first_section("triggers"))
             location.triggers.extend(triggers)
 
-        self.debug(f"    Built [blue]{id}:{name}")
+        self.debug(f"    Built [blue]{identifier}:{name}")
         return location
 
     def build_item(self, item: Section | Command) -> tuple[str, int]:
-        # Build an item in the game
-        id: str = item.args[0]
-        amo: int = int(item.args[1])
-        self.debug(f"    Item [blue]{id}[/blue] x{amo}")
-        self.game.bestiary.get_item(id)  # Check if item exists
-        return (id, amo)
+        """Build an item in the game.
 
-    def build_action(self, command: Section):
+        Parameters
+        ----------
+        item : Section | Command
+            The item section of the scenario.
+
+        Returns
+        -------
+        tuple[str, int]
+            The created item id and amount.
+        """
+        # Build an item in the game
+        identifier: str = item.args[0]
+        amo: int = int(item.args[1])
+        self.debug(f"    Item [blue]{identifier}[/blue] x{amo}")
+        self.game.bestiary.get_item(identifier)  # Check if item exists
+        return (identifier, amo)
+
+    def build_action(self, command: Section) -> Action:
+        """Build an action in the game.
+
+        Parameters
+        ----------
+        command : Section
+            The action section of the scenario.
+
+        Returns
+        -------
+        Action
+            The created action object.
+        """
         # Build an action in the game
         name, description = command.args
         block = self.game.executer.create_block(command)
@@ -256,6 +365,18 @@ class Builder:
         return Action(name, description, "", block.run)
 
     def build_triggers(self, triggers: Section) -> list[tuple[str, list[str], Block]]:
+        """Build triggers for a location in the game.
+
+        Parameters
+        ----------
+        triggers : Section
+            The triggers section of the scenario.
+
+        Returns
+        -------
+        list[tuple[str, list[str], Block]]
+            A list of created triggers.
+        """
         # Build triggers for a location in the game
         res: list[tuple[str, list[str], Block]] = []
         for i in triggers.all_sections():

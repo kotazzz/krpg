@@ -20,7 +20,7 @@ class Presenter:
     def __init__(self, game: Game):
         self.game = game
 
-    def bar(self, value, maximum, color="green", width=15):
+    def create_bar(self, value, maximum, color="green", width=15):
         """
         Generates a progress bar string based on the given value and maximum.
 
@@ -82,12 +82,12 @@ class Presenter:
 
         if minimal:
             name = f"[bold white]{e.name}[/][white]:"
-            hp = f"{self.bar(e.hp, e.max_hp)} [cyan]HP={e.hp:.2f}/{e.max_hp:.2f}"
+            hp = f"{self.create_bar(e.hp, e.max_hp)} [cyan]HP={e.hp:.2f}/{e.max_hp:.2f}"
             attack = f"[red]A={e.attack:.2f} [blue]D={e.defense:.2f}[/]"
             console.print(f"{name} {attack} {hp}")
         else:
             stats = (
-                f"[cyan]HP={e.hp:.2f}/{e.max_hp:.2f} {self.bar(e.hp, e.max_hp, 'green')}\n"
+                f"[cyan]HP={e.hp:.2f}/{e.max_hp:.2f} {self.create_bar(e.hp, e.max_hp, 'green')}\n"
                 f"[red]A={e.attack:.2f} [blue]D={e.defense:.2f}\n" + self.get_stats(e)
             )
             console.print(f"[bold white]{e.name}[/]\n{stats}")
@@ -100,15 +100,15 @@ class Presenter:
             entities (list[Entity]): The list of entities to present.
         """
         console = self.game.console
-        nl = max([len(e.name) for e in entities])
-        al = max([len(f"{e.attack:.2f}") for e in entities])
-        dl = max([len(f"{e.defense:.2f}") for e in entities])
-        hl = max([len(f"{e.hp:.2f}") for e in entities])
-        ml = max([len(f"{e.max_hp:.2f}") for e in entities])
+        nl = max(len(e.name) for e in entities)
+        al = max(len(f"{e.attack:.2f}") for e in entities)
+        dl = max(len(f"{e.defense:.2f}") for e in entities)
+        hl = max(len(f"{e.hp:.2f}") for e in entities)
+        ml = max(len(f"{e.max_hp:.2f}") for e in entities)
 
         for e in entities:
             name = f"[bold white]{e.name:<{nl}}[white]:"
-            hp = f"{self.bar(e.hp, e.max_hp)} [cyan]HP={e.hp:<{hl}.2f}/{e.max_hp:<{ml}.2f}"
+            hp = f"{self.create_bar(e.hp, e.max_hp)} [cyan]HP={e.hp:<{hl}.2f}/{e.max_hp:<{ml}.2f}"
             attack = f"[red]A={e.attack:<{al}.2f} [blue]D={e.defense:<{dl}.2f}[/]"
             stats = self.get_stats(e)
             console.print(f"{stats} {name} {attack} {hp}")
@@ -131,15 +131,14 @@ class Presenter:
 
         if slot.empty:
             return "[yellow]-[/] "
-        else:
-            item = game.bestiary.get_item(slot.id)
-            text = ""
-            if show_amount:
-                text += f"[white]{slot.amount}x"
-            text += f"[green]{item.name}[/] "
-            if additional:
-                text += additional(item)
-            return text
+        item = game.bestiary.get_item(slot.id)
+        text = ""
+        if show_amount:
+            text += f"[white]{slot.amount}x"
+        text += f"[green]{item.name}[/] "
+        if additional:
+            text += additional(item)
+        return text
 
     def presence_item(self, item: Item):
         """
@@ -197,7 +196,6 @@ class Presenter:
         console = self.game.console
         inventory = self.game.player.inventory
         console.print("[bold green]Инвентарь[/]")
-        last = None
         grouped_slots = groupby(inventory.slots, lambda i: i.type)
         counter = 1
         for slot_type, slots in grouped_slots:
