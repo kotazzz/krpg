@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any, Callable
+
 from krpg.actions import Action
 from krpg.attributes import Attributes
 from krpg.bestiary import Meta

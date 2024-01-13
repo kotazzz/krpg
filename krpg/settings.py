@@ -1,9 +1,11 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any, Optional
+
+from rich.table import Table
 
 from krpg.actions import action
 from krpg.data.themes import THEMES
-from rich.table import Table
 
 if TYPE_CHECKING:
     from krpg.game import Game

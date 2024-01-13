@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from krpg.actions import Action, HasExtract
-
 from typing import TYPE_CHECKING, Any, Optional
 
+from krpg.actions import Action, HasExtract
 from krpg.events import Events
 from krpg.executer import Block, executer_command
 

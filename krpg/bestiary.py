@@ -1,9 +1,12 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 from krpg.entity import Entity
 
 if TYPE_CHECKING:
     from krpg.game import Game
+
 from krpg.attributes import Attributes
 from krpg.inventory import Item
 

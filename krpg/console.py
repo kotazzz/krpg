@@ -1,20 +1,19 @@
 import io
+import logging
+import shlex
+import sys
+from typing import Any, Callable, Optional, Sequence
+
+from prompt_toolkit import ANSI
+from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.data_structures import Size
 from prompt_toolkit.output.windows10 import Windows10_Output
-import sys
-from rich.color import Color
-from typing import Any, Callable, Optional, Sequence
-from prompt_toolkit.completion import WordCompleter
-from rich.console import Console
-from prompt_toolkit import ANSI
-import logging
-from rich.logging import RichHandler
-import shlex
 from prompt_toolkit.shortcuts import PromptSession
-from rich.color import ColorSystem
-from rich.theme import Theme
-from rich.theme import ThemeStackError
+from rich.color import Color, ColorSystem
+from rich.console import Console
+from rich.logging import RichHandler
 from rich.style import Style
+from rich.theme import Theme, ThemeStackError
 
 
 def rich_to_pt_ansi(*args, console=None, **kwargs):

@@ -6,8 +6,8 @@ if TYPE_CHECKING:
     from krpg.game import Game
 
 from krpg.actions import action
-from krpg.executer import executer_command
 from krpg.events import Events
+from krpg.executer import executer_command
 
 
 class Clock:

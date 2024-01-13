@@ -1,13 +1,14 @@
 from __future__ import annotations
-from krpg.actions import action
-from krpg.entity import Entity
 
 from typing import TYPE_CHECKING
+
 from rich.tree import Tree
+
+from krpg.actions import action
+from krpg.entity import Entity
+from krpg.events import Events
 from krpg.executer import executer_command
 from krpg.inventory import Item, ItemType, Slot
-
-from krpg.events import Events
 from krpg.world import Location
 
 if TYPE_CHECKING:

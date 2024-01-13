@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, List
+
 from krpg.actions import action
 from krpg.events import Events
 from krpg.inventory import Item

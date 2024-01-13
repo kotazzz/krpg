@@ -1,10 +1,11 @@
 from __future__ import annotations
-import os
 
+import os
 import re
 import shlex
-from typing import Any, Optional, Self, Sequence
 import zlib
+from typing import Any, Optional, Self, Sequence
+
 import rich.repr
 
 ALLOW_KWARGS = True

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from krpg.actions import action
 from typing import TYPE_CHECKING, Any
+
 from rich.tree import Tree
 
-from krpg.executer import executer_command
+from krpg.actions import action
 from krpg.events import Events
+from krpg.executer import executer_command
 
 if TYPE_CHECKING:
     from krpg.game import Game
