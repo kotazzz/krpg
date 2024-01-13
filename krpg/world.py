@@ -10,6 +10,8 @@ from krpg.executer import Block, executer_command
 if TYPE_CHECKING:
     from krpg.game import Game
 
+class InvalidLocation(Exception):
+    pass
 
 class Location:
     def __init__(self, id: str, name: str, description: str):
@@ -82,11 +84,11 @@ class World(HasExtract):
 
     @property
     def current(self) -> Location:
-        assert self._current
+        if not self._current:
+            raise InvalidLocation("No current location")
         return self._current
 
     def save(self) -> dict[str, list[Any] | str]:
-        assert self.current
         return {loc.id: loc.save() for loc in self.locations} | {
             "CURRENT": self.current.id
         }
@@ -115,13 +117,15 @@ class World(HasExtract):
         self, item_id: str, count: int = 0, location: Optional[str | Location] = None
     ):
         loc = self.get(location) if location else self.current
-        assert loc
         self.game.events.dispatch(Events.WORLD_ITEM_DROP, item_id=item_id, count=count)
 
         loc.items.append((item_id, count))
 
-    def set(self, new_loc: Optional[str | Location] = None) -> bool:
-        assert (new_loc := new_loc or self._start)
+    def set_default(self):
+        loc = self.get(self._start)
+        self.set(loc)
+
+    def set(self, new_loc: str | Location) -> bool:
         new_loc = self.get(new_loc)
 
         if self._current:
@@ -145,7 +149,6 @@ class World(HasExtract):
         return True
 
     def extract(self) -> list[Action]:
-        assert self.current
         return self.current.actions
 
     def add(self, location: Location):
@@ -158,7 +161,7 @@ class World(HasExtract):
                     return loc
         elif isinstance(id, Location):
             return id
-        raise Exception(f"No location found for {id}")
+        raise InvalidLocation(f"No location found for {id}")
 
     def get_list(self, *ids: str | Location) -> list[Location]:
         res = []

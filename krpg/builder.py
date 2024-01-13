@@ -13,6 +13,9 @@ from krpg.world import Location
 if TYPE_CHECKING:
     from krpg.game import Game
 
+class InvalidScenario(Exception):
+    pass
+
 
 class Builder:
     """
@@ -97,10 +100,12 @@ class Builder:
                     if cmd.name == "wear":
                         wear, attrs = cmd.args[0], list(int(i) for i in cmd.args[1:])
 
-                        assert wear in ItemType.__members__, Exception(
+                        if wear not in ItemType.__members__:
+                            raise InvalidScenario(
                             f"Invalid item type: {wear}"
                         )
-                        assert len(attrs) == 7, Exception(
+                        if len(attrs) != 7:
+                            raise InvalidScenario(
                             f"Invalid amount of SPECIAW attrs ({len(attrs)})"
                         )
 

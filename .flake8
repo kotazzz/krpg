@@ -1,0 +1,10 @@
+[flake8]
+# Другие настройки flake8...
+# ignore line too long
+ignore = E501 PLC301
+# Добавь новые плагины
+plugins =
+    flake8_black,
+    flake8_bandit,
+    flake8_isort,
+    flake8_pylint

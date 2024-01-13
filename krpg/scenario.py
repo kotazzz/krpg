@@ -11,6 +11,8 @@ ALLOW_KWARGS = True
 MULOPEN = "<|"
 MULCLOSE = "|>"
 
+class UnexpectedEnd(Exception):
+    pass
 
 class Section:
     """
@@ -268,7 +270,6 @@ class Multiline(Command):
         yield self.name
         yield self.args
 
-
 class Scenario(Section):
     """
     Represents a scenario in the game.
@@ -321,7 +322,8 @@ class Scenario(Section):
         current = Section(section_name)
         for line in lines:
             if line == "}":
-                assert current.parent
+                if not current.parent:
+                    raise UnexpectedEnd("Unexpected }")
                 current = current.parent
             elif line.endswith("{"):
                 name, *args = shlex.split(line[:-1])
