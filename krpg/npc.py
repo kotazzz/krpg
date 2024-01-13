@@ -1,11 +1,12 @@
 from __future__ import annotations
-from krpg.events import Events
-from krpg.inventory import Slot
-from krpg.actions import Action, action
-from typing import TYPE_CHECKING, Optional
 
+from typing import TYPE_CHECKING, Optional
 from zlib import crc32
+
+from krpg.actions import Action, action
+from krpg.events import Events
 from krpg.executer import Block, executer_command
+from krpg.inventory import Slot
 
 if TYPE_CHECKING:
     from krpg.game import Game

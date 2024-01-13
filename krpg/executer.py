@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Callable
 
-from krpg.scenario import Command, Section, Multiline
+from krpg.scenario import Command, Multiline, Section
 
 if TYPE_CHECKING:
     from krpg.game import Game

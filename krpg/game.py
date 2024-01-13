@@ -1,20 +1,21 @@
 from __future__ import annotations
+
 import glob
 import os
-
 import random
 import time
-from typing import Any, Callable, Literal
 import zlib
 from datetime import datetime
+from enum import Enum
 from hashlib import sha512
 from itertools import groupby
 from textwrap import wrap
+from typing import Any, Callable, Literal
 
 import msgpack  # type: ignore
+from rich._spinners import SPINNERS
 from rich.live import Live
 from rich.spinner import Spinner
-from rich._spinners import SPINNERS
 
 import krpg.game
 from krpg.actions import ActionManager, action
@@ -23,7 +24,8 @@ from krpg.bestiary import Bestiary
 from krpg.builder import Builder
 from krpg.clock import Clock
 from krpg.console import KrpgConsole
-from krpg.data.info import BRAND_COLORS, TIMESHIFT, __version__, ABOUT_TEXT, FAQ
+from krpg.data.info import (ABOUT_TEXT, BRAND_COLORS, FAQ, TIMESHIFT,
+                            __version__)
 from krpg.data.splashes import SPLASHES
 from krpg.diary import DiaryManager
 from krpg.encoder import Encoder
@@ -38,7 +40,6 @@ from krpg.scenario import Scenario
 from krpg.settings import Settings
 from krpg.stats import StatsManager
 from krpg.world import World
-from enum import Enum
 
 
 class GameState(Enum):

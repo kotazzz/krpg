@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable, cast
+
 from krpg.entity import Entity
 from krpg.events import Events
-
 from krpg.executer import executer_command
 
 if TYPE_CHECKING:

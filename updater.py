@@ -1,7 +1,8 @@
-import urllib3
+import glob
 import os
 import zlib
-import glob
+
+import urllib3
 
 link = "https://raw.githubusercontent.com/kotazzz/krpg/master/"
 files = ["krpg/**/*.py", "krpg/**/*.krpg", "krpg/*.*", "updater.py"]

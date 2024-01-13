@@ -1,6 +1,6 @@
 from __future__ import annotations
-from math import e
 
+from math import e
 from typing import TYPE_CHECKING
 
 from krpg.actions import action

@@ -1,10 +1,10 @@
 from __future__ import annotations
-from itertools import groupby
-from krpg.attributes import Attributes
-from krpg.entity import Entity
 
+from itertools import groupby
 from typing import TYPE_CHECKING, Callable, Optional
 
+from krpg.attributes import Attributes
+from krpg.entity import Entity
 from krpg.inventory import Item, ItemType, Slot
 
 if TYPE_CHECKING:
