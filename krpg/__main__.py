@@ -1,3 +1,5 @@
+"""Module of game"""
+
 import argparse
 
 from krpg.data.info import __version__

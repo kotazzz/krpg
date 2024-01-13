@@ -1,12 +1,18 @@
+"""
+Represents items, slots and inventories in a role-playing game.
+"""
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import Optional
 
 from krpg.attributes import Attributes
 
 
 class ItemType(IntEnum):
+    """
+    Represents the type of an item in a role-playing game.
+    """
+
     ITEM = 0
     # шлем нагрудник поножи ботинки перчатки щит оружие кольца амулет
     HELMET = 1
@@ -40,7 +46,11 @@ ITEM_DESCRIPTIONS = {
 
 
 class Item:
-    def __init__(self, id: str, name: str, description: str):
+    """
+    Represents an item.
+    """
+
+    def __init__(self, identifier: str, name: str, description: str):
         """
         Initialize an Item object.
 
@@ -58,7 +68,7 @@ class Item:
             cost (int): The cost of the item. Default is 0.
             throwable (bool): Indicates if the item is throwable. Default is True.
         """
-        self.id = id
+        self.id = identifier
         self.name = name
         self.description = description
         self.stack: int = 1
@@ -78,7 +88,7 @@ class Item:
         """
         self.stack = amount
 
-    def set_wear(self, type: ItemType, attrib: Attributes):
+    def set_wear(self, item_type: ItemType, attrib: Attributes):
         """
         Set the type and attributes of the item.
 
@@ -86,7 +96,7 @@ class Item:
             type (ItemType): The type of the item.
             attrib (Attributes): The attributes of the item.
         """
-        self.type = type
+        self.type = item_type
         self.attributes = attrib
 
     def set_use(self, action, amount):
@@ -135,18 +145,22 @@ class Item:
 
 
 class Slot:
-    def __init__(self, type: ItemType = ItemType.ITEM):
+    """
+    Represents a slot in an inventory.
+    """
+
+    def __init__(self, item_type: ItemType = ItemType.ITEM):
         """
         Initializes a Slot object.
 
         Args:
             type (ItemType, optional): The type of the slot. Defaults to ItemType.ITEM.
         """
-        self.type = type
+        self.type = item_type
         self.id: str = ""
         self.amount: int = 0
 
-    def set(self, id: str, amount: int = 1):
+    def set(self, identifier: str, amount: int = 1):
         """
         Sets the id and amount of the slot.
 
@@ -157,7 +171,7 @@ class Slot:
         Returns:
             Slot: The updated Slot object.
         """
-        self.id = id
+        self.id = identifier
         self.amount = amount
         return self
 
@@ -231,6 +245,10 @@ class Slot:
 
 
 class Inventory:
+    """
+    Represents an inventory in a role-playing game.
+    """
+
     def __init__(self, is_carrier: bool = True, size: int = 10):
         """
         Initialize an Inventory object.
@@ -275,7 +293,8 @@ class Inventory:
         Args:
             data (list): The data to load.
         """
-        [self.slots[i].load(d) for i, d in enumerate(data)]
+        for i, d in enumerate(data):
+            self.slots[i].load(d)
 
     def __repr__(self):
         """

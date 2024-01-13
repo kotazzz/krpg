@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from math import e
 from typing import TYPE_CHECKING
 
 from krpg.actions import action
@@ -34,21 +33,33 @@ class DiaryManager:
         self.game.add_actions(self)
 
     def save(self):
-        pass
+        """_summary_"""
 
     def load(self, data: dict):
-        pass
+        """_summary_
+
+        Parameters
+        ----------
+        data : dict
+            _description_
+        """
 
     @action("diary", "Управление дневником", "Информация")
     @staticmethod
     def action_diary(game: Game):
+        """_summary_
+
+        Parameters
+        ----------
+        game : Game
+            _description_
+        """
         # v - view record
         # e - edit record
         # a - add record
         # d - delete record
         # l - list records
         # e - exit
-        pass
 
     def __repr__(self) -> str:
-        return f"<Diary>"
+        return "<Diary>"

@@ -39,7 +39,7 @@ class Encoder:
         ),
     }
 
-    def encode(self, data: bytes, type: str, base: Optional[int] = None) -> str:
+    def encode(self, data: bytes, encode_type: str, base: Optional[int] = None) -> str:
         """
         Encode data using the specified encoding scheme.
 
@@ -51,7 +51,7 @@ class Encoder:
         Returns:
         str: The encoded data.
         """
-        abc = self.abc[type]
+        abc = self.abc[encode_type]
         base = base if base else len(abc)
         out_data = []
         in_data = int.from_bytes(b"\x01" + data, "big")
@@ -62,7 +62,7 @@ class Encoder:
             out_data.append(abc[d])
         return "".join(out_data)
 
-    def decode(self, data: str, type: str, base: Optional[int] = None) -> bytes:
+    def decode(self, data: str, encode_type: str, base: Optional[int] = None) -> bytes:
         """
         Decode data using the specified encoding scheme.
 
@@ -74,7 +74,7 @@ class Encoder:
         Returns:
         bytes: The decoded data.
         """
-        abc = self.abc[type]
+        abc = self.abc[encode_type]
         base = base if base else len(abc)
         out_data = 0
         for i, ch in enumerate(data):

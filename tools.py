@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""
+Tools for development. Run with `python tools.py --help`.
+"""
 import argparse
 import ast
 import json
@@ -8,7 +11,18 @@ import toml
 import updater
 
 
-def python_set(filename, variable, new_value):
+def python_set(filename: str, variable: str, new_value: str):
+    """Set variable value in python file
+
+    Parameters
+    ----------
+    filename : str
+        Path to python file
+    variable : str
+        Variable name
+    new_value : str
+        New value for variable
+    """
     with open(filename, "r", encoding="utf-8") as file:
         tree = ast.parse(file.read())
     for node in ast.walk(tree):
@@ -23,7 +37,21 @@ def python_set(filename, variable, new_value):
         file.write(ast.unparse(tree))
 
 
-def python_get(filename, variable):
+def python_get(filename: str, variable: str):
+    """Get variable value from python file
+
+    Parameters
+    ----------
+    filename : str
+        Path to python file
+    variable : str
+        Variable name
+
+    Returns
+    -------
+    Any
+        Variable value
+    """
     with open(filename, "r", encoding="utf-8") as file:
         tree = ast.parse(file.read())
     for node in ast.walk(tree):
@@ -33,10 +61,19 @@ def python_get(filename, variable):
             and isinstance(node.targets[0], ast.Name)
             and node.targets[0].id == variable
         ):
-            return node.value.s
+            return node.value  # FIXME: What?
+    raise NameError(f"Variable {variable} not found")
 
 
-def poetry_set(value):
+def poetry_set(value: str):
+    """Set version in pyproject.toml
+
+    Parameters
+    ----------
+    value : str
+        New version
+    """
+
     filename = "pyproject.toml"
     with open(filename, "r", encoding="utf-8") as file:
         data = toml.load(file)
@@ -46,30 +83,52 @@ def poetry_set(value):
         toml.dump(data, file)
 
 
-def poetry_get():
-    file = "pyproject.toml"
-    with open(file, "r", encoding="utf-8") as file:
+def poetry_get() -> str:
+    """Get version from pyproject.toml
+
+    Returns
+    -------
+    str
+        Version
+    """
+    filename = "pyproject.toml"
+    with open(filename, "r", encoding="utf-8") as file:
         data = toml.load(file)
         # [tool.poetry] - version = value
         return data["tool"]["poetry"]["version"]
 
 
-def update_version(args):
+def update_version(update_args: argparse.Namespace):
+    """Update version
+
+    Parameters
+    ----------
+    args : argparse.Namespace
+        Arguments
+    """
     file = "krpg/data/info.py"
     var = "__version__"
-    if args.version:
-        python_set(file, var, args.version)
-        poetry_set(args.version)
-    if args.show:
+    if update_args.version:
+        python_set(file, var, update_args.version)
+        poetry_set(update_args.version)
+    if update_args.show:
         print("Python:", python_get(file, var))
         print("Poetry:", poetry_get())
 
 
-def build_hashes(args):
-    filename = args.file
+def build_hashes(build_args: argparse.Namespace):
+    """Build hashes file
+
+    Parameters
+    ----------
+    args : argparse.Namespace
+        Arguments
+    """
+    filename = build_args.file
     hashes = updater.local_hashes()
-    if args.output:
-        print(*[f"{i}: {hashes[i]}" for i in hashes], sep="\n")
+    if build_args.output:
+        for i, j in hashes.items():  # noqa
+            print(f"{i}: {j}")
     else:
         print(f"Writing to {filename}")
         with open(filename, "w", encoding="utf-8") as f:

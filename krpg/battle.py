@@ -1,3 +1,6 @@
+"""
+Battle system for game.
+"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable, cast
@@ -13,10 +16,10 @@ if TYPE_CHECKING:
 class BattleManager:
     def __init__(self, game: Game):
         self.game = game
-        self.game.executer.add_extension(self)
+        game.executer.add_extension(self)
 
     def __repr__(self) -> str:
-        return f"<BattleManager>"
+        return "<BattleManager>"
 
     def predict(self, player: Entity, enemy: Entity) -> int:
         """
@@ -29,29 +32,6 @@ class BattleManager:
         Returns:
             int: The predicted action for the player. 0 represents attack, 1 represents defend.
         """
-        # Rule expressions:
-        # player, enemy - Entity
-        # actions: 0 - attack, 1 - defend
-        # Rule format: ([...expressions (str)], action, weight)
-        # [v] TODO: Lambda functions
-        # rules = [
-        #     # If enemy have 50%+ hp, then attack
-        #     (["enemy.hp / enemy.max_hp >= 0.5"], 0, 1),
-        #     # If enemy have 50%- hp, then defend
-        #     (["enemy.hp / enemy.max_hp < 0.5"], 1, 1),
-        #     # If player have 50%+ hp, then attack
-        #     (["player.hp / player.max_hp >= 0.5"], 0, 0.5),
-        #     # If player have 50%- hp, then attack
-        #     (["player.hp / player.max_hp < 0.5"], 0, 1),
-        # ]
-        # results: list[tuple[int, int]] = []
-        # env = {
-        #     "player": player,
-        #     "enemy": enemy,
-        # }
-        # for rule in rules:
-        #     if all(eval(expr, env) for expr in rule[0]):
-        #         results.append((rule[1], rule[2]))
 
         # [ ] TODO: int to IntEnum
         rules: list[tuple[Callable[[Entity, Entity], bool], int, float]] = [
@@ -72,7 +52,7 @@ class BattleManager:
 
         if not results:
             raise ValueError("No rules matched")
-        
+
         chaos = 0.2  # random action chance and distance from best action
 
         # Select best action
@@ -88,30 +68,47 @@ class BattleManager:
     @executer_command("fight_list")
     @staticmethod
     def command_fight_list(game: Game, *monster_ids: str):
+        """Fight with random monster from list.
+
+        Parameters
+        ----------
+        game : Game
+            Game instance.
+        """
         monster = game.random.choice(monster_ids)
         game.battle_manager.fight(monster)
 
     @executer_command("fight")
     @staticmethod
     def command_fight(game: Game, monster_id: str):
+        """Fight with monster.
+
+        Parameters
+        ----------
+        game : Game
+            Game instance.
+        monster_id : str
+            Monster id.
+        """
         game.battle_manager.fight(monster_id)
 
     def fight(self, monster_id: str):
-        """
-        Perform a battle between the player and a monster.
+        """Fight with monster.
 
-        Args:
-            monster_id (str): The ID of the monster to fight.
-
-        Returns:
-            None
+        Parameters
+        ----------
+        monster_id : str
+            Monster id.
         """
         monster = self.game.bestiary.get_entity(monster_id)
         player = self.game.player
         console = self.game.console
         presenter = self.game.presenter
         console.print(f"Вы наткнулись на {monster.name}")
-        spread = lambda s=5: self.game.random.randint(-s, s) / 100 + 1
+
+        def spread(s=5):
+            return self.game.random.randint(-s, s) / 100 + 1
+
         while True:
             presenter.presenses([player, monster])
             select: int = console.menu(
@@ -152,8 +149,7 @@ class BattleManager:
                 if self.game.random.random() < chance:
                     console.print("[bold green]Вы убежали")
                     break
-                else:
-                    console.print("[bold yellow]Вы не смогли убежать")
+                console.print("[bold yellow]Вы не смогли убежать")
             if player.hp <= 0:
                 console.print("[bold red]Вы умерли!")
                 break

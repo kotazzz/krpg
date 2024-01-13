@@ -4,12 +4,9 @@ from typing import TYPE_CHECKING, List
 
 from krpg.actions import action
 from krpg.events import Events
-from krpg.inventory import Item
 
 if TYPE_CHECKING:
     from krpg.game import Game
-    from krpg.quests import QuestState
-    from krpg.world import Location
 
 
 class Counter:
@@ -19,9 +16,17 @@ class Counter:
         self.count: int = 0
 
     def add(self, amount: int = 1):
+        """Add to the counter.
+
+        Parameters
+        ----------
+        amount : int, optional
+            amount, by default 1
+        """
         self.count += amount
 
-    def listener(self, *args, **kwargs):
+    def listener(self, *_, **__):
+        """Listener for the event."""
         self.add()
 
 
@@ -94,8 +99,8 @@ class StatsManager:
         for i in self.counters:
             i.count = data.pop(0)
 
-    @staticmethod
     @action("stats", "Посмотреть статистику", "Информация")
+    @staticmethod
     def stats_action(game: Game):
         """
         Displays the statistics.

@@ -4,16 +4,16 @@ import os
 import re
 import shlex
 import zlib
-from typing import Any, Optional, Self, Sequence
-
-import rich.repr
+from typing import Any, Optional, Self
 
 ALLOW_KWARGS = True
 MULOPEN = "<|"
 MULCLOSE = "|>"
 
+
 class UnexpectedEnd(Exception):
     pass
+
 
 class Section:
     """
@@ -39,6 +39,7 @@ class Section:
 
     @property
     def as_command(self):
+        """Return section as command"""
         return Command(self.name, self.args)
 
     def first(self, *a, **k) -> None:
@@ -53,7 +54,7 @@ class Section:
         Returns:
             Section | Command | None: The first child section or command with the specified name, or None if not found.
         """
-        raise Exception("Use first_command or first_section instead")
+        raise DeprecationWarning("Use first_command or first_section instead")
         # TODO: remove this method
         # for child in self.children:
         #     if child.name == name:
@@ -74,12 +75,12 @@ class Section:
             Command: The first child command with the specified name.
 
         Raises:
-            Exception: If the command with the specified name is not found.
+            ValueError: If the command with the specified name is not found.
         """
         for child in self.children:
             if child.name == name and isinstance(child, Command):
                 return child
-        raise Exception(f"Command {name} not found")
+        raise ValueError(f"Command {name} not found")
 
     def has_command(self, name: str) -> bool:
         """
@@ -97,19 +98,27 @@ class Section:
         return False
 
     def first_section(self, name: str) -> Section:
-        """
-        Returns the first child section with the specified name.
+        """Returns the first child section with the specified name.
 
-        Args:
-            name (str): The name of the child section.
+        Parameters
+        ----------
+        name : str
+            The name of the child section.
 
-        Returns:
-            Section | None: The first child section with the specified name, or None if not found.
+        Returns
+        -------
+        Section
+            The first child section with the specified name.
+
+        Raises
+        ------
+        ValueError
+            If the section with the specified name is not found.
         """
         for child in self.children:
             if child.name == name and isinstance(child, Section):
                 return child
-        raise Exception(f"Section {name} not found")
+        raise ValueError(f"Section {name} not found")
 
     def has_section(self, name: str) -> bool:
         """
@@ -262,7 +271,7 @@ class Command:
 class Multiline(Command):
     @staticmethod
     def from_raw(string) -> Multiline:
-        return Multiline(string[len(MULOPEN) : -len(MULCLOSE)])
+        return Multiline(string[len(MULOPEN) : -len(MULCLOSE)])  # noqa
 
     def __repr__(self) -> str:
         return f"Multiline('{self.name[:10]+'...'}', {self.args})"
@@ -270,6 +279,7 @@ class Multiline(Command):
     def __rich_repr__(self):
         yield self.name
         yield self.args
+
 
 class Scenario(Section):
     """

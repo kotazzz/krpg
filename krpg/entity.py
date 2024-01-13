@@ -21,9 +21,9 @@ class Entity:
         self.game = game
 
         self.name = name
-        self.attributes = Attributes(1, 1, 1, 1, 1, 1, 1, 10, holder=self)
+        self.attributes = Attributes(1, 1, 1, 1, 1, 1, 1, 10, self)
         self.inventory = Inventory()
-        self.hp = self.max_hp
+        self.hp: float = self.max_hp
 
         self.money = 0
 
@@ -42,15 +42,29 @@ class Entity:
             *self.attributes.save(),
         ]
 
-    def load(self, data):
+    def load(self, data: list):
         """
         Load the entity's data.
 
         Args:
             data (list): A list containing the entity's name, hp, money, inventory data, and attribute data.
         """
-        self.name, self.hp, self.money, inv, *attrib = data
-        self.attributes.update(*attrib, set=True)
+        self.name = data[0]
+        self.hp = float(data[1])
+        self.money = data[2]
+        inv: list = data[3]
+        attrib: list = data[4:]
+        self.attributes.update(
+            strength=attrib[0],
+            wisdom=attrib[1],
+            endurance=attrib[2],
+            agility=attrib[3],
+            intelligence=attrib[4],
+            charisma=attrib[5],
+            perception=attrib[6],
+            free=attrib[7],
+            replace=True,
+        )
         self.inventory.load(inv)
 
     def __repr__(self):
@@ -73,7 +87,7 @@ class Entity:
             int: The calculated value of the attribute.
         """
         result: int = getattr(self.attributes, attribute)
-        for i, slot in self.inventory.get(ItemType.ITEM, True):
+        for _, slot in self.inventory.get(ItemType.ITEM, True):
             if not slot.empty:
                 item = self.game.bestiary.get_item(slot.id)
                 result += getattr(item.attributes, attribute)

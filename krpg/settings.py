@@ -14,23 +14,23 @@ if TYPE_CHECKING:
 class Param:
     def __init__(
         self,
-        id: str,
+        identifier: str,
         name: str,
         description: str,
         variants: Optional[dict[str, str]] = None,
     ):
-        self.id: str = id
+        self.id: str = identifier
         self.name: str = name
         self.description: str = description
         self.variants: dict[str, str] = variants or {}
         self.value: Optional[str] = None
 
-    def on_change(self, param: Param, game: Game, new_value: str):
+    def on_change(self, cb_param: Param, game: Game, new_value: str):
         """
         Changes the parameter value.
 
         Args:
-            param (Param): The parameter instance.
+            cb_param (Param): The parameter instance.
             game (Game): The game instance.
             new_value: The new value for the parameter.
         """
@@ -44,19 +44,22 @@ class Param:
 
 
 class ComplexParam:
-    def __init__(self, id: str, name: str, description: str):
-        self.id = id
+    def __init__(self, identifier: str, name: str, description: str):
+        self.id = identifier
         self.name = name
         self.description = description
         self.value: Any = None
 
-    def callback(self, param: ComplexParam, game: Game):
+    def callback(self, cb_param: ComplexParam, game: Game):
+        """Callback func"""
         raise NotImplementedError
 
-    def save(self, game: Game):
+    def save(self, _: Game):
+        """Save func"""
         return self.value
 
-    def load(self, data: Any, game: Game):
+    def load(self, data: Any, _: Game):
+        """Load func"""
         self.value = data
 
 
@@ -70,13 +73,15 @@ class ThemeManager(ComplexParam):  # TODO: replace ComplexParam with Param?
         if self.value:
             self.change_theme(game, self.value)
 
-    def callback(self, param: ComplexParam, game: Game):
-        """
-        Changes the theme setting.
+    def callback(self, cb_param: ComplexParam, game: Game):
+        """Callback func
 
-        Args:
-            param (Param): The parameter instance.
-            game (Game): The game instance.
+        Parameters
+        ----------
+        cb_param : ComplexParam
+            The parameter instance.
+        game : Game
+            The game instance.
         """
 
         def parse(theme):
@@ -88,18 +93,20 @@ class ThemeManager(ComplexParam):  # TODO: replace ComplexParam with Param?
         page = 0
 
         data = [parse(i) for i in THEMES]
-        pages = [data[i : i + page_size] for i in range(0, len(data), page_size)]
+        pages = [
+            data[i : i + page_size] for i in range(0, len(data), page_size)  # noqa
+        ]  # noqa
 
         while True:
             table = Table(title="Выберите тему")
             for i in range(collumns):
-                table.add_column(f"Тема")
-                table.add_column(f"Название")
+                table.add_column("Тема")
+                table.add_column("Название")
             cells = []
             for theme in pages[page]:
                 cells.extend([theme[0], theme[1]])
             for i in range(0, len(cells), collumns * 2):
-                table.add_row(*cells[i : i + collumns * 2])
+                table.add_row(*cells[i : i + collumns * 2])  # noqa
 
             game.console.print(table)
             game.console.print("Страница " + str(page + 1) + " из " + str(len(pages)))
@@ -115,7 +122,7 @@ class ThemeManager(ComplexParam):  # TODO: replace ComplexParam with Param?
             )
             if command == "e":
                 return
-            elif command == "n":
+            if command == "n":
                 page += 1
                 if page >= len(pages):
                     page = 0
@@ -130,18 +137,44 @@ class ThemeManager(ComplexParam):  # TODO: replace ComplexParam with Param?
                 game.console.print("Тема успешно изменена")
 
     def change_theme(self, game: Game, name: str):
+        """Changes the theme
+
+        Parameters
+        ----------
+        game : Game
+            The game instance.
+        name : str
+            The theme name.
+        """
         colors = {i[-1]: [f"#{j}" for j in i[:-1]] for i in [i.split() for i in THEMES]}
         print(colors[name])
         game.console.set_theme(colors[name])
 
 
 def param(
-    id: str, name: str, description: str, variants: Optional[dict[str, str]] = None
+    identifier: str,
+    name: str,
+    description: str,
+    variants: Optional[dict[str, str]] = None,
 ):
+    """Decorator for creating a parameter.
+
+    Parameters
+    ----------
+    identifier : str
+        id of the parameter
+    name : str
+        name of the parameter
+    description : str
+        description of the parameter
+    variants : Optional[dict[str, str]], optional
+        variants of the parameter, by default None
+    """
+
     def decorator(f):
-        param = Param(id, name, description, variants)
-        param.on_change = f
-        return param
+        cb_param = Param(identifier, name, description, variants)
+        cb_param.on_change = f
+        return cb_param
 
     return decorator
 
@@ -192,11 +225,11 @@ class Settings:
         Args:
             data (dict): The settings data to load.
         """
-        for param in self.params:
-            if isinstance(param, ComplexParam):
-                param.load(data[param.id], self.game)
+        for cb_param in self.params:
+            if isinstance(cb_param, ComplexParam):
+                cb_param.load(data[cb_param.id], self.game)
             else:
-                param.value = data.pop(param.id, None)
+                cb_param.value = data.pop(cb_param.id, None)
 
     @param(
         "debug",
@@ -205,7 +238,7 @@ class Settings:
         {"enable": "Включить", "disable": "Выключить"},
     )
     @staticmethod
-    def change_debug(param: Param, game: Game, new_value):
+    def change_debug(cb_param: Param, game: Game, new_value):
         """
         Changes the debug setting.
 
@@ -214,7 +247,7 @@ class Settings:
             game (Game): The game instance.
             new_value: The new value for the debug setting.
         """
-        param.value = new_value == "enable"
+        cb_param.value = new_value == "enable"
         game.set_debug(new_value == "enable")
 
         # game.console.set_theme(colors)
@@ -229,26 +262,27 @@ class Settings:
             game (Game): The game instance.
         """
         variants = game.settings.params
-        view = (
-            lambda x: f"[green]{x.name}[/] [yellow]\\[{x.value if x.value is not None else 'По умолчанию'}][/] - {x.description}"
-            if isinstance(x, Param) | isinstance(x, ComplexParam)
-            else "-"
-        )
+
+        def view(x):
+            if isinstance(x, Param) | isinstance(x, ComplexParam):
+                return f"[green]{x.name}[/] [yellow]\\[{x.value if x.value is not None else 'По умолчанию'}][/] - {x.description}"
+            return "-"
+
         while True:
-            param: Param | ComplexParam = game.console.menu(
+            cb_param: Param | ComplexParam = game.console.menu(
                 2, variants, "e", view, title="Выберете параметр для изменения"
             )
 
-            if not param:
+            if not cb_param:
                 return
 
-            if isinstance(param, ComplexParam):
-                param.callback(param, game)
+            if isinstance(cb_param, ComplexParam):
+                cb_param.callback(cb_param, game)
 
             else:
-                if param.variants:
+                if cb_param.variants:
                     new_value = game.console.menu(
-                        3, list(param.variants.items()), "e", lambda x: x[1]
+                        3, list(cb_param.variants.items()), "e", lambda x: x[1]
                     )
                     if not new_value:
                         continue
@@ -257,7 +291,7 @@ class Settings:
                     new_value = game.console.prompt(3)
                     if new_value == "e":
                         continue
-                param(game, new_value)
+                cb_param(game, new_value)
 
     def __repr__(self) -> str:
         return f"<Settings params={len(self.params)}>"
