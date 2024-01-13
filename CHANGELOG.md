@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Заменен ast.Str на ast.Constant
 - Заменены assert и добавлены новые исключения
+- Большой рефакторинг и исправление множества ошибок
+- Фикс описания игры
 
 ## [1.4.0] - 2023-12-01
 

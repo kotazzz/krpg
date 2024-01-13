@@ -113,7 +113,7 @@ class World(HasExtract):
     def current(self) -> Location:
         """Return current location"""
         if not self._current:
-            raise InvalidLocation("No current location")
+            raise AttributeError("No current location")
         return self._current
 
     def save(self) -> dict[str, list[Any] | str]:
@@ -190,6 +190,7 @@ class World(HasExtract):
         if not self._start:
             raise InvalidLocation("No starting location")
         loc = self.get(self._start)
+        self._current = loc
         self.set(loc)
 
     def set_start(self, start: str):
