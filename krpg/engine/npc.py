@@ -10,7 +10,7 @@ from zlib import crc32
 from krpg.actions import Action, action
 from krpg.events import Events
 from krpg.executer import Block, executer_command
-from krpg.inventory import Slot
+from krpg.engine.inventory import Slot
 
 if TYPE_CHECKING:
     from krpg.game import Game
@@ -239,7 +239,7 @@ class NpcManager:
             nametag = "[grey]???"
         else:
             crc_hash = crc32(name.encode("utf-8"))
-            nametag = f"[#{crc_hash&0xffffff:06x}]{name}"
+            nametag = f"[#{crc_hash & 0xffffff:06x}]{name}"
         text = self.game.executer.process_text(text)
         self.game.console.print(f"{nametag}[white]: {text}")
 

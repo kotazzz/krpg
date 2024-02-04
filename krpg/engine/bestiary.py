@@ -7,13 +7,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from krpg.entity import Entity
+from krpg.engine.entity import Entity
 
 if TYPE_CHECKING:
     from krpg.game import Game
 
-from krpg.attributes import Attributes
-from krpg.inventory import Item
+from krpg.engine.attributes import Attributes
+from krpg.engine.inventory import Item
 
 
 @dataclass()

@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from krpg.actions import Action
-from krpg.attributes import Attributes
-from krpg.bestiary import Meta
+from krpg.engine.attributes import Attributes
+from krpg.engine.bestiary import Meta
 from krpg.executer import Block
-from krpg.inventory import Item, ItemType
-from krpg.npc import Npc
-from krpg.quests import Quest
+from krpg.engine.inventory import Item, ItemType
+from krpg.engine.npc import Npc
+from krpg.engine.quests import Quest
 from krpg.scenario import Command, Section
-from krpg.world import Location
+from krpg.engine.world import Location
 
 if TYPE_CHECKING:
     from krpg.game import Game

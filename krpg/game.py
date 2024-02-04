@@ -23,27 +23,27 @@ from rich.live import Live
 from rich.spinner import Spinner
 
 from krpg.actions import ActionManager, action
-from krpg.battle import BattleManager
-from krpg.bestiary import Bestiary
+from krpg.engine.battle import BattleManager
+from krpg.engine.bestiary import Bestiary
 from krpg.builder import Builder
-from krpg.clock import Clock
+from krpg.engine.clock import Clock
 from krpg.console import KrpgConsole
 from krpg.data.info import __version__  # noqa: BLK100
 from krpg.data.info import ABOUT_TEXT, BRAND_COLORS, FAQ, TIMESHIFT
 from krpg.data.splashes import SPLASHES
-from krpg.diary import DiaryManager
+from krpg.engine.diary import DiaryManager
 from krpg.encoder import Encoder
 from krpg.events import EventHandler, Events
 from krpg.executer import Executer
-from krpg.npc import NpcManager
-from krpg.player import Player
+from krpg.engine.npc import NpcManager
+from krpg.engine.player import Player
 from krpg.presenter import Presenter
-from krpg.quests import QuestManager
-from krpg.random import RandomManager
+from krpg.engine.quests import QuestManager
+from krpg.engine.random import RandomManager
 from krpg.scenario import Scenario
-from krpg.settings import Settings
-from krpg.stats import StatsManager
-from krpg.world import World
+from krpg.engine.settings import Settings
+from krpg.engine.stats import StatsManager
+from krpg.engine.world import World
 
 
 class GameState(Enum):

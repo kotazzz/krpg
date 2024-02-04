@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from enum import IntEnum
 
-from krpg.attributes import Attributes
+from krpg.engine.attributes import Attributes
 
 
 class ItemType(IntEnum):

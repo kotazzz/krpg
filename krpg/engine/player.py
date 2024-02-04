@@ -5,11 +5,11 @@ from typing import TYPE_CHECKING
 from rich.tree import Tree
 
 from krpg.actions import action
-from krpg.entity import Entity
+from krpg.engine.entity import Entity
 from krpg.events import Events
 from krpg.executer import executer_command
-from krpg.inventory import Item, ItemType, Slot
-from krpg.world import Location
+from krpg.engine.inventory import Item, ItemType, Slot
+from krpg.engine.world import Location
 
 if TYPE_CHECKING:
     from krpg.game import Game
