@@ -1,14 +1,8 @@
 from __future__ import annotations
 
 import os
-import re
-import shlex
 import zlib
 from typing import Any, Optional, Self
-
-ALLOW_KWARGS = True
-MULOPEN = "<|"
-MULCLOSE = "|>"
 
 
 class UnexpectedEnd(Exception):
@@ -217,6 +211,17 @@ class Section:
         yield self.args
         yield self.children
 
+    def __eq__(self, __value: object) -> bool:
+        if isinstance(__value, Section):
+            for i, j in zip(self.children, __value.children):
+                if i != j:
+                    return False
+            for a, b in zip(self.args, __value.args):
+                if a != b:
+                    return False
+            return self.name == __value.name
+        return False
+
 
 class Command:
     def __init__(
@@ -237,27 +242,6 @@ class Command:
         self.args = args or []
         self.kwargs = kwargs or {}
 
-    @staticmethod
-    def from_raw(string):
-        """
-        Creates a Command object from a raw string.
-
-        Args:
-            string (str): The raw string representing the command.
-
-        Returns:
-            Command: The created Command object.
-        """
-        cmd, *args = shlex.split(string)
-        kwargs = {}
-        if ALLOW_KWARGS:
-            for i, arg in enumerate(args):
-                if arg.startswith("--"):
-                    a, b = arg[2:].split("=")
-                    args.pop(i)
-                    kwargs[a] = b
-        return Command(cmd, args, kwargs)
-
     def __repr__(self) -> str:
         """
         Returns a string representation of the Command object.
@@ -267,18 +251,103 @@ class Command:
         """
         return f"Command({self.name!r}, args={self.args!r})"
 
+    def __eq__(self, __value: object) -> bool:
+        if isinstance(__value, Command):
+            return self.name == __value.name and self.args == __value.args
+        return False
 
-class Multiline(Command):
-    @staticmethod
-    def from_raw(string) -> Multiline:
-        return Multiline(string[len(MULOPEN) : -len(MULCLOSE)])  # noqa
 
-    def __repr__(self) -> str:
-        return f"Multiline('{self.name[:10]+'...'}', {self.args})"
+def tokenize(text):
+    text = text.strip()
+    tokens = []
+    temp = ""
+    is_string = False
+    is_comment = False
+    close = None
+    # TODO: Error handling
+    # TODO: Add support for comments
+    for i in text:
+        if is_string and i != close:
+            temp += i
+            continue
+        if is_comment:
+            if i == "\n":
+                is_comment = False
+            else:
+                continue
 
-    def __rich_repr__(self):
-        yield self.name
-        yield self.args
+        if i in "{}":
+            tokens.append(("BRACE", i))
+        elif i in "\"'":
+            is_string = not is_string
+            close = i
+            if not is_string:
+                tokens.append(("QUOTED", temp))
+                temp = ""
+        elif i == "#":
+            is_comment = not is_comment
+        elif i == "\n":
+            tokens.append(("TEXT", temp))
+            tokens.append(("NEWLINE", "\n"))
+            temp = ""
+        elif i != " ":
+            temp += i
+        elif i == " " and temp:
+            tokens.append(("TEXT", temp))
+            temp = ""
+
+    if temp:
+        tokens.append(("TEXT", temp))
+    return [
+        [token[0].replace("QUOTED", "TEXT"), token[1]]
+        for token in tokens
+        if token[0] == "TEXT" and token[1] or token[0] != "TEXT"
+    ]
+
+
+class Block:
+    def __init__(self, parrent=None) -> None:
+        self.parrent: Block | None = parrent
+        self.content: list[str] = []
+        self.children: list[Block] = []
+
+    def as_dict(self) -> dict[str, list]:
+        dictionary: dict[str, list] = {
+            "content": self.content,
+        }
+        if self.children:
+            dictionary["children"] = [
+                child.as_dict() for child in self.children if child
+            ]
+        return dictionary
+
+    def __bool__(self):
+        return bool(self.content or self.children)
+
+
+def parse(tokens):
+    result = Block()
+    result.children.append(Block(result))
+    current = result.children[0]
+    for t, value in tokens:
+        if t == "TEXT":
+            current.content.append(value)
+        elif t == "NEWLINE" and current.content:
+            block = Block(current.parrent)
+            if not current.parrent:
+                raise Exception("Unexpected error")
+            current.parrent.children.append(block)
+            current = block
+        elif t == "BRACE":
+            if value == "{":
+                block = Block(current)
+                current.children.append(block)
+                current = block
+            elif value == "}":
+                if not current.parrent:
+                    raise Exception("Unexpected }")
+                current = current.parrent
+    return result.as_dict()["children"]
 
 
 class Scenario(Section):
@@ -323,30 +392,18 @@ class Scenario(Section):
         return self  # for chaining
 
     def parse(self, text: str, section_name: str = "root") -> Section:
-        """
-        Parses given content and appends children to the current section.
-        """
-        regex = re.escape(MULOPEN) + r'[^"|.]*' + re.escape(MULCLOSE)
-        text = re.sub(regex, lambda m: m.group(0).strip().replace("\n", "\\n"), text)
-        text = text.replace("\n\n", "\n").replace("\\\n", "")
-        lines = [r for line in text.split("\n") if (r := line.split("#", 1)[0].strip())]
-        current = Section(section_name)
-        for line in lines:
-            if line == "}":
-                if not current.parent:
-                    raise UnexpectedEnd("Unexpected }")
-                current = current.parent
-            elif line.endswith("{"):
-                name, *args = shlex.split(line[:-1])
-                new = Section(name, args, current)
-                current.children.append(new)
-                current = new
-            else:
-                if line.startswith(MULOPEN):
-                    current.children.append(Multiline.from_raw(line))
+        def build_block(content, children, parrent=None) -> Section:
+            block = Section(content[0], content[1:], parrent)
+            for i in children:
+                if "children" in i:
+                    block.children.append(
+                        build_block(i["content"], i["children"], block)
+                    )
                 else:
-                    current.children.append(Command.from_raw(line))
-        return current
+                    block.children.append(Command(i["content"][0], i["content"][1:]))
+            return block
+
+        return build_block([section_name], parse(text))
 
     def __repr__(self):
         return f"<Scenario {self.hash} c={len(self.children)}>"

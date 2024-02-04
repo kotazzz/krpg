@@ -7,7 +7,7 @@ import random
 import time
 from typing import TYPE_CHECKING, Any
 
-from git import Optional
+from typing import Optional
 
 if TYPE_CHECKING:
     from krpg.game import Game
