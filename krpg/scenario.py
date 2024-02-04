@@ -257,7 +257,7 @@ class Command:
         return False
 
 
-def tokenize(text):
+def tokenize(text) -> list[list[str]]:
     text = text.strip()
     tokens = []
     temp = ""
@@ -403,7 +403,7 @@ class Scenario(Section):
                     block.children.append(Command(i["content"][0], i["content"][1:]))
             return block
 
-        return build_block([section_name], parse(text))
+        return build_block([section_name], parse(tokenize(text)))
 
     def __repr__(self):
         return f"<Scenario {self.hash} c={len(self.children)}>"
