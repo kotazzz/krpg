@@ -109,6 +109,8 @@ def update_version(update_args: argparse.Namespace):
     file = "krpg/data/info.py"
     var = "__version__"
     if update_args.version:
+        if update_args.version == "1.0.0":
+            raise ValueError("Change version to something other than 1.0.0")
         python_set(file, var, update_args.version)
         poetry_set(update_args.version)
     if update_args.show:

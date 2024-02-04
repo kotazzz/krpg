@@ -1,6 +1,7 @@
 """
 Bestiary module. Represents a tools to create and manage monsters and items in the game.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

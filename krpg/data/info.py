@@ -1,4 +1,4 @@
-__version__ = "1.4.0"
+__version__ = "1.5.0"
 TIMESHIFT = 1667250000
 BRAND_COLORS = [
     "[bold magenta]",
