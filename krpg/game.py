@@ -1,6 +1,7 @@
 """
 Main game file. Run game with `python -m krpg` command
 """
+
 from __future__ import annotations
 
 import glob
@@ -131,7 +132,7 @@ class Game:
                 nonlocal lines
                 lines.append(msg)
                 lines = lines[-3:]
-                spin.update(text=f"\n{' '*spin_size}".join(lines))
+                spin.update(text=f"\n{' ' * spin_size}".join(lines))
                 time.sleep(random.random() / 10)
 
             self.console.log.debug = func

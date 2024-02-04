@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Callable
 
-from krpg.scenario import Command, Multiline, Section
+from krpg.scenario import Command, Section
 
 if TYPE_CHECKING:
     from krpg.game import Game
@@ -88,7 +88,7 @@ class Block:
         self.pos = 0
         self.state = "stop"
         self.section = section
-        self.code: list[Command | Section | Multiline] = section.children
+        self.code: list[Command | Section] = section.children
         self.executer = executer
         self.execute = self.executer.create_execute([self])
         self.parent = parent
@@ -218,7 +218,7 @@ class Executer:
             function: The new execute method.
         """
 
-        def execute(command: Command | Section | Multiline):
+        def execute(command: Command | Section):
             ext = self.extensions
             self.extensions += extensions
             self.execute(command)
