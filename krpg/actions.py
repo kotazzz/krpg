@@ -1,6 +1,7 @@
 """
 Actions module contains classes and functions for actions in the game.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

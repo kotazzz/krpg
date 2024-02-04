@@ -1,6 +1,7 @@
 """
 Module containing the NPC class and the NPC manager class.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
@@ -40,9 +41,9 @@ class Npc:
         self.description: str = description
         self.location: str = location
         self.actions: dict[str, list[Action]] = actions  # {state: [actions]}
-        self.requirements: dict[
-            str, str
-        ] = requirements  # {state "." action: python_eval}
+        self.requirements: dict[str, str] = (
+            requirements  # {state "." action: python_eval}
+        )
         self.known: bool = False
 
     def get_actions(self, game: Optional[Game] = None) -> list[Action]:

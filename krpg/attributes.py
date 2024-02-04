@@ -1,6 +1,7 @@
 """
 The attributes module contains the Attributes class, which represents the attributes of an entity in a role-playing game.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
