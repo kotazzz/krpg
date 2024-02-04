@@ -1,6 +1,7 @@
 """
 Updater for krpg
 """
+
 import glob
 import os
 import zlib
@@ -49,7 +50,7 @@ def get_hashes() -> dict[str, int]:
     http = urllib3.PoolManager()
     r = http.request("GET", LINK + "hashes.json")
     if r.status == 200:
-        return r.data
+        return r.json()
     raise ValueError("Can't get hashes")
 
 
