@@ -1,0 +1,3 @@
+init {
+    print "Hello, World!"
+}

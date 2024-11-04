@@ -1,29 +1,16 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING
 
-from krpg.scenario import Command, Section
+import attr
+
+from krpg.parser import Command, Section
 
 if TYPE_CHECKING:
     from krpg.game import Game
 
 
 def executer_command(name):
-    """
-    Decorator function that creates an instance of ExecuterCommand with the given name and callback function.
-
-    Args:
-        name (str): The name of the command.
-
-    Returns:
-        function: The wrapper function that creates an instance of ExecuterCommand.
-
-    Example:
-        @executer_command("my_command")
-        def my_callback():
-            pass
-    """
-
     def wrapper(callback):
         return ExecuterCommand(name, callback)
 
@@ -32,28 +19,35 @@ def executer_command(name):
 
 class ExecuterCommand:
     def __init__(self, name, callback):
-        """
-        Initializes an ExecuterCommand object.
-
-        Args:
-            name (str): The name of the command.
-            callback (function): The callback function to be executed when the command is called.
-        """
         self.name = name
         self.callback = callback
 
 
-class Base:
+class Extension:
+    def get_commands(self):
+        commands: dict[str, ExecuterCommand] = {}
+        for name in dir(self):
+            attr = getattr(self, name)
+            if isinstance(attr, ExecuterCommand):
+                if attr.name in commands:
+                    raise ValueError(f"Command with name {attr.name} already exists")
+                commands[attr.name] = attr
+        return commands
+
+
+class Base(Extension):
     @executer_command("print")
     @staticmethod
-    def builtin_print(game: Game, *args):
+    def builtin_print(ctx: Ctx, *args):
+        game = ctx.game
         """Builtin print"""
         text = " ".join(args)
         game.console.print("[blue]" + game.executer.process_text(text))
 
     @executer_command("$")
     @staticmethod
-    def builtin_exec(game: Game, *code: str):
+    def builtin_exec(ctx: Ctx, *code: str):
+        game = ctx.game
         """Builtin exec"""
         exec_str = " ".join(code)
         env = game.executer.env | {"game": game, "env": game.executer.env}
@@ -61,233 +55,58 @@ class Base:
 
     @executer_command("set")
     @staticmethod
-    def builtin_set(game: Game, name: str, expr: str):
+    def builtin_set(ctx: Ctx, name: str, expr: str):
+        game = ctx.game
         """Builtin set"""
         env = game.executer.env | {"game": game, "env": game.executer.env}
         game.executer.env[name] = eval(expr, env)  # noqa
 
-    @executer_command("if")
-    @staticmethod
-    def builtin_if(game: Game, expr: str, block: Block):
-        """Builtin if"""
-        env = game.executer.env | {"game": game, "env": game.executer.env}
-        if eval(expr, env):  # noqa
-            block.run()
 
-
-class Block:
-    def __init__(self, executer: Executer, section: Section, parent=None):
-        """
-        Represents a block of code within the KRPG game.
-
-        Args:
-            executer (Executer): The executer object responsible for executing the code.
-            section (Section): The section object containing the code.
-            parent (Block, optional): The parent block of this block. Defaults to None.
-        """
-        self.pos = 0
-        self.state = "stop"
-        self.section = section
-        self.code: list[Command | Section] = section.children
-        self.executer = executer
-        self.execute = self.executer.create_execute([self])
-        self.parent = parent
-
-        @executer_command("print_block")  # TODO: Goto
-        def print_block_command(game: Game):
-            game.console.print(self)
-
-        self.print_block_command = print_block_command
-
-    def run(self, *_, from_start: bool = True, **__):
-        """
-        Runs the block of code.
-
-        Args:
-            from_start (bool, optional): Indicates whether to start execution from the beginning of the block.
-                Defaults to True.
-        """
-        if not self.code:
-            return
-        if from_start:
-            self.pos = 0
-        self.state = "run"
-        while self.state == "run":
-            pos = self.pos
-            self.execute(self.code[self.pos])
-            if pos == self.pos:  # if execute dont changed pos
-                self.pos += 1
-            if self.pos >= len(self.code):
-                break
-        self.state = "stop"
+@attr.s(auto_attribs=True)
+class Ctx:
+    game: Game
+    executer: Executer
 
 
 class Executer:
-    """
-    The Executer class is responsible for executing commands in the game.
-    It manages extensions, commands, and the execution environment.
-
-    Args:
-        game (Game): The game instance.
-
-    Attributes:
-        game (Game): The game instance.
-        extensions (list[object]): The list of extensions added to the executer.
-        env (dict): The execution environment.
-    """
-
     def __init__(self, game: Game):
         self.game = game
-        self.extensions: list[object] = [Base()]
-        self.env: dict[str, Any] = {}
-        game.add_saver("env", self.save, self.load)
+        self.extensions: list[Extension] = [Base()]
+        self.env = {}
 
-    def save(self):
-        """
-        Save the execution environment.
-
-        Returns:
-            dict: The saved execution environment.
-        """
-        return {k: v for k, v in self.env.items() if not k.startswith("_")}
-
-    def load(self, data):
-        """
-        Load the execution environment.
-
-        Args:
-            data (dict): The saved execution environment.
-        """
-        self.env = data
-
-    def get_executer_additions(self, obj: object):
-        """
-        Get the executer additions from an object.
-
-        Args:
-            obj (object): The object to get the executer additions from.
-
-        Returns:
-            dict[str, ExecuterCommand]: The executer additions.
-        """
-        cmds: dict[str, ExecuterCommand] = {}
-        for i in dir(obj):
-            try:
-                attr = getattr(obj, i)
-            except AttributeError:
-                continue
-            else:
-                if isinstance(attr, ExecuterCommand):
-                    cmds[attr.name] = attr
-        return cmds
-
-    def add_extension(self, ext: object):
-        """
-        Add an extension to the executer.
-
-        Args:
-            ext (object): The extension to add.
-        """
-        self.game.log.debug(
-            f"  [yellow3]Added ExecuterExtension [yellow]{ext.__class__.__name__}",
-            stacklevel=2,
-        )
-        self.extensions.append(ext)
-
-    def get_all_commands(self) -> dict[str, ExecuterCommand]:
-        """
-        Get all the commands from the extensions.
-
-        Returns:
-            dict[str, ExecuterCommand]: All the commands.
-        """
-        commands: dict[str, ExecuterCommand] = {}
-        for ext in self.extensions:
-            commands |= self.get_executer_additions(ext)
-        return commands
-
-    def create_execute(self, extensions: list[object]) -> Callable[..., None]:
-        """
-        Create a new execute method that extends the extension list before running
-        the command and returns it back after.
-
-        Args:
-            extensions (list[object]): The extensions to add temporarily.
-
-        Returns:
-            function: The new execute method.
-        """
-
-        def execute(command: Command | Section):
-            ext = self.extensions
-            self.extensions += extensions
-            self.execute(command)
-            self.extensions = ext
-
-        return execute
-
-    def execute(self, command: Command | Section):
-        """
-        Execute a command by name, passing game, args, kwargs, and "block" kwarg if command has {}.
-
-        Args:
-            command (Command | Section): The command or section to execute.
-
-        Raises:
-            ValueError: If the command is unknown.
-        """
-        commands = self.get_all_commands()
-        if command.name in commands:
-            self.game.log.debug(f"Executing {command.name} ")
-            kwargs = {}
-            if isinstance(command, Section):
-                kwargs = {"block": self.create_block(command)}
-            commands[command.name].callback(self.game, *command.args, **kwargs)
-        else:
-            raise ValueError(f"Unknown command: {command.name}")
-
-    def create_block(self, section: Section) -> Block:
-        """
-        Create a block for a section.
-
-        Args:
-            section (Section): The section to create a block for.
-
-        Returns:
-            Block: The created block.
-        """
-        block = Block(self, section)
-        return block
-
-    def process_text(self, text: str):
-        """
-        Process the text by evaluating it in the execution environment.
-
-        Args:
-            text (str): The text to process.
-
-        Returns:
-            str: The processed text.
-        """
-        # Scenario allowed to use python code
+    def process_text(self, text):
         return self.evaluate(f"f'''{text}'''")  # noqa
 
     def evaluate(self, text: str):
-        """
-        Evaluate the text in the execution environment.
-
-        Args:
-            text (str): The text to evaluate.
-
-        Returns:
-            Any: The result of the evaluation.
-        """
         game = self.game
         env = game.executer.env | {"game": game, "env": game.executer.env}
         # Scenario allowed to use python code
         return eval(text, env)  # noqa
 
-    def __repr__(self):
-        return (
-            f"<Executer ext={len(self.extensions)} cmd={len(self.get_all_commands())}>"
-        )
+    def get_commands(self):
+        commands: dict[str, ExecuterCommand] = {}
+        for extension in self.extensions:
+            for name, command in extension.get_commands().items():
+                if name in commands:
+                    raise ValueError(f"Command with name {name} already exists")
+                commands[name] = command
+        return commands
+
+    def execute(self, command: Command | Section):
+        game = self.game
+        ctx = Ctx(game, self)
+        cmds = self.get_commands()
+        if command.name in cmds:
+            if isinstance(command, Section):
+                cmds[command.name].callback(
+                    ctx, *command.args, children=command.children
+                )
+            else:
+                cmds[command.name].callback(ctx, *command.args)
+
+    def run(self, section: Section | Command):
+        if isinstance(section, Section):
+            for child in section.children:
+                self.execute(child)
+        else:
+            self.execute(section)
