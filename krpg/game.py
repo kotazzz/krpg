@@ -1,10 +1,14 @@
 from __future__ import annotations
+from rich.console import Group
+from rich.align import Align
+from rich.panel import Panel
 from krpg.builder import Builder
 from krpg.console import KrpgConsole
-from krpg.data.consts import LOGO_GAME
+from krpg.data.consts import ABOUT, LOGO_GAME
 from krpg.engine.actions import ActionManager, action
 from krpg.engine.enums import GameState
 from krpg.executer import Executer
+from rich.text import Text
 
 
 class RootActionManager(ActionManager):
@@ -27,14 +31,27 @@ class Game:
         self.executer = Executer(self)
         self.builder = Builder(self)
 
+    def show_logo(self):
+        centered_logo = Align(LOGO_GAME, align="center")
+        centered_about = Align(
+            Text(ABOUT, justify="center", style="green"), align="center", width=80
+        )
+        pad = "\n" * 3
+        self.console.print(
+            Panel(
+                Group(pad, centered_logo, centered_about, pad),
+                title="Добро пожаловать в KRPG",
+            )
+        )
+
     def main(self):
         options = {
             "Начать новую игру": self.new_game,
             "Выйти": exit,
         }
-        self.console.print(LOGO_GAME)
+        self.show_logo()
         while True:
-            choice = self.console.menu("[red]Добро пожаловать[/]", options)
+            choice = self.console.menu("Добро пожаловать", options)
             if not choice:
                 break
             choice()

@@ -1,5 +1,4 @@
 from itertools import groupby
-from re import I
 
 from rich.columns import Columns
 from rich.console import Group, ConsoleRenderable

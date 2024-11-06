@@ -119,9 +119,13 @@ class KrpgConsole:
         choices = [
             questionary.Choice([("green", i)], value=j) for i, j in options.items()
         ]
-        self.console.print(title)
+        s = questionary.Style(
+            [
+                ("question", "red bold"),
+            ]
+        )
         return questionary.select(
-            "(Используйте стрелки)", choices, qmark="", instruction=" "
+            title, choices, qmark="", instruction=" ", style=s
         ).ask()
 
     def confirm(self, prompt, allow_exit: bool = True) -> bool | None:
