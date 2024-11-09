@@ -1,19 +1,17 @@
 from __future__ import annotations
 from enum import Enum
 import random
-from typing import Callable
 
 from attr import field
 import attr
 
 from krpg.entity.enums import Attribute, Body, EntityScales, ModifierType, TargetType
-from krpg.entity.scale import Scale
-from krpg.entity.utils import DEFAULT_DESCRIPTION, Nameable
+from krpg.utils import DEFAULT_DESCRIPTION, Nameable
 
 
 @attr.s(auto_attribs=True)
 class Effect(Nameable):
-    target: TargetType
+    target: TargetType | None = None
     time: int = 0
     interval: int = 0
 
@@ -40,14 +38,14 @@ class ItemModifier:
 @attr.s(auto_attribs=True)
 class EntityModifier:
     # todo: make programmable modifiers?
-    _parts: dict[Body, int | Callable] = field(
-        factory=lambda: {}, repr=lambda x: {i: j for i, j in x.items() if j}
+    _parts: dict[Body, int] = field(
+        factory=lambda: {}, repr=lambda x: str({i: j for i, j in x.items() if j})
     )
-    _scales: dict[Body, int | Callable] = field(
-        factory=lambda: {}, repr=lambda x: {i: j for i, j in x.items() if j}
+    _scales: dict[EntityScales, int] = field(
+        factory=lambda: {}, repr=lambda x: str({i: j for i, j in x.items() if j})
     )
-    _attributes: dict[Attribute, int | Callable] = field(
-        factory=lambda: {}, repr=lambda x: {i: j for i, j in x.items() if j}
+    _attributes: dict[Attribute, int] = field(
+        factory=lambda: {}, repr=lambda x: str({i: j for i, j in x.items() if j})
     )
     mods: list[tuple[ModifierType, int]] = field(factory=list)
 

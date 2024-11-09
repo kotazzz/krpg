@@ -5,7 +5,7 @@ from attr import field
 
 from typing import TYPE_CHECKING
 
-from krpg.entity.utils import DEFAULT_DESCRIPTION, Nameable, _get_by_id
+from krpg.utils import DEFAULT_DESCRIPTION, Nameable, _get_by_id
 
 if TYPE_CHECKING:
     from krpg.entity.inventory import Item, Slot
@@ -43,7 +43,10 @@ class SkillTree:
         return self._last_level
 
     def learn(self, item: str | Nameable):
-        skill: Skill = _get_by_id(self.skills, item)
+        res = _get_by_id(self.skills, item)
+        if not res:
+            raise Exception(f"Not found: {item}")
+        skill: Skill = res
         if not skill:
             raise ValueError(f"No skill: {item}")
         self.learned.append(skill.new_instance)
@@ -52,15 +55,15 @@ class SkillTree:
 
 @attr.s(auto_attribs=True)
 class Skill(Nameable):
-    cooldown: int
-    prepare_time: int
-    target: TargetType
+    cooldown: int = 0
+    prepare_time: int = 0
+    target: TargetType = TargetType.ENTITY
 
     level: int = 1
     difficulty: int = 1
 
     cost_mp: int = 0
-    cost_item: Item | ItemTag = None
+    cost_item: Item | ItemTag | None = None
 
     parrent: Skill = field(default=None, repr=False)
     childrens: list[Skill] = field(factory=list, repr=False)
@@ -81,7 +84,7 @@ class Skill(Nameable):
 class SkillState:
     skill: Skill = field(repr=lambda x: repr(x.id))
     cooldown: int = 0
-    use_slot: Slot = None
+    use_slot: Slot | None = None
     prepare: int = 0
 
     @property

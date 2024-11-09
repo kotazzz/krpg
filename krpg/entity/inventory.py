@@ -3,10 +3,10 @@ from __future__ import annotations
 import attr
 from attr import field
 
-from krpg.entity.effects import Effect
+from krpg.entity.effects import Effect, EffectState
 from krpg.entity.enums import ItemTag, SlotType
 from krpg.entity.skills import SkillState, SkillTree
-from krpg.entity.utils import DEFAULT_DESCRIPTION, Nameable
+from krpg.utils import DEFAULT_DESCRIPTION, Nameable
 
 
 @attr.s(auto_attribs=True)
@@ -39,6 +39,7 @@ class Inventory:
         actions = []
         for slot in self.slots:
             if slot.type != SlotType.ITEM and not slot.empty:
+                assert slot.item is not None
                 if not slot.item.wear_skill:
                     continue
                 actions.extend(slot.item.wear_skill.learned)
@@ -47,19 +48,20 @@ class Inventory:
         return actions
 
     @property
-    def effects(self):
+    def effects(self) -> list[EffectState]:
         effects: list[Effect] = []
         for slot in self.slots:
             if slot.type != SlotType.ITEM and not slot.empty:
+                assert slot.item is not None
                 effects.extend(slot.item.effects)
         return [effect.new_instance for effect in effects]
 
-    def get_slot(self, type: SlotType):
+    def get_slot(self, type: SlotType) -> list[Slot]:
         if not self.slots:
             raise ValueError("No slots")
         return [s for s in self.slots if s.type == type]
 
-    def get_free_slot(self, filter: Item = None):
+    def get_free_slot(self, filter: Item | None = None):
         for slot in self.get_slot(SlotType.ITEM):
             if filter and slot.item == filter and not slot.full:
                 return slot
@@ -70,6 +72,7 @@ class Inventory:
         # TODO: tag search
         item = item if isinstance(item, str) else item.id
         for slot in self.slots:
+            assert slot.item is not None
             if not slot.empty and slot.item.id == item:
                 return slot
 
@@ -81,7 +84,7 @@ class Inventory:
                 return True
             else:
                 return False
-
+        assert slot.item is not None
         slots = self.get_slot(slot.item.slot_type)
         for s in slots:
             if s.empty:
@@ -123,6 +126,9 @@ class Slot:
 
     @property
     def full(self):
+        if self.empty:
+            raise Exception("Slot is empty")
+        assert self.item is not None
         return self.count == self.item.stack
 
     @property
@@ -141,6 +147,7 @@ class Slot:
 
     @property
     def use_skills(self):
+        assert self.item is not None
         skills = self.item.use_skills
         for skill in skills:
             skill.use_slot = self
@@ -153,7 +160,7 @@ class Item(Nameable):
 
     description: str = DEFAULT_DESCRIPTION
     use_skills: list[SkillState] = field(factory=list)
-    wear_skill: SkillTree = None
+    wear_skill: SkillTree | None = None
     effects: list[Effect] = field(factory=list)
 
     buy_cost: int = -1

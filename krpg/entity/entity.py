@@ -4,11 +4,11 @@ from attr import field
 import attr
 
 from krpg.entity.effects import EffectState, EntityModifier, ItemModifier
-from krpg.entity.enums import Attribute, Body, EntityScales, TargetType
+from krpg.entity.enums import Attribute, Body, EntityScales, ItemTag, TargetType
 from krpg.entity.inventory import Inventory
 from krpg.entity.scale import Scale
 from krpg.entity.skills import SkillState, SkillTree
-from krpg.entity.utils import Nameable
+from krpg.utils import Nameable
 
 
 @attr.s(auto_attribs=True)
@@ -77,8 +77,8 @@ class Entity(Nameable):
         return self
 
     @property
-    def modifiers(self) -> list[EntityModifier]:
-        modifiers = []
+    def modifiers(self) -> list[EntityModifier | ItemModifier]:
+        modifiers: list[EntityModifier | ItemModifier] = []
         for effect in self.inventory.effects:
             if effect.effect.time == -1:
                 modifiers.extend(effect.effect.modifiers)
@@ -89,6 +89,8 @@ class Entity(Nameable):
         p = {i: 0 for i in self._parts}
 
         for mod in self.modifiers:
+            if isinstance(mod, ItemModifier):
+                raise Exception
             for part, pmod in mod.parts.items():
                 p[part] += pmod
 
@@ -101,6 +103,8 @@ class Entity(Nameable):
         p = {i: 0 for i in self._attributes}
 
         for mod in self.modifiers:
+            if isinstance(mod, ItemModifier):
+                raise Exception
             for part, pmod in mod.attributes.items():
                 p[part] += pmod
         for part, pmod in self._attributes.items():
@@ -164,6 +168,8 @@ class Entity(Nameable):
 
         slot = None
         if skill.skill.cost_item:
+            if isinstance(skill.skill.cost_item, ItemTag):
+                raise Exception("Not supported yet")
             slot = self.inventory.find(skill.skill.cost_item)
             if not slot:
                 return skill.skill.cost_item
@@ -182,6 +188,8 @@ class Entity(Nameable):
             raise ValueError
 
         for mod in effect.effect.modifiers:
+            if isinstance(mod, ItemModifier):
+                raise Exception("Not supported yet")
             for part, val in mod.parts.items():
                 self.parts[part] += val
             for sc, val in mod.scales.items():
@@ -189,8 +197,8 @@ class Entity(Nameable):
 
 
 class TimeCluster:
-    def __init__(self, *entities: list[Entity]):
-        self.entities: list[Entity] = entities
+    def __init__(self, *entities: Entity):
+        self.entities: list[Entity] = list(entities)
 
     @property
     def minimal_tick(self):

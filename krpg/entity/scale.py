@@ -1,6 +1,6 @@
 from attr import field
 import attr
-from krpg.entity.utils import Nameable
+from krpg.utils import Nameable
 
 
 @attr.s(auto_attribs=True)

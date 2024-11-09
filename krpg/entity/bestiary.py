@@ -4,7 +4,7 @@ from krpg.entity.effects import Effect
 from krpg.entity.entity import Entity
 from krpg.entity.inventory import Item
 from krpg.entity.skills import Skill
-from krpg.entity.utils import _add, _get_by_id
+from krpg.utils import _add, _get_by_id
 
 
 @attr.s(auto_attribs=True)

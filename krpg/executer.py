@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import attr
 
@@ -24,7 +24,7 @@ class ExecuterCommand:
 
 
 class Extension:
-    def get_commands(self):
+    def get_commands(self) -> dict[str, ExecuterCommand]:
         commands: dict[str, ExecuterCommand] = {}
         for name in dir(self):
             attr = getattr(self, name)
@@ -72,7 +72,7 @@ class Executer:
     def __init__(self, game: Game):
         self.game = game
         self.extensions: list[Extension] = [Base()]
-        self.env = {}
+        self.env: dict[str, Any] = {}
 
     def process_text(self, text):
         return self.evaluate(f"f'''{text}'''")  # noqa
@@ -83,7 +83,7 @@ class Executer:
         # Scenario allowed to use python code
         return eval(text, env)  # noqa
 
-    def get_commands(self):
+    def get_commands(self) -> dict[str, ExecuterCommand]:
         commands: dict[str, ExecuterCommand] = {}
         for extension in self.extensions:
             for name, command in extension.get_commands().items():
