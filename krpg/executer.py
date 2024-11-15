@@ -10,6 +10,9 @@ if TYPE_CHECKING:
     from krpg.game import Game
 
 
+type Enviroment = dict[str, Any]
+
+
 def executer_command(name):
     def wrapper(callback):
         return ExecuterCommand(name, callback)
@@ -66,13 +69,22 @@ class Base(Extension):
 class Ctx:
     game: Game
     executer: Executer
+    locals = {}
+
+
+@attr.s(auto_attribs=True)
+class Script:
+    game: Game
+    section: Section
+    position = 0
+    env: Enviroment = {}
 
 
 class Executer:
     def __init__(self, game: Game):
         self.game = game
         self.extensions: list[Extension] = [Base()]
-        self.env: dict[str, Any] = {}
+        self.env: Enviroment = {}
 
     def process_text(self, text):
         return self.evaluate(f"f'''{text}'''")  # noqa
@@ -92,9 +104,9 @@ class Executer:
                 commands[name] = command
         return commands
 
-    def execute(self, command: Command | Section):
+    def execute(self, command: Command | Section, locals: Enviroment):
         game = self.game
-        ctx = Ctx(game, self)
+        ctx = Ctx(game, self, locals)
         cmds = self.get_commands()
         if command.name in cmds:
             if isinstance(command, Section):

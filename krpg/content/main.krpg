@@ -50,19 +50,23 @@ locations {
                         say "Ты идешь по лесу, внимательно осматривая каждый куст и дерево. Вдруг ты замечаешь редкое растение, которое тебе нужно."
                         pickup herbs
                     }
+                    flag stop_now
                 }
                 if "_random > 85" {
                     require quest catch_rabbits stage 0 {
                         say "Ты идешь по лесу, внимательно осматривая каждый куст и дерево. Вдруг ты замечаешь двух кроликов, которых тебе нужно поймать."
                         pickup rabbits
                     }
+                    flag stop_now
                 }
                 if "_random > 82" {
                     require quest find_berries stage 0 {
                         say "Ты идешь по лесу, внимательно осматривая каждый куст и дерево. Вдруг ты замечаешь редкие ягоды, которые тебе нужно собрать."
                         pickup berries
                     }
+                    flag stop_now
                 }
+                stop stop_now
             }
         }
     }
