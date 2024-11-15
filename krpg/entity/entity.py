@@ -1,14 +1,18 @@
 from __future__ import annotations
+from typing import Any, Literal, TYPE_CHECKING
 
 from attr import field
 import attr
 
 from krpg.entity.effects import EffectState, EntityModifier, ItemModifier
 from krpg.entity.enums import Attribute, Body, EntityScales, ItemTag, TargetType
-from krpg.entity.inventory import Inventory
+from krpg.entity.inventory import Inventory, Item
 from krpg.entity.scale import Scale
 from krpg.entity.skills import SkillState, SkillTree
 from krpg.utils import Nameable
+
+if TYPE_CHECKING:
+    from krpg.entity.inventory import Item
 
 
 @attr.s(auto_attribs=True)
@@ -35,7 +39,7 @@ class Entity(Nameable):
                 values = i.value[:2]
                 self.scales[i] = Scale(*values, base_max_value=100)
 
-    def calc_bonus(self, attr: Attribute, max_value_bonus=False):
+    def calc_bonus(self, attr: Attribute, max_value_bonus: bool = False) -> float:
         # сила - наносимый урон
         # выносливость - защита
         # интеллект - стоимость манны
@@ -43,8 +47,8 @@ class Entity(Nameable):
         # восприятие - шанс крита, шанс знать действия врага первым
         # харизма - влияет на НПС
         # мудрость - получаемый опыт
-        attr_value = self.attributes[attr]._value
-        formulas = {
+        attr_value = self.attributes[attr].value
+        formulas: dict[str, dict[Attribute, float]] = {
             "mvb": {
                 Attribute.STRENGTH: 0.01 * attr_value,
                 Attribute.PERCEPTION: 0.01 * attr_value,
@@ -142,7 +146,7 @@ class Entity(Nameable):
             skill.cooldown = max(0, skill.cooldown - time)
 
     @property
-    def minimal_tick(self):
+    def minimal_tick(self) -> list[int]:
         # timers = []
         # for act in self.queue_actions:
         #     timers.append((0, act, act.prepare))
@@ -151,7 +155,7 @@ class Entity(Nameable):
         # for skill in self.actions:
         #     timers.append((2, skill, skill.cooldown))
         # print(timers)
-        timers = []
+        timers: list[int] = []
         for act in self.queue_actions:
             timers.append(act.prepare)
         for effect in self.effects:
@@ -160,10 +164,10 @@ class Entity(Nameable):
             timers.append(skill.cooldown)
         return timers
 
-    def use(self, skill: SkillState, target: Entity):
+    def use(self, skill: SkillState, target: Entity) -> float | Item | None:
         mana_cost = skill.skill.cost_mp * self.calc_bonus(Attribute.WISDOM)
 
-        if mana_cost > self.scales[EntityScales.MP]._value:
+        if mana_cost > self.scales[EntityScales.MP].value:
             return mana_cost
 
         slot = None
@@ -177,9 +181,12 @@ class Entity(Nameable):
             slot.count -= 1
         self.scales[EntityScales.MP] += -mana_cost
 
-        skill.prepare = skill.skill.prepare_time * self.calc_bonus(Attribute.WISDOM)
+        skill.prepare = round(
+            skill.skill.prepare_time * self.calc_bonus(Attribute.WISDOM)
+        )
         skill.cooldown = skill.skill.cooldown + skill.prepare
         target.queue_actions.append(skill)
+        return None
 
     def apply_effect(self, effect: EffectState):
         if effect.effect.target == TargetType.ITEM:
@@ -201,15 +208,15 @@ class TimeCluster:
         self.entities: list[Entity] = list(entities)
 
     @property
-    def minimal_tick(self):
-        timers = []
+    def minimal_tick(self) -> Any | Literal[0]:
+        timers: list[int] = []
         for e in self.entities:
             timers.extend(e.minimal_tick)
         if timers := [i for i in timers if i]:
             return min(timers)
         return 0
 
-    def tick(self, time):
+    def tick(self, time: int):
         for e in self.entities:
             e.tick(time)
 

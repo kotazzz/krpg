@@ -37,7 +37,7 @@ def render_entity(entity: Entity):
             f"[yellow]{s.value}[/]",
             ProgressBar(
                 s.max_value,
-                s._value,
+                s.value,
                 width=30,
                 complete_style=c,
                 finished_style=c,

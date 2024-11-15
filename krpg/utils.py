@@ -1,3 +1,4 @@
+from typing import MutableSequence, Sequence
 from attr import field
 import attr
 
@@ -12,12 +13,12 @@ class Nameable:
     description: str = DEFAULT_DESCRIPTION
 
 
-def _get_by_id(collection: list, item: str | Nameable):
+def get_by_id[T: Nameable](collection: Sequence[T], item: str | T):
     item = item.id if isinstance(item, Nameable) else item
     return next((obj for obj in collection if obj.id == item), None)
 
 
-def _add(collection: list, obj: Nameable):
-    if _get_by_id(collection, obj.id):
+def add[T: Nameable](collection: MutableSequence[T], obj: T):
+    if get_by_id(collection, obj.id):
         raise ValueError(f"exists: {obj.id}")
     collection.append(obj)

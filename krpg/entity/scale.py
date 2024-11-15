@@ -1,3 +1,4 @@
+from typing import Any
 from attr import field
 import attr
 from krpg.utils import Nameable
@@ -28,8 +29,9 @@ class Scale(Nameable):
         self._value = self.max_value
 
     @classmethod
-    def infinite(cls, *args, **kwargs):
-        scale = cls(*args, **kwargs, base_max_value=-1)
+    def infinite(cls, *args: Any, **kwargs: Any):
+        kwargs["base_max_value"] = -1
+        scale = cls(*args, **kwargs)
         scale.reset()
         return scale
 
@@ -41,7 +43,7 @@ class Scale(Nameable):
         self._value = round(float(self._value), 2)
         return self
 
-    def set(self, new_value):
+    def set(self, new_value: float):
         if self.max_value == -1:
             self._value = new_value
         else:
@@ -55,7 +57,7 @@ class Scale(Nameable):
             self._value = self.max_value
         self._value = round(float(self._value), 2)
 
-    def set_bonus(self, value):
+    def set_bonus(self, value: float):
         self.bonus = value
         if self.max_value != -1 and self.value > self.max_value:
             self._value = self.max_value

@@ -35,8 +35,8 @@ class Inventory:
         )
 
     @property
-    def actionable(self):
-        actions = []
+    def actionable(self) -> list[SkillState]:
+        actions: list[SkillState] = []
         for slot in self.slots:
             if slot.type != SlotType.ITEM and not slot.empty:
                 assert slot.item is not None

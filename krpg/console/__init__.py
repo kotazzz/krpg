@@ -5,12 +5,15 @@ from typing import Any, Optional
 from prompt_toolkit import ANSI
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.shortcuts import PromptSession
+from prompt_toolkit.history import InMemoryHistory
 import questionary
 from rich.console import Console
 from rich.logging import RichHandler
 
 
-def rich_to_pt_ansi(*args, console: Optional[Console] = None, **kwargs):
+def rich_to_pt_ansi(
+    *args: str, console: Optional[Console] = None, **kwargs: Any
+) -> ANSI:
     kwargs["end"] = kwargs.get("end", "")
     console = console or Console(markup=True)
     console = Console()
@@ -24,9 +27,9 @@ DEFAULT_LEVEL = 1000
 
 class KrpgConsole:
     def __init__(self) -> None:
-        self.console = Console()
+        self.session: PromptSession[str] = PromptSession(history=InMemoryHistory())
 
-        self.session: PromptSession = PromptSession()
+        self.console = Console()
 
         self.handler = RichHandler(
             level=DEFAULT_LEVEL,
@@ -57,13 +60,13 @@ class KrpgConsole:
     def get_history(self) -> list[str | Any]:
         return [repr(i) if " " in i or not i else i for i in self.history]
 
-    def print(self, *args, **kwargs) -> None:
+    def print(self, *args: Any, **kwargs: Any) -> None:
         """Prints the given arguments."""
         self.console.print(*args, **kwargs, highlight=False)
 
     def prompt(
         self,
-        text,
+        text: str | int | ANSI,
         completer: Optional[dict[str, str]] = None,
         allow_empty: bool = False,
         disable_parsing: bool = False,
@@ -85,14 +88,14 @@ class KrpgConsole:
             except KeyError:
                 raise ValueError(f"Unknown level: {text}")
 
-        def check(text) -> bool:
+        def check(text: str) -> bool:
             if not text and not allow_empty:
                 return False
             if completer and check_completer and text not in completer.keys():
                 return False
             return True
 
-        def parse(text) -> list[str]:
+        def parse(text: str) -> list[str]:
             items = shlex.split(text)
             self.history.extend(items)
             return items
@@ -115,7 +118,7 @@ class KrpgConsole:
             if check(item):
                 return item
 
-    def menu(self, title, options: dict[str, Any]) -> Any:
+    def menu(self, title: str, options: dict[str, Any]) -> Any:
         choices = [
             questionary.Choice([("green", i)], value=j) for i, j in options.items()
         ]
@@ -128,7 +131,7 @@ class KrpgConsole:
             title, choices, qmark="", instruction=" ", style=s
         ).ask()
 
-    def confirm(self, prompt, allow_exit: bool = True) -> bool | None:
+    def confirm(self, prompt: str, allow_exit: bool = True) -> bool | None:
         while True:
             res = questionary.confirm(prompt).ask()
             if res or not allow_exit:

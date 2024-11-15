@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 import attr
 
@@ -13,15 +13,15 @@ if TYPE_CHECKING:
 type Enviroment = dict[str, Any]
 
 
-def executer_command(name):
-    def wrapper(callback):
+def executer_command(name: str):
+    def wrapper(callback: Callable[..., None]):
         return ExecuterCommand(name, callback)
 
     return wrapper
 
 
 class ExecuterCommand:
-    def __init__(self, name, callback):
+    def __init__(self, name: str, callback: Callable[..., None]):
         self.name = name
         self.callback = callback
 
@@ -41,7 +41,7 @@ class Extension:
 class Base(Extension):
     @executer_command("print")
     @staticmethod
-    def builtin_print(ctx: Ctx, *args):
+    def builtin_print(ctx: Ctx, *args: str):
         game = ctx.game
         """Builtin print"""
         text = " ".join(args)
@@ -69,7 +69,7 @@ class Base(Extension):
 class Ctx:
     game: Game
     executer: Executer
-    locals = {}
+    locals: Enviroment = {}
 
 
 @attr.s(auto_attribs=True)
@@ -86,7 +86,7 @@ class Executer:
         self.extensions: list[Extension] = [Base()]
         self.env: Enviroment = {}
 
-    def process_text(self, text):
+    def process_text(self, text: str):
         return self.evaluate(f"f'''{text}'''")  # noqa
 
     def evaluate(self, text: str):
@@ -117,8 +117,9 @@ class Executer:
                 cmds[command.name].callback(ctx, *command.args)
 
     def run(self, section: Section | Command):
+        # TODO: Мб надо вынести как то? Типо Block
         if isinstance(section, Section):
             for child in section.children:
-                self.execute(child)
+                self.execute(child, {})
         else:
-            self.execute(section)
+            self.execute(section, {})

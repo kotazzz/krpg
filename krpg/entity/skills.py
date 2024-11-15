@@ -5,7 +5,7 @@ from attr import field
 
 from typing import TYPE_CHECKING
 
-from krpg.utils import DEFAULT_DESCRIPTION, Nameable, _get_by_id
+from krpg.utils import DEFAULT_DESCRIPTION, Nameable, get_by_id
 
 if TYPE_CHECKING:
     from krpg.entity.inventory import Item, Slot
@@ -21,7 +21,7 @@ class SkillTree:
     xp: int = 0
     _last_level: int = 0
 
-    def add_xp(self, xp):
+    def add_xp(self, xp: int):
         self.xp += xp
 
     @property
@@ -43,8 +43,8 @@ class SkillTree:
         return self._last_level
 
     def learn(self, item: str | Nameable):
-        res = _get_by_id(self.skills, item)
-        if not res:
+        res = get_by_id(self.skills, item)
+        if not res or not isinstance(res, Skill):
             raise Exception(f"Not found: {item}")
         skill: Skill = res
         if not skill:

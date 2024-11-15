@@ -1,6 +1,7 @@
 from __future__ import annotations
 from enum import Enum
 import random
+from typing import Any, Callable
 
 from attr import field
 import attr
@@ -61,7 +62,7 @@ class EntityModifier:
     def attributes(self):
         return self._attributes
 
-    def unpack(self, data: dict[Enum, float]):
+    def unpack(self, data: dict[Enum, int | float]):
         return list(data.values())
 
     def pack(self, data: dict[Enum, float], values: list[float]):
@@ -71,7 +72,7 @@ class EntityModifier:
             data[k] = values[i]
 
     @staticmethod
-    def blur_array(arr, blur_level=1):
+    def blur_array(arr: list[int | float], blur_level: int = 1) -> list[int | float]:
         result = arr[:]  # Копируем массив
         length = len(arr)
 
@@ -89,13 +90,13 @@ class EntityModifier:
         return result
 
     @staticmethod
-    def copy_element(arr, pos=0):
+    def copy_element(arr: list[int | float], pos: int = 0) -> list[int | float]:
         for i in range(1, len(arr)):
-            arr[i] = arr[0]
+            arr[i] = arr[pos]
         return arr
 
     @staticmethod
-    def swap_with_chance(arr, chance):
+    def swap_with_chance(arr: list[int | float], chance: int = 50) -> list[int | float]:
         length = len(arr)
 
         for i in range(length - 1):
@@ -106,7 +107,8 @@ class EntityModifier:
 
         return arr
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
+        i: Any
         for i in Body:
             if i not in self._parts:
                 self._parts[i] = 0
@@ -117,9 +119,13 @@ class EntityModifier:
             if i not in self._attributes:
                 self._attributes[i] = 0
 
+        t: Any
         for t in [self._parts, self._scales, self._attributes]:
             values = self.unpack(t)
-            funcs = {
+            # TODO: slice this long type hint
+            funcs: dict[
+                ModifierType, Callable[[list[int | float], int], list[int | float]]
+            ] = {
                 ModifierType.BLUR: self.blur_array,
                 ModifierType.CHAOS: self.swap_with_chance,
                 ModifierType.COPY: self.copy_element,

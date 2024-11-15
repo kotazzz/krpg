@@ -85,3 +85,7 @@ class ObjectiveState:
         match self.objective.type:
             case ObjectiveType.PICKUP:
                 pass
+            case _:
+                raise NotImplementedError(
+                    f"Objective type {self.objective.type} is not implemented"
+                )

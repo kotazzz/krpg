@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Callable
+from typing import Any, Callable
 
 
 class ActionCategory(StrEnum):
@@ -15,7 +15,7 @@ class Action:
     name: str
     description: str
     category: ActionCategory | str
-    callback: Callable
+    callback: Callable[..., Any]
 
     def __repr__(self):
         return f"<Action {self.name} from {self.category}>"
@@ -24,7 +24,7 @@ class Action:
 def action(
     name: str, description: str = "No description", category: ActionCategory | str = ""
 ) -> Callable[..., Action]:
-    def decorator(callback: Callable):
+    def decorator(callback: Callable[..., Any]):
         return Action(name, description, category, callback)
 
     return decorator

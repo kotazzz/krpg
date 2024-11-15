@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Any, Callable
 from rich.console import Group
 from rich.align import Align
 from rich.panel import Panel
@@ -44,8 +45,8 @@ class Game:
             )
         )
 
-    def main(self):
-        options = {
+    def main(self) -> None:
+        options: dict[str, Callable[..., Any]] = {
             "Начать новую игру": self.new_game,
             "Выйти": exit,
         }

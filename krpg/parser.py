@@ -37,43 +37,37 @@ class Section(Command):
     ) -> Section | Command | None:
         for child in self.children:
             if child.name == name:
-                if (command and isinstance(child, Command)) or (
-                    section and isinstance(child, Section)
-                ):
+                if command or (section and isinstance(child, Section)):
                     return child
         return None
 
     def all(
         self, name: str, command: bool = True, section: bool = True
     ) -> list[Section | Command]:
-        result = []
+        result: list[Section | Command] = []
         for child in self.children:
             if child.name == name:
-                if (command and isinstance(child, Command)) or (
-                    section and isinstance(child, Section)
-                ):
+                if command or (section and isinstance(child, Section)):
                     result.append(child)
         return result
 
     def has(self, name: str, command: bool = True, section: bool = True) -> bool:
         for child in self.children:
             if child.name == name:
-                if (command and isinstance(child, Command)) or (
-                    section and isinstance(child, Section)
-                ):
+                if command or (section and isinstance(child, Section)):
                     return True
         return False
 
 
 def tokenize(text: str) -> list[tuple[TokenType, str]]:
     text = text.strip()
-    tokens = []
+    tokens: list[tuple[TokenType, str]] = []
     temp = ""
     is_string = False
     is_comment = False
     close_char = None
 
-    def add_temp(t=TokenType.COMMAND) -> None:
+    def add_temp(t: TokenType = TokenType.COMMAND) -> None:
         nonlocal temp
         if temp or is_string:
             tokens.append((t, temp.strip()))
