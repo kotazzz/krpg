@@ -10,6 +10,9 @@ from krpg.entity.enums import Attribute, Body, EntityScales, ModifierType, Targe
 from krpg.utils import DEFAULT_DESCRIPTION, Nameable
 
 
+type number = int | float
+
+
 @attr.s(auto_attribs=True)
 class Effect(Nameable):
     target: TargetType | None = None
@@ -51,28 +54,28 @@ class EntityModifier:
     mods: list[tuple[ModifierType, int]] = field(factory=list)
 
     @property
-    def parts(self):
+    def parts(self) -> dict[Body, int]:
         return self._parts
 
     @property
-    def scales(self):
+    def scales(self) -> dict[EntityScales, int]:
         return self._scales
 
     @property
-    def attributes(self):
+    def attributes(self) -> dict[Attribute, int]:
         return self._attributes
 
-    def unpack(self, data: dict[Enum, int | float]):
+    def unpack(self, data: dict[Enum, number]) -> list[number]:
         return list(data.values())
 
-    def pack(self, data: dict[Enum, float], values: list[float]):
+    def pack(self, data: dict[Enum, float], values: list[float]) -> None:
         # for i, (_, v) in enumerate(data.items()):
         #     v.value = values[i]
         for i, (k, _) in enumerate(data.items()):
             data[k] = values[i]
 
     @staticmethod
-    def blur_array(arr: list[int | float], blur_level: int = 1) -> list[int | float]:
+    def blur_array(arr: list[number], blur_level: int = 1) -> list[number]:
         result = arr[:]  # Копируем массив
         length = len(arr)
 
@@ -90,13 +93,13 @@ class EntityModifier:
         return result
 
     @staticmethod
-    def copy_element(arr: list[int | float], pos: int = 0) -> list[int | float]:
+    def copy_element(arr: list[number], pos: int = 0) -> list[number]:
         for i in range(1, len(arr)):
             arr[i] = arr[pos]
         return arr
 
     @staticmethod
-    def swap_with_chance(arr: list[int | float], chance: int = 50) -> list[int | float]:
+    def swap_with_chance(arr: list[number], chance: int = 50) -> list[number]:
         length = len(arr)
 
         for i in range(length - 1):
@@ -123,9 +126,7 @@ class EntityModifier:
         for t in [self._parts, self._scales, self._attributes]:
             values = self.unpack(t)
             # TODO: slice this long type hint
-            funcs: dict[
-                ModifierType, Callable[[list[int | float], int], list[int | float]]
-            ] = {
+            funcs: dict[ModifierType, Callable[[list[number], int], list[number]]] = {
                 ModifierType.BLUR: self.blur_array,
                 ModifierType.CHAOS: self.swap_with_chance,
                 ModifierType.COPY: self.copy_element,

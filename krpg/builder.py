@@ -15,7 +15,7 @@ class Builder:
     def __init__(self, game: Game):
         self.game = game
 
-    def build(self):
+    def build(self) -> None:
         if __package__ is None:
             raise ValueError("Package is not set")
         with open(

@@ -81,7 +81,7 @@ class ObjectiveState:
     progress: int = 0
     completed: bool = False
 
-    def check(self):
+    def check(self) -> None:
         match self.objective.type:
             case ObjectiveType.PICKUP:
                 pass

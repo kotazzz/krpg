@@ -3,7 +3,7 @@ import attr
 from attr import field
 
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 from krpg.utils import DEFAULT_DESCRIPTION, Nameable, get_by_id
 
@@ -21,11 +21,11 @@ class SkillTree:
     xp: int = 0
     _last_level: int = 0
 
-    def add_xp(self, xp: int):
+    def add_xp(self, xp: int) -> None:
         self.xp += xp
 
     @property
-    def required_xp(self):
+    def required_xp(self) -> int:
         if self._last_level < 16:
             req = self._last_level**1.5 + self._last_level * 2 + 7
         if self._last_level < 31:
@@ -34,7 +34,7 @@ class SkillTree:
         return int(req)
 
     @property
-    def level(self):
+    def level(self) -> int:
         while self.required_xp <= self.xp:
             self.xp -= self.required_xp
             self._last_level += 1
@@ -42,7 +42,7 @@ class SkillTree:
 
         return self._last_level
 
-    def learn(self, item: str | Nameable):
+    def learn(self, item: str | Nameable) -> Self:
         res = get_by_id(self.skills, item)
         if not res or not isinstance(res, Skill):
             raise Exception(f"Not found: {item}")
@@ -71,12 +71,12 @@ class Skill(Nameable):
     effects: list[Effect] = field(factory=list)
     description: str = DEFAULT_DESCRIPTION
 
-    def link_children(self, skill: Skill):
+    def link_children(self, skill: Skill) -> None:
         skill.parrent = self
         self.childrens.append(skill)
 
     @property
-    def new_instance(self):
+    def new_instance(self) -> SkillState:
         return SkillState(self)
 
 
@@ -88,5 +88,5 @@ class SkillState:
     prepare: int = 0
 
     @property
-    def available(self):
+    def available(self) -> bool:
         return self.cooldown == 0

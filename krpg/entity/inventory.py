@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Self
 
 import attr
 from attr import field
@@ -14,7 +15,7 @@ class Inventory:
     slots: list[Slot] = field(factory=list)
 
     @classmethod
-    def basic(cls):
+    def basic(cls) -> Self:
         return cls(
             [
                 Slot(type=slot_type)
@@ -61,22 +62,24 @@ class Inventory:
             raise ValueError("No slots")
         return [s for s in self.slots if s.type == type]
 
-    def get_free_slot(self, filter: Item | None = None):
+    def get_free_slot(self, filter: Item | None = None) -> Slot | None:
         for slot in self.get_slot(SlotType.ITEM):
             if filter and slot.item == filter and not slot.full:
                 return slot
             elif slot.empty:
                 return slot
+        return None
 
-    def find(self, item: str | Item):
+    def find(self, item: str | Item) -> Slot | None:
         # TODO: tag search
         item = item if isinstance(item, str) else item.id
         for slot in self.slots:
             assert slot.item is not None
             if not slot.empty and slot.item.id == item:
                 return slot
+        return None
 
-    def equip(self, slot: Slot):
+    def equip(self, slot: Slot) -> bool:
         if slot.type != SlotType.ITEM:
             free = self.get_free_slot()
             if free:
@@ -94,14 +97,15 @@ class Inventory:
             slots[0].swap(slot)
         return True
 
-    def pickup(self, item: Item, count: int):
+    def pickup(self, item: Item, count: int) -> int | None:
         while count:
             slot = self.get_free_slot(item)
             if not slot:
                 return count
             count = slot.fill(item, count)
+        return None
 
-    def ipickup(self, item: Item, count: int = 1):
+    def ipickup(self, item: Item, count: int = 1) -> Self:
         x = self.pickup(item, count)
         if x:
             raise ValueError(f"Cant insert {x} x {item.id}")
@@ -114,7 +118,7 @@ class Slot:
     item: Item | None = attr.field(default=None, repr=lambda x: x and repr(x.id))
     count: int = 0
 
-    def fill(self, item: Item, count: int):
+    def fill(self, item: Item, count: int) -> int:
         if not self.item:
             self.item = item
         if item != self.item:
@@ -125,14 +129,14 @@ class Slot:
         return count
 
     @property
-    def full(self):
+    def full(self) -> bool:
         if self.empty:
             raise Exception("Slot is empty")
         assert self.item is not None
         return self.count == self.item.stack
 
     @property
-    def empty(self):
+    def empty(self) -> bool:
         if self.count == 0:
             self.item = None
             return True
@@ -141,12 +145,12 @@ class Slot:
             return True
         return False
 
-    def swap(self, slot: Slot):
+    def swap(self, slot: Slot) -> None:
         self.item, slot.item = (slot.item, self.item)
         self.count, slot.count = (slot.count, self.count)
 
     @property
-    def use_skills(self):
+    def use_skills(self) -> list[SkillState]:
         assert self.item is not None
         skills = self.item.use_skills
         for skill in skills:

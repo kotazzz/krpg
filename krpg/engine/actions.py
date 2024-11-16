@@ -17,14 +17,14 @@ class Action:
     category: ActionCategory | str
     callback: Callable[..., Any]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Action {self.name} from {self.category}>"
 
 
 def action(
     name: str, description: str = "No description", category: ActionCategory | str = ""
 ) -> Callable[..., Action]:
-    def decorator(callback: Callable[..., Any]):
+    def decorator(callback: Callable[..., Any]) -> Action:
         return Action(name, description, category, callback)
 
     return decorator
@@ -63,5 +63,5 @@ class ActionManager:
     def extract(self) -> list[Action]:
         return []
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<ActionManager act={len(self.actions)}>"

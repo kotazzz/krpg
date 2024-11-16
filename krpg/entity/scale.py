@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Literal, Self
 from attr import field
 import attr
 from krpg.utils import Nameable
@@ -13,29 +13,29 @@ class Scale(Nameable):
     _value: float = 0.0
 
     @property
-    def value(self):
+    def value(self) -> float:
         if self.base_max_value != -1:
             return self._value
         return self._value + self.bonus
 
     @property
-    def max_value(self):
+    def max_value(self) -> float | Literal[-1]:
         if self.base_max_value != -1:
             return self.base_max_value + self.bonus
         return -1
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         self.base_max_value = round(float(self.base_max_value), 2)
         self._value = self.max_value
 
     @classmethod
-    def infinite(cls, *args: Any, **kwargs: Any):
+    def infinite(cls, *args: Any, **kwargs: Any) -> Self:
         kwargs["base_max_value"] = -1
         scale = cls(*args, **kwargs)
         scale.reset()
         return scale
 
-    def __iadd__(self, increment: float):
+    def __iadd__(self, increment: float) -> Self:
         if self.max_value == -1:
             self._value += increment
         else:
@@ -43,21 +43,21 @@ class Scale(Nameable):
         self._value = round(float(self._value), 2)
         return self
 
-    def set(self, new_value: float):
+    def set(self, new_value: float) -> None:
         if self.max_value == -1:
             self._value = new_value
         else:
             self._value = min(self.max_value, max(0, new_value))
         self._value = round(float(self._value), 2)
 
-    def reset(self):
+    def reset(self) -> None:
         if self.max_value == -1:
             self._value = 0
         else:
             self._value = self.max_value
         self._value = round(float(self._value), 2)
 
-    def set_bonus(self, value: float):
+    def set_bonus(self, value: float) -> None:
         self.bonus = value
         if self.max_value != -1 and self.value > self.max_value:
             self._value = self.max_value

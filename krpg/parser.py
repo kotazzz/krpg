@@ -16,11 +16,11 @@ class Command:
     parrent: Section = attr.field(default=None, repr=False)
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         return self.content[0] if self.content else None
 
     @property
-    def args(self):
+    def args(self) -> list[str]:
         return self.content[1:]
 
 
@@ -28,7 +28,7 @@ class Command:
 class Section(Command):
     children: list[Section | Command] = attr.field(factory=lambda: [])
 
-    def add_children(self, item: Section | Command):
+    def add_children(self, item: Section | Command) -> None:
         item.parrent = self
         self.children.append(item)
 

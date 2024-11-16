@@ -2,7 +2,7 @@ from enum import Enum, auto
 
 
 class NamedEnum(Enum):
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr(self.name)
 
 

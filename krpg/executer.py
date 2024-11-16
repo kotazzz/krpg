@@ -13,15 +13,15 @@ if TYPE_CHECKING:
 type Enviroment = dict[str, Any]
 
 
-def executer_command(name: str):
-    def wrapper(callback: Callable[..., None]):
+def executer_command(name: str) -> Callable[..., ExecuterCommand]:
+    def wrapper(callback: Callable[..., None]) -> ExecuterCommand:
         return ExecuterCommand(name, callback)
 
     return wrapper
 
 
 class ExecuterCommand:
-    def __init__(self, name: str, callback: Callable[..., None]):
+    def __init__(self, name: str, callback: Callable[..., None]) -> None:
         self.name = name
         self.callback = callback
 
@@ -41,7 +41,7 @@ class Extension:
 class Base(Extension):
     @executer_command("print")
     @staticmethod
-    def builtin_print(ctx: Ctx, *args: str):
+    def builtin_print(ctx: Ctx, *args: str) -> None:
         game = ctx.game
         """Builtin print"""
         text = " ".join(args)
@@ -49,7 +49,7 @@ class Base(Extension):
 
     @executer_command("$")
     @staticmethod
-    def builtin_exec(ctx: Ctx, *code: str):
+    def builtin_exec(ctx: Ctx, *code: str) -> None:
         game = ctx.game
         """Builtin exec"""
         exec_str = " ".join(code)
@@ -58,7 +58,7 @@ class Base(Extension):
 
     @executer_command("set")
     @staticmethod
-    def builtin_set(ctx: Ctx, name: str, expr: str):
+    def builtin_set(ctx: Ctx, name: str, expr: str) -> None:
         game = ctx.game
         """Builtin set"""
         env = game.executer.env | {"game": game, "env": game.executer.env}
@@ -81,15 +81,17 @@ class Script:
 
 
 class Executer:
-    def __init__(self, game: Game):
+    def __init__(self, game: Game) -> None:
         self.game = game
         self.extensions: list[Extension] = [Base()]
         self.env: Enviroment = {}
 
-    def process_text(self, text: str):
-        return self.evaluate(f"f'''{text}'''")  # noqa
+    def process_text(self, text: str) -> str:
+        t = self.evaluate(f"f'''{text}'''")
+        assert isinstance(t, str)
+        return t  # noqa
 
-    def evaluate(self, text: str):
+    def evaluate(self, text: str) -> Any:
         game = self.game
         env = game.executer.env | {"game": game, "env": game.executer.env}
         # Scenario allowed to use python code
@@ -104,7 +106,7 @@ class Executer:
                 commands[name] = command
         return commands
 
-    def execute(self, command: Command | Section, locals: Enviroment):
+    def execute(self, command: Command | Section, locals: Enviroment) -> None:
         game = self.game
         ctx = Ctx(game, self, locals)
         cmds = self.get_commands()
@@ -116,7 +118,7 @@ class Executer:
             else:
                 cmds[command.name].callback(ctx, *command.args)
 
-    def run(self, section: Section | Command):
+    def run(self, section: Section | Command) -> None:
         # TODO: Мб надо вынести как то? Типо Block
         if isinstance(section, Section):
             for child in section.children:

@@ -14,7 +14,7 @@ from krpg.entity.inventory import Item, Slot
 from krpg.entity.skills import SkillState
 
 
-def render_entity(entity: Entity):
+def render_entity(entity: Entity) -> Panel:
     colors = {
         Attribute.STRENGTH: "red",
         Attribute.PERCEPTION: "green",
@@ -30,10 +30,10 @@ def render_entity(entity: Entity):
         EntityScales.THIRST: "cyan",
     }
     table_scales = Table.grid(padding=(0, 1))
-    for type, s in entity.scales.items():
-        c = colors[type]
+    for scale_type, s in entity.scales.items():
+        c = colors[scale_type]
         table_scales.add_row(
-            f"[{c}]{type.value[3]}[/]",
+            f"[{c}]{scale_type.value[3]}[/]",
             f"[yellow]{s.value}[/]",
             ProgressBar(
                 s.max_value,
@@ -46,7 +46,7 @@ def render_entity(entity: Entity):
         )
 
     table_parts = Table.grid(padding=(0, 1))
-    for type, p in entity.parts.items():
+    for _, p in entity.parts.items():
         table_parts.add_row(
             f"[red]{p.name}[/]",
             f"[yellow]{p.value}[/]",
@@ -55,15 +55,15 @@ def render_entity(entity: Entity):
         )
 
     table_attr = Table.grid(padding=(0, 1))
-    for type, a in entity.attributes.items():
+    for attr_type, attr in entity.attributes.items():
         table_attr.add_row(
-            f"[b][{colors[type]}]{a.name}: [/b] {a.value}[/{colors[type]}]"
+            f"[b][{colors[attr_type]}]{attr.name}: [/b] {attr.value}[/{colors[attr_type]}]"
         )
 
     inventory = Table.grid(padding=(0, 1))
     groups = groupby(entity.inventory.slots, key=lambda x: x.type)
 
-    def form_item(slot: Slot):
+    def form_item(slot: Slot) -> str:
         if not slot.item:
             return "[yellow]-Пусто-[/]"
         if slot.count > 1:
@@ -77,14 +77,14 @@ def render_entity(entity: Entity):
         )
 
     abilities = Columns()
-    for a in entity.actions:
-        if a.prepare:
-            cd = f"[yellow]Подготовка[/]: {a.prepare}"
-        elif a.cooldown:
-            cd = f"[red]Откат[/]: {a.cooldown}"
+    for abil in entity.actions:
+        if abil.prepare:
+            cd = f"[yellow]Подготовка[/]: {abil.prepare}"
+        elif abil.cooldown:
+            cd = f"[red]Откат[/]: {abil.cooldown}"
         else:
-            cd = f"[green]Готово[/]: {a.skill.prepare_time}"
-        text = f"[b cyan]{a.skill.name}[/]\n[blue]{a.skill.description}[/]\n{cd}"
+            cd = f"[green]Готово[/]: {abil.skill.prepare_time}"
+        text = f"[b cyan]{abil.skill.name}[/]\n[blue]{abil.skill.description}[/]\n{cd}"
         abilities.add_renderable(text)
 
     return Panel(
@@ -106,11 +106,11 @@ def render_entity(entity: Entity):
     )
 
 
-def side_by_side(e1: Entity, e2: Entity):
+def side_by_side(e1: Entity, e2: Entity) -> Columns:
     return Columns([render_entity(e1), render_entity(e2)])
 
 
-def render_effect(effect: Effect):
+def render_effect(effect: Effect) -> Group:
     data: list[ConsoleRenderable | str] = [
         f"{effect.name} - {effect.description}",
         Rule(),
@@ -119,21 +119,21 @@ def render_effect(effect: Effect):
     for mod in effect.modifiers:
         if isinstance(mod, ItemModifier):
             continue  # TODO: render item modifiers
-        for t, s in mod.attributes.items():
+        for t_attr, s in mod.attributes.items():
             if s != 0:
-                data.append(f"[yellow]{t.value[1]}[/]: {s}")
-        for t, s in mod.parts.items():
+                data.append(f"[yellow]{t_attr.value[1]}[/]: {s}")
+        for t_part, s in mod.parts.items():
             if s != 0:
-                data.append(f"[red]{t.value[1]}[/]: {s}")
-        for t, s in mod.scales.items():
+                data.append(f"[red]{t_part.value[1]}[/]: {s}")
+        for t_scal, s in mod.scales.items():
             if s != 0:
-                data.append(f"[green]{t.value[1]}[/]: {s}")
+                data.append(f"[green]{t_scal.value[1]}[/]: {s}")
         data.append(Rule())
 
     return Group(*data[:-1])
 
 
-def render_skill(skill: SkillState):
+def render_skill(skill: SkillState) -> Panel:
     info = Table.grid(padding=(0, 1))
     t = {
         TargetType.ENTITY: "На врага",
@@ -181,7 +181,7 @@ def render_skill(skill: SkillState):
     )
 
 
-def render_item(item: Item):
+def render_item(item: Item) -> Panel:
     info = Table.grid(padding=(0, 1))
     data = [
         ["[green]Описание: ", item.description],

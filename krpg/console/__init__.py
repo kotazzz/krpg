@@ -1,6 +1,6 @@
 import logging
 import shlex
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 from prompt_toolkit import ANSI
 from prompt_toolkit.completion import WordCompleter
@@ -133,9 +133,9 @@ class KrpgConsole:
 
     def confirm(self, prompt: str, allow_exit: bool = True) -> bool | None:
         while True:
-            res = questionary.confirm(prompt).ask()
+            res: bool | None = questionary.confirm(prompt).ask()
             if res or not allow_exit:
                 return res
 
-    def __repr__(self):
+    def __repr__(self) -> Literal["<Console>"]:
         return "<Console>"

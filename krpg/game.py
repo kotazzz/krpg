@@ -15,12 +15,12 @@ from rich.text import Text
 class RootActionManager(ActionManager):
     @action("exit")
     @staticmethod
-    def action_exit(game: Game):
+    def action_exit(game: Game) -> None:
         game.state = GameState.MENU
 
     @action("test")
     @staticmethod
-    def action_test(game: Game):
+    def action_test(game: Game) -> None:
         game.console.print("Test action")
 
 
@@ -32,7 +32,7 @@ class Game:
         self.executer = Executer(self)
         self.builder = Builder(self)
 
-    def show_logo(self):
+    def show_logo(self) -> None:
         centered_logo = Align(LOGO_GAME, align="center")
         centered_about = Align(
             Text(ABOUT, justify="center", style="green"), align="center", width=80
@@ -57,10 +57,10 @@ class Game:
                 break
             choice()
 
-    def init_game(self):
+    def init_game(self) -> None:
         self.builder.build()
 
-    def new_game(self):
+    def new_game(self) -> None:
         self.state = GameState.INIT
         self.init_game()
         self.state = GameState.PLAY
@@ -69,7 +69,7 @@ class Game:
         except KeyboardInterrupt:
             self.console.print("Игра завершена")
 
-    def play(self):
+    def play(self) -> None:
         while True:
             actions = self.actions.actions
             command = self.console.prompt(
@@ -81,6 +81,6 @@ class Game:
                 break
 
 
-def main():
+def main() -> None:
     game = Game()
     game.main()

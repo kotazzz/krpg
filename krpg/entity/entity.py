@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Literal, TYPE_CHECKING
+from typing import Any, Literal, TYPE_CHECKING, Self
 
 from attr import field
 import attr
@@ -25,19 +25,22 @@ class Entity(Nameable):
     _attributes: dict[Attribute, Scale] = field(factory=lambda: {}, init=False)
     queue_actions: list[SkillState] = field(factory=list)
 
-    def __attrs_post_init__(self):
-        for i in Body:
-            if i not in self.parts:
-                self.parts[i] = Scale(*i.value, base_max_value=100)
+    def __attrs_post_init__(self) -> None:
 
-        for i in Attribute:
-            if i not in self.attributes:
-                self.attributes[i] = Scale.infinite(*i.value)
+        for _ in Body:
+            if _ not in self.parts:
+                name, desc = _.value
+                self.parts[_] = Scale(name, desc, base_max_value=100)
 
-        for i in EntityScales:
-            if i not in self.scales:
-                values = i.value[:2]
-                self.scales[i] = Scale(*values, base_max_value=100)
+        for _ in Attribute:
+            if _ not in self.attributes:
+                name, desc = _.value
+                self.attributes[_] = Scale.infinite(name, desc)
+
+        for _ in EntityScales:
+            if _ not in self.scales:
+                name, desc = _.value[:2]
+                self.scales[_] = Scale(name, desc, base_max_value=100)
 
     def calc_bonus(self, attr: Attribute, max_value_bonus: bool = False) -> float:
         # сила - наносимый урон
@@ -76,7 +79,7 @@ class Entity(Nameable):
     def actions(self) -> list[SkillState]:
         return self.inventory.actionable + self.skills.learned
 
-    def set_attr(self, key: Attribute, value: int):
+    def set_attr(self, key: Attribute, value: int) -> Self:
         self.attributes[key].set(value)
         return self
 
@@ -89,7 +92,7 @@ class Entity(Nameable):
         return modifiers
 
     @property
-    def parts(self):
+    def parts(self) -> dict[Body, Scale]:
         p = {i: 0 for i in self._parts}
 
         for mod in self.modifiers:
@@ -98,12 +101,12 @@ class Entity(Nameable):
             for part, pmod in mod.parts.items():
                 p[part] += pmod
 
-        for part, pmod in self._parts.items():
+        for part, _ in self._parts.items():
             self._parts[part].set_bonus(p[part])
         return self._parts
 
     @property
-    def attributes(self):
+    def attributes(self) -> dict[Attribute, Scale]:
         p = {i: 0 for i in self._attributes}
 
         for mod in self.modifiers:
@@ -111,18 +114,18 @@ class Entity(Nameable):
                 raise Exception
             for part, pmod in mod.attributes.items():
                 p[part] += pmod
-        for part, pmod in self._attributes.items():
+        for part, _ in self._attributes.items():
             self._attributes[part].set_bonus(p[part])
 
         return self._attributes
 
     @property
-    def scales(self):
+    def scales(self) -> dict[EntityScales, Scale]:
         for type, scale in self._scales.items():
             scale.set_bonus(100 * self.calc_bonus(type.value[2], max_value_bonus=True))
         return self._scales
 
-    def tick(self, time: int):
+    def tick(self, time: int) -> None:
         for act in self.queue_actions:
             act.prepare = max(0, act.prepare - time)
             if act.prepare == 0:
@@ -147,6 +150,7 @@ class Entity(Nameable):
 
     @property
     def minimal_tick(self) -> list[int]:
+        # TODO: Remove this
         # timers = []
         # for act in self.queue_actions:
         #     timers.append((0, act, act.prepare))
@@ -188,7 +192,7 @@ class Entity(Nameable):
         target.queue_actions.append(skill)
         return None
 
-    def apply_effect(self, effect: EffectState):
+    def apply_effect(self, effect: EffectState) -> None:
         if effect.effect.target == TargetType.ITEM:
             raise ValueError
         if any(isinstance(i, ItemModifier) for i in effect.effect.modifiers):
@@ -216,9 +220,9 @@ class TimeCluster:
             return min(timers)
         return 0
 
-    def tick(self, time: int):
+    def tick(self, time: int) -> None:
         for e in self.entities:
             e.tick(time)
 
-    def auto(self):
+    def auto(self) -> None:
         self.tick(self.minimal_tick)
