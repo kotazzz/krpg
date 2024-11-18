@@ -1,8 +1,9 @@
 from __future__ import annotations
-from typing import Any, Literal, TYPE_CHECKING, Self
 
-from attr import field
+from typing import TYPE_CHECKING, Any, Literal, Self
+
 import attr
+from attr import field
 
 from krpg.entity.effects import EffectState, EntityModifier, ItemModifier
 from krpg.entity.enums import Attribute, Body, EntityScales, ItemTag, TargetType

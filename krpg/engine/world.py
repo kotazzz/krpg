@@ -1,4 +1,5 @@
 import attr
+
 from krpg.engine.actions import Action
 from krpg.engine.npc import Npc
 from krpg.entity.inventory import Item

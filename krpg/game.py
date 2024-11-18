@@ -1,23 +1,25 @@
 from __future__ import annotations
+
 import code
-from itertools import groupby
 import logging
 import sys
+from itertools import groupby
 from typing import Any, Callable
-from rich.console import Group
+
 from rich.align import Align
+from rich.console import Group
 from rich.panel import Panel
+from rich.text import Text
+
 from krpg.builder import Builder
 from krpg.console import KrpgConsole
-from krpg.data.consts import ABOUT, LOGO_GAME
+from krpg.data.consts import ABOUT, LOGO_GAME, __version__
 from krpg.engine.actions import Action, ActionCategory, ActionManager, action
 from krpg.engine.enums import GameState
 from krpg.engine.quests import QuestManager
 from krpg.engine.world import World
 from krpg.entity.bestiary import Bestiary
 from krpg.executer import Executer, Extension
-from krpg.data.consts import __version__
-from rich.text import Text
 
 
 class RootActionManager(ActionManager):

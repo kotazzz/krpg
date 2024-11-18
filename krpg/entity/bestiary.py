@@ -1,7 +1,10 @@
 from __future__ import annotations
+
 from typing import Any
-from attr import field
+
 import attr
+from attr import field
+
 from krpg.utils import Nameable, add, get_by_id
 
 

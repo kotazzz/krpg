@@ -1,7 +1,7 @@
 from itertools import groupby
 
 from rich.columns import Columns
-from rich.console import Group, ConsoleRenderable
+from rich.console import ConsoleRenderable, Group
 from rich.panel import Panel
 from rich.progress_bar import ProgressBar
 from rich.rule import Rule

@@ -2,8 +2,8 @@
 
 import argparse
 
-from krpg.game import main
 from krpg.data.consts import __version__
+from krpg.game import main
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="KRPG", description="Консольная рпг игра", epilog="Ы :)")

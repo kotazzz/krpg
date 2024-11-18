@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 from enum import Enum, StrEnum, auto
 from typing import TYPE_CHECKING, Any
+
 import attr
 
 from krpg.executer import Ctx, Extension, executer_command

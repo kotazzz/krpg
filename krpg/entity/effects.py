@@ -1,14 +1,14 @@
 from __future__ import annotations
-from enum import Enum
+
 import random
+from enum import Enum
 from typing import Any, Callable
 
-from attr import field
 import attr
+from attr import field
 
 from krpg.entity.enums import Attribute, Body, EntityScales, ModifierType, TargetType
 from krpg.utils import DEFAULT_DESCRIPTION, Nameable
-
 
 type number = int | float
 

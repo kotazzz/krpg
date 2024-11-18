@@ -1,7 +1,7 @@
 from typing import MutableSequence, Sequence
-from attr import field
-import attr
 
+import attr
+from attr import field
 
 DEFAULT_DESCRIPTION = field(default="Нет описания", repr=False)
 

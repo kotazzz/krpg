@@ -1,8 +1,10 @@
+import colorsys
+import hashlib
+
 import attr
+
 from krpg.engine.actions import Action
 from krpg.utils import Nameable
-import hashlib
-import colorsys
 
 
 @attr.s(auto_attribs=True)

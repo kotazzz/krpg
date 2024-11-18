@@ -1,6 +1,8 @@
 from typing import Any, Literal, Self
-from attr import field
+
 import attr
+from attr import field
+
 from krpg.utils import Nameable
 
 

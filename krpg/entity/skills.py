@@ -1,17 +1,17 @@
 from __future__ import annotations
-import attr
-from attr import field
-
 
 from typing import TYPE_CHECKING, Self
 
-from krpg.utils import DEFAULT_DESCRIPTION, Nameable, get_by_id
+import attr
+from attr import field
+
 from krpg.entity.enums import TargetType
+from krpg.utils import DEFAULT_DESCRIPTION, Nameable, get_by_id
 
 if TYPE_CHECKING:
-    from krpg.entity.inventory import Item, Slot
-    from krpg.entity.enums import ItemTag
     from krpg.entity.effects import Effect
+    from krpg.entity.enums import ItemTag
+    from krpg.entity.inventory import Item, Slot
 
 
 @attr.s(auto_attribs=True)

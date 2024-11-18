@@ -1,16 +1,16 @@
 from __future__ import annotations
+
+import os
+from typing import TYPE_CHECKING, Any, Callable
+
 from krpg.engine.actions import Action
 from krpg.engine.npc import Npc
 from krpg.engine.quests import Objective, ObjectiveType, Quest, Reward, RewardType, Stage, args_map
+from krpg.engine.world import Location
 from krpg.entity.enums import SlotType
 from krpg.entity.inventory import Item
-from krpg.engine.world import Location
 from krpg.parser import Section, parse, tokenize
-from typing import TYPE_CHECKING, Any, Callable
-import os
-
 from krpg.utils import get_by_id
-
 
 if TYPE_CHECKING:
     from krpg.game import Game

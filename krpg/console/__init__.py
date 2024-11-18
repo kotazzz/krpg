@@ -2,11 +2,11 @@ import logging
 import shlex
 from typing import Any, Literal, Optional
 
+import questionary
 from prompt_toolkit import ANSI
 from prompt_toolkit.completion import WordCompleter
-from prompt_toolkit.shortcuts import PromptSession
 from prompt_toolkit.history import InMemoryHistory
-import questionary
+from prompt_toolkit.shortcuts import PromptSession
 from rich.console import Console
 from rich.logging import RichHandler
 
