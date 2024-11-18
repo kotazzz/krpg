@@ -56,9 +56,7 @@ def render_entity(entity: Entity) -> Panel:
 
     table_attr = Table.grid(padding=(0, 1))
     for attr_type, attr in entity.attributes.items():
-        table_attr.add_row(
-            f"[b][{colors[attr_type]}]{attr.name}: [/b] {attr.value}[/{colors[attr_type]}]"
-        )
+        table_attr.add_row(f"[b][{colors[attr_type]}]{attr.name}: [/b] {attr.value}[/{colors[attr_type]}]")
 
     inventory = Table.grid(padding=(0, 1))
     groups = groupby(entity.inventory.slots, key=lambda x: x.type)
@@ -168,11 +166,7 @@ def render_skill(skill: SkillState) -> Panel:
     return Panel(
         Group(
             info,
-            (
-                Panel(cost_data, title="Стоимость", width=30)
-                if cost_data.row_count > 0
-                else ""
-            ),
+            (Panel(cost_data, title="Стоимость", width=30) if cost_data.row_count > 0 else ""),
             Panel(links, title="Связи", width=30),
             Panel(effects, title="Эффекты", width=30),
         ),

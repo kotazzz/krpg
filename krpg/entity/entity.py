@@ -26,7 +26,6 @@ class Entity(Nameable):
     queue_actions: list[SkillState] = field(factory=list)
 
     def __attrs_post_init__(self) -> None:
-
         for _ in Body:
             if _ not in self.parts:
                 name, desc = _.value
@@ -185,9 +184,7 @@ class Entity(Nameable):
             slot.count -= 1
         self.scales[EntityScales.MP] += -mana_cost
 
-        skill.prepare = round(
-            skill.skill.prepare_time * self.calc_bonus(Attribute.WISDOM)
-        )
+        skill.prepare = round(skill.skill.prepare_time * self.calc_bonus(Attribute.WISDOM))
         skill.cooldown = skill.skill.cooldown + skill.prepare
         target.queue_actions.append(skill)
         return None

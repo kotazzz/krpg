@@ -42,15 +42,9 @@ class ItemModifier:
 @attr.s(auto_attribs=True)
 class EntityModifier:
     # todo: make programmable modifiers?
-    _parts: dict[Body, int] = field(
-        factory=lambda: {}, repr=lambda x: str({i: j for i, j in x.items() if j})
-    )
-    _scales: dict[EntityScales, int] = field(
-        factory=lambda: {}, repr=lambda x: str({i: j for i, j in x.items() if j})
-    )
-    _attributes: dict[Attribute, int] = field(
-        factory=lambda: {}, repr=lambda x: str({i: j for i, j in x.items() if j})
-    )
+    _parts: dict[Body, int] = field(factory=lambda: {}, repr=lambda x: str({i: j for i, j in x.items() if j}))
+    _scales: dict[EntityScales, int] = field(factory=lambda: {}, repr=lambda x: str({i: j for i, j in x.items() if j}))
+    _attributes: dict[Attribute, int] = field(factory=lambda: {}, repr=lambda x: str({i: j for i, j in x.items() if j}))
     mods: list[tuple[ModifierType, int]] = field(factory=list)
 
     @property

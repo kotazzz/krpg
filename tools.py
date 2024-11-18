@@ -2,6 +2,7 @@
 """
 Tools for development. Run with `python tools.py --help`.
 """
+
 import argparse
 import ast
 import json
@@ -26,12 +27,7 @@ def python_set(filename: str, variable: str, new_value: str):
     with open(filename, "r", encoding="utf-8") as file:
         tree = ast.parse(file.read())
     for node in ast.walk(tree):
-        if (
-            isinstance(node, ast.Assign)
-            and len(node.targets) == 1
-            and isinstance(node.targets[0], ast.Name)
-            and node.targets[0].id == variable
-        ):
+        if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name) and node.targets[0].id == variable:
             node.value = ast.Constant(s=new_value)
     with open(filename, "w", encoding="utf-8") as file:
         file.write(ast.unparse(tree))
@@ -55,12 +51,7 @@ def python_get(filename: str, variable: str):
     with open(filename, "r", encoding="utf-8") as file:
         tree = ast.parse(file.read())
     for node in ast.walk(tree):
-        if (
-            isinstance(node, ast.Assign)
-            and len(node.targets) == 1
-            and isinstance(node.targets[0], ast.Name)
-            and node.targets[0].id == variable
-        ):
+        if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name) and node.targets[0].id == variable:
             return node.value  # FIXME: What?
     raise NameError(f"Variable {variable} not found")
 
@@ -139,9 +130,7 @@ def build_hashes(build_args: argparse.Namespace):
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--version", "-v", action="version", version="%(prog)s 1.0")
-subparsers = parser.add_subparsers(
-    dest="command", help="Action to perform", required=True
-)
+subparsers = parser.add_subparsers(dest="command", help="Action to perform", required=True)
 update_sub = subparsers.add_parser("version", help="Update version")
 update_sub.add_argument("version", action="store", nargs="?", help="New version name")
 update_sub.add_argument("--show", action="store_true", help="Show the new version")
