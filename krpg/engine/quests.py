@@ -42,13 +42,13 @@ args_map: dict[Enum, list[type]] = {
 class Objective:
     description: str
     type: ObjectiveType
-    args: list[Any] = []
+    args: list[Any] = attr.ib(factory=list)
 
 
 @attr.s(auto_attribs=True)
 class Reward:
     type: RewardType
-    args: list[Any] = []
+    args: list[Any] = attr.ib(factory=list)
 
 
 class QuestCommandsExtension(Extension):
@@ -65,8 +65,8 @@ class QuestCommandsExtension(Extension):
 @attr.s(auto_attribs=True)
 class QuestManager:
     game: Game
-    active: list[QuestState] = []
-    completed: list[QuestState] = []
+    active: list[QuestState] = attr.ib(factory=list)
+    completed: list[QuestState] = attr.ib(factory=list)
 
     def __attrs_post_init__(self) -> None:
         self.game.add_extension(QuestCommandsExtension())
@@ -77,20 +77,20 @@ class QuestManager:
 
 @attr.s(auto_attribs=True)
 class Quest(Nameable):
-    stages: list[Stage] = []
+    stages: list[Stage] = attr.ib(factory=list)
 
 
 @attr.s(auto_attribs=True)
 class Stage:
     description: str
-    objectives: list[Objective] = []
-    rewards: list[Reward] = []
+    objectives: list[Objective] = attr.ib(factory=list)
+    rewards: list[Reward] = attr.ib(factory=list)
 
 
 @attr.s(auto_attribs=True)
 class QuestState:
     quest: Quest
-    current: list[ObjectiveState] = []
+    current: list[ObjectiveState] = attr.ib(factory=list)
 
     def __attrs_post_init__(self) -> None:
         self.current = [ObjectiveState(objective=stage.objectives[0]) for stage in self.quest.stages]

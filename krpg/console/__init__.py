@@ -11,9 +11,7 @@ from rich.console import Console
 from rich.logging import RichHandler
 
 
-def rich_to_pt_ansi(
-    *args: str, console: Optional[Console] = None, **kwargs: Any
-) -> ANSI:
+def rich_to_pt_ansi(*args: str, console: Optional[Console] = None, **kwargs: Any) -> ANSI:
     kwargs["end"] = kwargs.get("end", "")
     console = console or Console(markup=True)
     console = Console()
@@ -27,7 +25,7 @@ DEFAULT_LEVEL = 1000
 
 class KrpgConsole:
     def __init__(self) -> None:
-        self.session: PromptSession[str] = PromptSession(history=InMemoryHistory())
+        self.session: PromptSession[str] = PromptSession()
 
         self.console = Console()
 
@@ -81,10 +79,7 @@ class KrpgConsole:
         if completer:
             prompt_completer = WordCompleter(
                 list(completer.keys()),
-                meta_dict={
-                    i: rich_to_pt_ansi(j, console=self.console)
-                    for i, j in completer.items()
-                },
+                meta_dict={i: rich_to_pt_ansi(j, console=self.console) for i, j in completer.items()},
             )
 
         if isinstance(text, int):
@@ -101,7 +96,10 @@ class KrpgConsole:
             return True
 
         def parse(text: str) -> list[str]:
-            items = shlex.split(text)
+            try:
+                items = shlex.split(text)
+            except ValueError:
+                return []
             self.history.extend(items)
             return items
 
@@ -124,17 +122,13 @@ class KrpgConsole:
                 return item
 
     def menu(self, title: str, options: dict[str, Any]) -> Any:
-        choices = [
-            questionary.Choice([("green", i)], value=j) for i, j in options.items()
-        ]
+        choices = [questionary.Choice([("green", i)], value=j) for i, j in options.items()]
         s = questionary.Style(
             [
                 ("question", "red bold"),
             ]
         )
-        return questionary.select(
-            title, choices, qmark="", instruction=" ", style=s
-        ).ask()
+        return questionary.select(title, choices, qmark="", instruction=" ", style=s).ask()
 
     def confirm(self, prompt: str, allow_exit: bool = True) -> bool | None:
         while True:

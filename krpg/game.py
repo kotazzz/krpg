@@ -1,6 +1,8 @@
 from __future__ import annotations
+import code
 from itertools import groupby
 import logging
+import sys
 from typing import Any, Callable
 from rich.console import Group
 from rich.align import Align
@@ -14,6 +16,7 @@ from krpg.engine.quests import QuestManager
 from krpg.engine.world import World
 from krpg.entity.bestiary import Bestiary
 from krpg.executer import Executer, Extension
+from krpg.data.consts import __version__
 from rich.text import Text
 
 
@@ -48,9 +51,20 @@ class RootActionManager(ActionManager):
         if game.console.log.level != logging.DEBUG:
             game.console.print("Режим отладки отключен, команда не доступна")
             return
-        cmd = game.console.prompt("$ > ")
-        res = game.executer.evaluate(cmd)
-        game.console.console.print(res)
+
+        class ExitAlt:
+            def __call__(self, confirm: int = 0) -> None:
+                if confirm == 1:
+                    raise SystemExit
+                else:
+                    game.console.print("[red b]Выполнение этой команды приведет к завершению игры. Для подтверждения введите exit(1)\nДля возврата в игру используйте Ctrl + D (или Z)[/]")
+
+            def __repr__(self) -> str:
+                return "Команда приведет к закрытию. Используйте exit(1) для подтверждения"
+
+        v = ".".join(map(str, sys.version_info[:3]))
+        welcome = f"Python {v}, KRPG {__version__}"
+        code.InteractiveConsole(locals={"game": game, "exit": ExitAlt()}).interact(welcome)
 
 
 class Game:
@@ -108,7 +122,7 @@ class Game:
         self.state = GameState.PLAY
         try:
             self.play()
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, EOFError):
             self.console.print("Игра завершена")
             self.state = GameState.MENU
 

@@ -7,18 +7,18 @@ from krpg.utils import Nameable
 
 @attr.s(auto_attribs=True)
 class Location(Nameable):
-    items: list[tuple[Item, int]] = []
-    npcs: list[Npc] = []
+    items: list[tuple[Item, int]] = attr.ib(factory=list)
+    npcs: list[Npc] = attr.ib(factory=list)
     locked: bool = False
-    stage = 0
+    stage: int = 0
     stages: list[list[Action]] = attr.ib(factory=list)
 
 
 @attr.s(auto_attribs=True)
 class World:
     locations: list[Location] = attr.ib(factory=list)
-    current_location: Location | None = None
-    start_location: Location | None = None
+    current_location: Location | None = attr.ib(default=None, repr=lambda x: repr(x.id) if x else "None")
+    start_location: Location | None = attr.ib(default=None, repr=lambda x: repr(x.id) if x else "None")
     roads: list[tuple[Location, Location]] = attr.ib(factory=list, repr=lambda x: f"{len(x)} roads")
 
     def get_roads(self, location: Location) -> list[Location]:
