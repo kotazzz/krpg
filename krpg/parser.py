@@ -42,18 +42,14 @@ class Section:
         item.parrent = self
         self.children.append(item)
 
-    def get(
-        self, name: str, command: bool = True, section: bool = True
-    ) -> Section | Command | None:
+    def get(self, name: str, command: bool = True, section: bool = True) -> Section | Command | None:
         for child in self.children:
             if child.name == name:
                 if command or (section and isinstance(child, Section)):
                     return child
         return None
 
-    def all(
-        self, name: str = "", command: bool = True, section: bool = True
-    ) -> list[Section | Command]:
+    def all(self, name: str = "", command: bool = True, section: bool = True) -> list[Section | Command]:
         result: list[Section | Command] = []
         for child in self.children:
             if not name or child.name == name:
@@ -112,6 +108,7 @@ def tokenize(text: str) -> list[tuple[TokenType, str]]:
         else:
             add_temp()
     add_temp()
+    tokens.append((TokenType.NEWLINE, "\n"))
     return tokens
 
 
