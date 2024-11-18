@@ -25,8 +25,18 @@ class Command:
 
 
 @attr.s(auto_attribs=True)
-class Section(Command):
+class Section:
+    content: list[str] = attr.field(factory=lambda: [])
+    parrent: Section = attr.field(default=None, repr=False)
     children: list[Section | Command] = attr.field(factory=lambda: [])
+
+    @property
+    def name(self) -> str | None:
+        return self.content[0] if self.content else None
+
+    @property
+    def args(self) -> list[str]:
+        return self.content[1:]
 
     def add_children(self, item: Section | Command) -> None:
         item.parrent = self
@@ -42,11 +52,11 @@ class Section(Command):
         return None
 
     def all(
-        self, name: str, command: bool = True, section: bool = True
+        self, name: str = "", command: bool = True, section: bool = True
     ) -> list[Section | Command]:
         result: list[Section | Command] = []
         for child in self.children:
-            if child.name == name:
+            if not name or child.name == name:
                 if command or (section and isinstance(child, Section)):
                     result.append(child)
         return result

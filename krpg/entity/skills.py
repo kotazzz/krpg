@@ -15,8 +15,8 @@ if TYPE_CHECKING:
 
 @attr.s(auto_attribs=True)
 class SkillTree:
-    learned: list[SkillState] = field(factory=list)
     skills: list[Skill] = field(factory=list)
+    learned: list[SkillState] = field(factory=list)
     points: int = 0
     xp: int = 0
     _last_level: int = 0

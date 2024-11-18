@@ -14,7 +14,18 @@ scenarios {
 
 
 items {
-    # TODO: Тут надо бы описать предметы
+    blade "Нож" "Основное оружие убийцы" {
+        slot_type WEAPON
+    }
+    throwing_knife "Метательный нож" "Метательное оружие для дальних атак" {
+        stack 10
+    }
+    shirt "Рубашка" "Обычная рубашка" {
+        slot_type ARMOR
+    }
+    pants "Штаны" "Обычные штаны" {
+        slot_type TROUSERS
+    }
 }
 
 npcs {

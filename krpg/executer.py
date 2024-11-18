@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Callable
 import attr
 
 from krpg.parser import Command, Section
+from krpg.utils import Nameable
 
 if TYPE_CHECKING:
     from krpg.game import Game
@@ -43,26 +44,29 @@ class Base(Extension):
     @staticmethod
     def builtin_print(ctx: Ctx, *args: str) -> None:
         game = ctx.game
-        """Builtin print"""
         text = " ".join(args)
         game.console.print("[blue]" + game.executer.process_text(text))
 
     @executer_command("$")
     @staticmethod
     def builtin_exec(ctx: Ctx, *code: str) -> None:
-        game = ctx.game
-        """Builtin exec"""
+
         exec_str = " ".join(code)
-        env = game.executer.env | {"game": game, "env": game.executer.env}
+        env = ctx.executer.env | {"game": ctx.game, "env": ctx.executer.env}
         exec(exec_str, env)  # noqa
 
     @executer_command("set")
     @staticmethod
     def builtin_set(ctx: Ctx, name: str, expr: str) -> None:
         game = ctx.game
-        """Builtin set"""
-        env = game.executer.env | {"game": game, "env": game.executer.env}
-        game.executer.env[name] = eval(expr, env)  # noqa
+        game.executer.env[name] = ctx.executer.evaluate(expr)  # noqa
+
+    @executer_command("say")
+    @staticmethod
+    def builtin_say(ctx: Ctx, *args: str) -> None:
+        game = ctx.game
+        text = " ".join(args)
+        game.console.print("[green]" + game.executer.process_text(text))
 
 
 @attr.s(auto_attribs=True)
@@ -74,10 +78,23 @@ class Ctx:
 
 @attr.s(auto_attribs=True)
 class Script:
-    game: Game
+    executer: Executer
     section: Section
     position = 0
     env: Enviroment = {}
+
+    def run(self) -> None:
+        while True:
+            if self.position >= len(self.section.children):
+                break
+            command = self.section.children[self.position]
+            self.executer.execute(command, self.env)
+            self.position += 1
+
+
+@attr.s(auto_attribs=True)
+class Scenario(Nameable):
+    script: Script | None = None
 
 
 class Executer:
@@ -117,11 +134,18 @@ class Executer:
                 )
             else:
                 cmds[command.name].callback(ctx, *command.args)
+            return
+        raise ValueError(f"Command {command.name} not found")
 
-    def run(self, section: Section | Command) -> None:
-        # TODO: Мб надо вынести как то? Типо Block
-        if isinstance(section, Section):
-            for child in section.children:
-                self.execute(child, {})
-        else:
-            self.execute(section, {})
+    def run(self, section: Section) -> None:
+        script = Script(self, section)
+        script.run()
+
+    def create_scenario(self, section: Section) -> Scenario:
+        if not section.name:
+            raise ValueError("Scenario name is required")
+        return Scenario(
+            id=section.name,
+            name=section.name,
+            script=Script(self, section),
+        )

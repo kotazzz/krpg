@@ -1,4 +1,5 @@
 from __future__ import annotations
+from itertools import groupby
 from typing import Any, Callable
 from rich.console import Group
 from rich.align import Align
@@ -6,22 +7,44 @@ from rich.panel import Panel
 from krpg.builder import Builder
 from krpg.console import KrpgConsole
 from krpg.data.consts import ABOUT, LOGO_GAME
-from krpg.engine.actions import ActionManager, action
+from krpg.engine.actions import Action, ActionManager, action
 from krpg.engine.enums import GameState
+from krpg.entity.bestiary import Bestiary
 from krpg.executer import Executer
 from rich.text import Text
 
 
 class RootActionManager(ActionManager):
-    @action("exit")
+    @action("exit", "Выйти из игры", "Игра")
     @staticmethod
     def action_exit(game: Game) -> None:
         game.state = GameState.MENU
 
-    @action("test")
+    @action("history", "История команд", "Игра")
     @staticmethod
-    def action_test(game: Game) -> None:
-        game.console.print("Test action")
+    def action_history(game: Game):
+        """Show command history
+
+        Parameters
+        ----------
+        game : Game
+            Game instance
+        """
+        c = game.console
+        c.print(f"[green]История команд: [red]{' '.join(c.get_history())}")
+
+    @action("help", "Показать команды", "Игра")
+    @staticmethod
+    def action_help(game: Game):
+        def get_key(act: Action):
+            return act.category
+
+        actions = sorted(game.actions.actions.values(), key=get_key)
+        cmdcat = groupby(actions, key=get_key)
+        for cat, cmds in cmdcat:
+            game.console.print(f"[b red]{cat}")
+            for cmd in cmds:
+                game.console.print(f" [green]{cmd.name}[/] - {cmd.description}")
 
 
 class Game:
@@ -31,6 +54,7 @@ class Game:
         self.actions = RootActionManager()
         self.executer = Executer(self)
         self.builder = Builder(self)
+        self.bestiary = Bestiary()
 
     def show_logo(self) -> None:
         centered_logo = Align(LOGO_GAME, align="center")
@@ -81,6 +105,7 @@ class Game:
                 break
 
 
-def main() -> None:
+def main(debug: bool) -> None:
     game = Game()
+    game.console.set_debug(debug)
     game.main()

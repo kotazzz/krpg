@@ -46,6 +46,7 @@ class ActionManager:
 
     def _get_actions(self) -> dict[str, Action]:
         actions: dict[str, Action] = {}
+
         for act in self.extract():
             if act.name in actions:
                 raise ValueError(f"Action with name {act.name} already exists")

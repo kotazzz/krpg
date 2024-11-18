@@ -57,6 +57,11 @@ class KrpgConsole:
             5: rich_to_pt_ansi("[bold magenta]>>>>> [/]", console=self.console),
         }
 
+    def set_debug(self, debug: bool) -> None:
+        level = logging.DEBUG if debug else DEFAULT_LEVEL
+        self.handler.setLevel(level)
+        self.log.setLevel(level)
+
     def get_history(self) -> list[str | Any]:
         return [repr(i) if " " in i or not i else i for i in self.history]
 
