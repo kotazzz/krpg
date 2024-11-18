@@ -121,7 +121,6 @@ def build_locations(game: Game, section: Section) -> None:
     for command in section.all(section=False):
         if command.name == "start":
             loc = get_by_id(game.world.locations, command.args[0])
-
             assert loc is not None, f"Location {command.args[0]} not found"
             assert game.world.start_location is None, "Start location already set"
             game.world.start_location = loc

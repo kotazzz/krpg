@@ -13,17 +13,18 @@ if TYPE_CHECKING:
 
 
 type Enviroment = dict[str, Any]
+type ExecuterCommandCallback = Callable[..., None]
 
 
 def executer_command(name: str) -> Callable[..., ExecuterCommand]:
-    def wrapper(callback: Callable[..., None]) -> ExecuterCommand:
+    def wrapper(callback: ExecuterCommandCallback) -> ExecuterCommand:
         return ExecuterCommand(name, callback)
 
     return wrapper
 
 
 class ExecuterCommand:
-    def __init__(self, name: str, callback: Callable[..., None]) -> None:
+    def __init__(self, name: str, callback: ExecuterCommandCallback) -> None:
         self.name = name
         self.callback = callback
 
@@ -51,7 +52,6 @@ class Base(Extension):
     @executer_command("$")
     @staticmethod
     def builtin_exec(ctx: Ctx, *code: str) -> None:
-
         exec_str = " ".join(code)
         env = ctx.executer.env | {"game": ctx.game, "env": ctx.executer.env}
         exec(exec_str, env)  # noqa

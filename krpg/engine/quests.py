@@ -1,9 +1,13 @@
 from __future__ import annotations
 from enum import Enum, StrEnum, auto
-from typing import Any
+from typing import TYPE_CHECKING, Any
 import attr
 
+from krpg.executer import Ctx, Extension, executer_command
 from krpg.utils import Nameable
+
+if TYPE_CHECKING:
+    from krpg.game import Game
 
 
 class RewardType(StrEnum):
@@ -35,9 +39,40 @@ args_map: dict[Enum, list[type]] = {
 
 
 @attr.s(auto_attribs=True)
+class Objective:
+    description: str
+    type: ObjectiveType
+    args: list[Any] = []
+
+
+@attr.s(auto_attribs=True)
+class Reward:
+    type: RewardType
+    args: list[Any] = []
+
+
+class QuestCommandsExtension(Extension):
+    @executer_command("quest")
+    @staticmethod
+    def quest(ctx: Ctx, *args: str) -> None:
+        assert len(args) == 1, f"Expected 1 argument, got {len(args)}"
+        quest_id = args[0]
+        quest = ctx.game.bestiary.get_entity_by_id(quest_id, Quest)
+        assert quest, f"Quest {quest_id} not found"
+        ctx.game.quest_manager.start(quest)
+
+
+@attr.s(auto_attribs=True)
 class QuestManager:
+    game: Game
     active: list[QuestState] = []
     completed: list[QuestState] = []
+
+    def __attrs_post_init__(self) -> None:
+        self.game.add_extension(QuestCommandsExtension())
+
+    def start(self, quest: Quest) -> None:
+        self.active.append(QuestState(quest=quest))
 
 
 @attr.s(auto_attribs=True)
@@ -53,28 +88,12 @@ class Stage:
 
 
 @attr.s(auto_attribs=True)
-class Objective:
-    description: str
-    type: ObjectiveType
-    args: list[Any] = []
-
-
-@attr.s(auto_attribs=True)
-class Reward:
-    type: RewardType
-    args: list[Any] = []
-
-
-@attr.s(auto_attribs=True)
 class QuestState:
     quest: Quest
-    stage: StageState
+    current: list[ObjectiveState] = []
 
-
-@attr.s(auto_attribs=True)
-class StageState:
-    stage: Stage
-    objectives: list[ObjectiveState] = []
+    def __attrs_post_init__(self) -> None:
+        self.current = [ObjectiveState(objective=stage.objectives[0]) for stage in self.quest.stages]
 
 
 @attr.s(auto_attribs=True)

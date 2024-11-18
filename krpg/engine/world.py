@@ -16,10 +16,10 @@ class Location(Nameable):
 
 @attr.s(auto_attribs=True)
 class World:
-    locations: list[Location] = []
+    locations: list[Location] = attr.ib(factory=list)
     current_location: Location | None = None
     start_location: Location | None = None
-    roads: list[tuple[Location, Location]] = []
+    roads: list[tuple[Location, Location]] = attr.ib(factory=list, repr=lambda x: f"{len(x)} roads")
 
     def get_roads(self, location: Location) -> list[Location]:
         froms = [road[0] for road in self.roads if road[1] == location]

@@ -9,6 +9,8 @@ class ActionCategory(StrEnum):
     PLAYER = "Игрок"
     INFO = "Информация"
     OTHER = "Другое"
+    NOT_SET = "Не установлено"
+    DEBUG = "Отладка"
 
 
 @dataclass()
@@ -22,9 +24,7 @@ class Action:
         return f"<Action {self.name} from {self.category}>"
 
 
-def action(
-    name: str, description: str = "No description", category: ActionCategory | str = ""
-) -> Callable[..., Action]:
+def action(name: str, description: str = "No description", category: ActionCategory = ActionCategory.NOT_SET) -> Callable[..., Action]:
     def decorator(callback: Callable[..., Any]) -> Action:
         return Action(name, description, category, callback)
 
