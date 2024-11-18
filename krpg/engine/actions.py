@@ -8,6 +8,7 @@ class ActionCategory(StrEnum):
     GAME = "Игра"
     PLAYER = "Игрок"
     INFO = "Информация"
+    OTHER = "Другое"
 
 
 @dataclass()

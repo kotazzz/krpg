@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, Callable
 
 import attr
 
+from krpg.engine.actions import Action, ActionCategory
 from krpg.parser import Command, Section
 from krpg.utils import Nameable
 
@@ -129,9 +130,7 @@ class Executer:
         cmds = self.get_commands()
         if command.name in cmds:
             if isinstance(command, Section):
-                cmds[command.name].callback(
-                    ctx, *command.args, children=command.children
-                )
+                cmds[command.name].callback(ctx, *command.args, children=command.children)
             else:
                 cmds[command.name].callback(ctx, *command.args)
             return
@@ -149,3 +148,9 @@ class Executer:
             name=section.name,
             script=Script(self, section),
         )
+
+    def create_action(self, section: Section) -> Action:
+        script = Script(self, section)
+        assert len(section.args) == 2, f"Expected 2 arguments, got {len(section.args)}"
+        name, desc = section.args
+        return Action(name=name, description=desc, category=ActionCategory.OTHER, callback=script.run)

@@ -82,10 +82,9 @@ class ObjectiveState:
     completed: bool = False
 
     def check(self) -> None:
-        match self.objective.type:
-            case ObjectiveType.PICKUP:
-                pass
-            case _:
-                raise NotImplementedError(
-                    f"Objective type {self.objective.type} is not implemented"
-                )
+        if self.objective.type == ObjectiveType.PICKUP:
+            pass
+        else:
+            raise NotImplementedError(
+                f"Objective type {self.objective.type} is not implemented"
+            )

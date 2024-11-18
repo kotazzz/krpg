@@ -7,8 +7,9 @@ from rich.panel import Panel
 from krpg.builder import Builder
 from krpg.console import KrpgConsole
 from krpg.data.consts import ABOUT, LOGO_GAME
-from krpg.engine.actions import Action, ActionManager, action
+from krpg.engine.actions import Action, ActionCategory, ActionManager, action
 from krpg.engine.enums import GameState
+from krpg.engine.world import World
 from krpg.entity.bestiary import Bestiary
 from krpg.executer import Executer
 from rich.text import Text
@@ -22,21 +23,14 @@ class RootActionManager(ActionManager):
 
     @action("history", "История команд", "Игра")
     @staticmethod
-    def action_history(game: Game):
-        """Show command history
-
-        Parameters
-        ----------
-        game : Game
-            Game instance
-        """
+    def action_history(game: Game) -> None:
         c = game.console
         c.print(f"[green]История команд: [red]{' '.join(c.get_history())}")
 
     @action("help", "Показать команды", "Игра")
     @staticmethod
-    def action_help(game: Game):
-        def get_key(act: Action):
+    def action_help(game: Game) -> None:
+        def get_key(act: Action) -> ActionCategory | str:
             return act.category
 
         actions = sorted(game.actions.actions.values(), key=get_key)
@@ -53,8 +47,9 @@ class Game:
         self.state = GameState.MENU
         self.actions = RootActionManager()
         self.executer = Executer(self)
-        self.builder = Builder(self)
         self.bestiary = Bestiary()
+        self.world = World()
+        self.builder = Builder(self)
 
     def show_logo(self) -> None:
         centered_logo = Align(LOGO_GAME, align="center")

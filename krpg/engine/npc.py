@@ -1,4 +1,5 @@
 import attr
+from krpg.engine.actions import Action
 from krpg.utils import Nameable
 import hashlib
 import colorsys
@@ -7,6 +8,8 @@ import colorsys
 @attr.s(auto_attribs=True)
 class Npc(Nameable):
     known: bool = False
+    stage: int = 0
+    stages: list[list[Action]] = attr.ib(factory=list)
 
     @property
     def color(self) -> str:

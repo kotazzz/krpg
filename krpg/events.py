@@ -35,7 +35,7 @@ class EventHandler:
         if callback not in self.listeners[event]:
             self.listeners[event].append(callback)
 
-    def lookup(self, obj: object):
+    def lookup(self, obj: object) -> None:
         for attrib in dir(obj):
             item = getattr(obj, attrib)
             if isinstance(item, Listener):
@@ -48,5 +48,5 @@ class EventHandler:
         for listener in self.listeners[Event]:
             listener.callback(event)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<EventHandler listeners={len(self.listeners)}>"

@@ -6,10 +6,11 @@ from attr import field
 from typing import TYPE_CHECKING, Self
 
 from krpg.utils import DEFAULT_DESCRIPTION, Nameable, get_by_id
+from krpg.entity.enums import TargetType
 
 if TYPE_CHECKING:
     from krpg.entity.inventory import Item, Slot
-    from krpg.entity.enums import ItemTag, TargetType
+    from krpg.entity.enums import ItemTag
     from krpg.entity.effects import Effect
 
 

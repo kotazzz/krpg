@@ -12,7 +12,7 @@ class Bestiary:
     def add(self, entity: Nameable) -> None:
         add(self.data, entity)
 
-    def get_entity_by_id[T: type](self, entity_id: str, expected: T) -> T | None:
+    def get_entity_by_id[T](self, entity_id: str, expected: type[T]) -> T | None:
         obj = get_by_id(self.data, entity_id)
         if not obj:
             return None
