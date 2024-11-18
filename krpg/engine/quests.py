@@ -10,6 +10,7 @@ class RewardType(StrEnum):
     UNLOCK = auto()
     RUN = auto()
     INTRODUCE = auto()
+    QUEST = auto()
 
 
 class ObjectiveType(StrEnum):
@@ -20,8 +21,8 @@ class ObjectiveType(StrEnum):
     FREEZE = auto()
 
 
-args: dict[Enum, list[type]] = {
-    ObjectiveType.PICKUP: [str],
+args_map: dict[Enum, list[type]] = {
+    ObjectiveType.PICKUP: [str, int],
     ObjectiveType.WEAR: [str],
     ObjectiveType.VISIT: [str],
     ObjectiveType.TALK: [str],
@@ -29,6 +30,7 @@ args: dict[Enum, list[type]] = {
     RewardType.UNLOCK: [str],
     RewardType.RUN: [str],
     RewardType.INTRODUCE: [str],
+    RewardType.QUEST: [str],
 }
 
 
@@ -85,6 +87,4 @@ class ObjectiveState:
         if self.objective.type == ObjectiveType.PICKUP:
             pass
         else:
-            raise NotImplementedError(
-                f"Objective type {self.objective.type} is not implemented"
-            )
+            raise NotImplementedError(f"Objective type {self.objective.type} is not implemented")

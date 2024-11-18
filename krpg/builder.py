@@ -1,7 +1,7 @@
 from __future__ import annotations
 from krpg.engine.actions import Action
 from krpg.engine.npc import Npc
-from krpg.engine.quests import Objective, ObjectiveType, Quest, Reward
+from krpg.engine.quests import Objective, ObjectiveType, Quest, Reward, RewardType, Stage, args_map
 from krpg.entity.enums import SlotType
 from krpg.entity.inventory import Item
 from krpg.engine.world import Location
@@ -137,8 +137,45 @@ def build_locations(game: Game, section: Section) -> None:
             loc.locked = True
 
 
+def create_quest_stage(game: Game, section: Section) -> Stage:
+    assert len(section.content) == 1, f"Expected 1 argument, got {len(section.content)}"
+    description = section.content[0]
+
+    objectives: list[Objective] = []
+    rewards: list[Reward] = []
+
+    def convert_args(args: list[str], key: ObjectiveType | RewardType) -> list[Any]:
+        assert len(args) == len(args_map[key]), f"Expected {len(args_map[key])} arguments, got {len(args)}"
+        mapped = [args_map[key][i](arg) for i, arg in enumerate(args)]
+        return mapped
+
+    for goal in section.all("goal"):
+        obj_type, *args, description = goal.args
+        assert obj_type in ObjectiveType.__members__, f"Unknown objective type {obj_type}"
+        objective_type = ObjectiveType[obj_type]
+        mapped = convert_args(args, objective_type)
+        obj = Objective(description=description, type=objective_type, args=mapped)
+        objectives.append(obj)
+    for reward in section.all("end"):
+        reward_type, *args = reward.args
+        assert reward_type in RewardType.__members__, f"Unknown reward type {reward_type}"
+        reward_type = RewardType[reward_type]
+        mapped = convert_args(args, reward_type)
+        rew = Reward(type=reward_type, args=mapped)
+        rewards.append(rew)
+    stage = Stage(description=description, objectives=objectives, rewards=rewards)
+    return stage
+
+
 def build_quest(game: Game, section: Section) -> None:
-    pass
+    assert len(section.content) == 3, f"Expected 3 arguments, got {len(section.content)}"
+    id, name, description = section.content
+    quest = Quest(id=id, name=name, description=description)
+    for stage in section.all():
+        assert isinstance(stage, Section)
+        quest_stage = create_quest_stage(game, stage)
+        quest.stages.append(quest_stage)
+    game.bestiary.add(quest)
 
 
 def build_quests(game: Game, section: Section) -> None:
