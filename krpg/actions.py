@@ -44,24 +44,25 @@ def merge_actions(*managers: ActionManager) -> dict[str, Action]:
 
 class ActionManager:
     def __init__(self) -> None:
-        self.actions = self._get_actions()
+        self.submanagers: list[ActionManager] = []
+        self._actions: list[Action] = []
 
-    def _get_actions(self) -> dict[str, Action]:
-        actions: dict[str, Action] = {}
+        for attr in dir(self):
+            if attr == "actions":
+                continue
+            get = getattr(self, attr)
+            if isinstance(get, Action):
+                if get in self._actions:
+                    raise ValueError(f"Action with name {get.name} already exists")
+                self._actions.append(get)
 
-        for act in self.extract():
-            if act.name in actions:
-                raise ValueError(f"Action with name {act.name} already exists")
-            actions[act.name] = act
-
-        for name in dir(self):
-            attr = getattr(self, name)
-            if isinstance(attr, Action):
-                if attr.name in actions:
-                    raise ValueError(f"Action with name {attr.name} already exists")
-                actions[attr.name] = attr
-
-        return actions
+    @property
+    def actions(self) -> dict[str, Action]:
+        actions = list(self.actions.copy().values())
+        actions.extend(self.extract())
+        for manager in self.submanagers:
+            actions.extend(manager.actions.values())
+        return {act.name: act for act in actions}
 
     def extract(self) -> list[Action]:
         return []

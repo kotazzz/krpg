@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING, Any, Callable
 
-from krpg.engine.actions import Action
+from krpg.actions import Action
 from krpg.engine.npc import Npc
 from krpg.engine.quests import Objective, ObjectiveType, Quest, Reward, RewardType, Stage, args_map
 from krpg.engine.world import Location

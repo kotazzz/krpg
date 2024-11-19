@@ -3,7 +3,7 @@ import hashlib
 
 import attr
 
-from krpg.engine.actions import Action
+from krpg.actions import Action
 from krpg.utils import Nameable
 
 

@@ -11,15 +11,15 @@ from rich.console import Group
 from rich.panel import Panel
 from rich.text import Text
 
-from krpg.builder import Builder
+from krpg.engine.builder import Builder
 from krpg.console import KrpgConsole
 from krpg.data.consts import ABOUT, LOGO_GAME, __version__
-from krpg.engine.actions import Action, ActionCategory, ActionManager, action
+from krpg.actions import Action, ActionCategory, ActionManager, action
 from krpg.engine.enums import GameState
 from krpg.engine.quests import QuestManager
 from krpg.engine.world import World
 from krpg.entity.bestiary import Bestiary
-from krpg.executer import Executer, Extension
+from krpg.engine.executer import Executer, Extension
 
 
 class RootActionManager(ActionManager):
@@ -84,6 +84,10 @@ class Game:
     def add_extension(self, extension: Extension) -> None:
         self.executer.extensions.append(extension)
         self.console.log.debug(f"Added extension {extension}")
+
+    def add_action_manager(self, manager: ActionManager) -> None:
+        self.actions.submanagers.append(manager)
+        self.console.log.debug(f"Added action manager {manager}")
 
     def show_logo(self) -> None:
         centered_logo = Align(LOGO_GAME, align="center")

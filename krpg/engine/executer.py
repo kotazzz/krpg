@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Callable
 
 import attr
 
-from krpg.engine.actions import Action, ActionCategory
+from krpg.actions import Action, ActionCategory
 from krpg.parser import Command, Section
 from krpg.utils import Nameable
 

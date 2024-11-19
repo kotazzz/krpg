@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 import attr
 
-from krpg.executer import Ctx, Extension, executer_command
+from krpg.engine.executer import Ctx, Extension, executer_command
 from krpg.utils import Nameable
 
 if TYPE_CHECKING:
