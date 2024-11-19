@@ -58,7 +58,7 @@ class ActionManager:
 
     @property
     def actions(self) -> dict[str, Action]:
-        actions = list(self.actions.copy().values())
+        actions = self._actions.copy()
         actions.extend(self.extract())
         for manager in self.submanagers:
             actions.extend(manager.actions.values())

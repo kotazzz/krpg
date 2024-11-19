@@ -19,7 +19,7 @@ class Event:
     pass
 
 
-def listen(event: EventType) -> Callable[..., Listener]:
+def listener(event: EventType) -> Callable[..., Listener]:
     def decorator(callback: Callback) -> Listener:
         return Listener(event, callback)
 
@@ -32,17 +32,17 @@ class EventHandler:
         for obj in lookup:
             self.lookup(obj)
 
-    def listen(self, event: EventType, callback: Listener) -> None:
-        if callback not in self.listeners[event]:
-            self.listeners[event].append(callback)
+    def subscribe(self, callback: Listener) -> None:
+        if callback not in self.listeners[callback.event]:
+            self.listeners[callback.event].append(callback)
 
     def lookup(self, obj: object) -> None:
         for attrib in dir(obj):
             item = getattr(obj, attrib)
             if isinstance(item, Listener):
-                self.listen(item.event, item)
+                self.subscribe(item)
 
-    def dispatch(self, event: Event) -> None:
+    def publish(self, event: Event) -> None:
         for listener in self.listeners[type(event)]:
             listener.callback(event)
 

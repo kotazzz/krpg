@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import os
 from typing import TYPE_CHECKING, Any, Callable
 
+from krpg import ROOT_DIR
 from krpg.actions import Action
 from krpg.engine.npc import Npc
 from krpg.engine.quests import Objective, ObjectiveType, Quest, Reward, RewardType, Stage, args_map
@@ -124,6 +124,7 @@ def build_locations(game: Game, section: Section) -> None:
             assert loc is not None, f"Location {command.args[0]} not found"
             assert game.world.start_location is None, "Start location already set"
             game.world.start_location = loc
+            game.world.current_location = loc
         elif command.name == "link":
             loc = get_by_id(game.world.locations, command.args[0])
             assert loc is not None, f"Location {command.args[0]} not found"
@@ -191,7 +192,7 @@ class Builder:
     def build(self) -> None:
         if __package__ is None:
             raise ValueError("Package is not set")
-        path = f"{os.path.abspath(__package__)}/{BASE_FOLDER}/{MAIN_FILE}"
+        path = f"{ROOT_DIR}/{BASE_FOLDER}/{MAIN_FILE}"
         with open(path, "r", encoding="utf-8") as file:
             self.main = parse(tokenize(file.read()))
 

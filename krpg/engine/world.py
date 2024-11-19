@@ -27,6 +27,10 @@ class World:
         tos = [road[1] for road in self.roads if road[0] == location]
         return froms + tos
 
+    def get_available_locations(self) -> list[Location]:
+        assert self.current_location, "Current location is not set"
+        return [loc for loc in self.get_roads(self.current_location) if not loc.locked]
+
     def link(self, location1: Location, location2: Location) -> None:
         assert location1 in self.locations, f"Location {location1} not found"
         assert location2 in self.locations, f"Location {location2} not found"

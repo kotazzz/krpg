@@ -1,14 +1,15 @@
 import logging
 import shlex
-from typing import Any, Literal, Optional
+from typing import Any, Callable, Literal, Optional
 
 import questionary
 from prompt_toolkit import ANSI
 from prompt_toolkit.completion import WordCompleter
-from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.shortcuts import PromptSession
 from rich.console import Console
 from rich.logging import RichHandler
+
+from krpg.utils import validate_select
 
 
 def rich_to_pt_ansi(*args: str, console: Optional[Console] = None, **kwargs: Any) -> ANSI:
@@ -74,6 +75,7 @@ class KrpgConsole:
         allow_empty: bool = False,
         disable_parsing: bool = False,
         check_completer: bool = False,
+        validator: Callable[[str], bool] | None = None,
     ) -> str:
         prompt_completer = None
         if completer:
@@ -92,6 +94,8 @@ class KrpgConsole:
             if not text and not allow_empty:
                 return False
             if completer and check_completer and text not in completer.keys():
+                return False
+            if validator and not validator(text):
                 return False
             return True
 
@@ -129,6 +133,17 @@ class KrpgConsole:
             ]
         )
         return questionary.select(title, choices, qmark="", instruction=" ", style=s).ask()
+
+    def select(self, title: str, options: dict[str, Any], use_console: bool = True) -> Any:
+        # use_console = True = console.prompt + validator
+        # else questionary.select
+
+        if use_console:
+            completer = {str(i): j for i, j in options.items()}
+            res = self.prompt(title, completer=completer, validator=validate_select(1, len(options)))
+            return options[res]
+        else:
+            return self.menu(title, options)
 
     def confirm(self, prompt: str, allow_exit: bool = True) -> bool | None:
         while True:

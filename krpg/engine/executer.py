@@ -40,6 +40,9 @@ class Extension:
                 commands[attr.name] = attr
         return commands
 
+    def __repr__(self) -> str:
+        return f"<Extension {self.__class__.__name__}>"
+
 
 class Base(Extension):
     @executer_command("print")
