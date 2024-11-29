@@ -28,7 +28,7 @@ def python_set(filename: str, variable: str, new_value: str):
         tree = ast.parse(file.read())
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name) and node.targets[0].id == variable:
-            node.value = ast.Constant(s=new_value)
+            node.value = ast.Constant(value=new_value)
     with open(filename, "w", encoding="utf-8") as file:
         file.write(ast.unparse(tree))
 
