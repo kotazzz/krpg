@@ -25,9 +25,7 @@ class NewdayEvent(Event):
 
 
 @command
-def wait(
-    clock: Clock, minutes: int
-) -> Generator[TimepassEvent | NewdayEvent, Any, None]:
+def wait(clock: Clock, minutes: int) -> Generator[TimepassEvent | NewdayEvent, Any, None]:
     assert minutes, "Must be number"
     assert minutes > 0, "Must be greater than zero"
     assert minutes < 24 * 60, "Cant skip more, than 1 day"  # TODO: ???
@@ -37,15 +35,15 @@ def wait(
     if clock.days > day:
         yield NewdayEvent(clock.days)
 
+
 @component
 class ClockCommands(ActionManager):
     @action("time", "Узнать, сколько время", ActionCategory.INFO)
     @staticmethod
     def time(game: Game) -> None:
         c = game.clock
-        game.console.print(
-            f"[green]Время: День [yellow]{c.days}[green], [yellow]{c.hours:0>2}:{c.minutes:0>2}[/]"
-        )
+        game.console.print(f"[green]Время: День [yellow]{c.days}[green], [yellow]{c.hours:0>2}:{c.minutes:0>2}[/]")
+
 
 @component
 class ClockExtension(Extension):
@@ -57,7 +55,7 @@ class ClockExtension(Extension):
 
 
 class Clock:
-    def __init__(self) -> None:  
+    def __init__(self) -> None:
         self.global_minutes: int = 60 * 31  # Day 1, 07:00
 
     def in_range(self, start: int, end: int) -> bool:

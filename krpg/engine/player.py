@@ -11,6 +11,7 @@ from krpg.entity.entity import Entity
 if TYPE_CHECKING:
     from krpg.game import Game
 
+
 @component
 class Actions(ActionManager):
     @action("me", "Показать информацию о себе", ActionCategory.INFO)
@@ -28,8 +29,6 @@ class Actions(ActionManager):
         game.console.print(render_location_info(loc))
 
 
-
 class Player:
     def __init__(self) -> None:
         self.entity = Entity("player", "Игрок")
-        

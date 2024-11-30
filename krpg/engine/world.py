@@ -16,6 +16,7 @@ from rich.tree import Tree
 if TYPE_CHECKING:
     from krpg.game import Game
 
+
 @component
 class WorldActions(ActionManager):
     @action("map", "Показать карту", ActionCategory.INFO)
@@ -47,7 +48,6 @@ class WorldActions(ActionManager):
         root = populate(Tree(format_name(cur)), cur)
         game.console.print(Panel(root, title="Карта мира"))
 
-        
     @action("go", "Перейти в локацию", ActionCategory.PLAYER)
     @staticmethod
     def action_go(game: Game) -> None:
@@ -62,10 +62,12 @@ class WorldActions(ActionManager):
         select = game.console.select("Выберите локацию", {loc.name: loc for loc in avail})
         print(select)
 
+
 @attr.s(auto_attribs=True)
 class MoveEvent(Event):
     old_loc: Location
     new_loc: Location
+
 
 @command
 def move(world: World, new_loc: Location) -> Generator[MoveEvent, Any, None]:

@@ -5,7 +5,15 @@ from typing import TYPE_CHECKING, Any, Callable
 from krpg import ROOT_DIR
 from krpg.actions import Action
 from krpg.engine.npc import Npc
-from krpg.engine.quests import Objective, ObjectiveType, Quest, Reward, RewardType, Stage, args_map
+from krpg.engine.quests import (
+    Objective,
+    ObjectiveType,
+    Quest,
+    Reward,
+    RewardType,
+    Stage,
+    args_map,
+)
 from krpg.engine.world import Location
 from krpg.entity.enums import SlotType
 from krpg.entity.inventory import Item
@@ -183,7 +191,6 @@ def build_quests(game: Game, section: Section) -> None:
         assert isinstance(quest, Section)
         assert quest.name, "Quest id is required"
         wrap_log(game, quest, quest.name, build_quest, 1)
-
 
 
 def build(game: Game) -> None:

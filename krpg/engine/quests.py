@@ -55,6 +55,7 @@ class Reward:
     type: RewardType
     args: list[Any] = attr.ib(factory=list)
 
+
 @component
 class QuestCommandsExtension(Extension):
     @executer_command("quest")
@@ -75,8 +76,9 @@ class QuestActions(ActionManager):
         def _format_state(state: QuestState) -> str:
             color = "green" if state.is_completed else "red"
             return f"[{color}]{state.quest.name}[/] - [white]{state.quest.description}"
+
         tree = Tree("[magenta]Квесты")
-        
+
         branch = tree.add("[green b]Выполнено")
         for quest in game.quest_manager.completed:
             branch.add(_format_state(quest))
@@ -85,15 +87,16 @@ class QuestActions(ActionManager):
             tree_quest = branch.add(_format_state(quest))
             for c in quest.completed_stages:
                 tree_quest.add(f"[green]{c.description}")
-            
+
             tree_stage = tree_quest.add(f"[yellow]{quest.stage_data.description}")
             for objective in quest.current:
                 if objective.completed:
-                    tree_stage.add(f'[cyan]{objective.objective.description}')
+                    tree_stage.add(f"[cyan]{objective.objective.description}")
                 else:
                     tree_stage.add(f"[blue]{objective.objective.description}")
 
         game.console.print(tree)
+
 
 @attr.s(auto_attribs=True)
 class QuestManager:
@@ -124,19 +127,19 @@ class QuestState:
 
     @property
     def is_completed(self) -> bool:
-        return all(i.completed for i in self.current) and self.stage_index == len(self.quest.stages)-1
-    
+        return all(i.completed for i in self.current) and self.stage_index == len(self.quest.stages) - 1
+
     @property
     def completed_stages(self) -> list[Stage]:
-        return self.quest.stages[:self.stage_index]
+        return self.quest.stages[: self.stage_index]
 
     @property
     def stage_data(self) -> Stage:
         return self.quest.stages[self.stage_index]
-    
+
     def next_stage(self) -> None:
         if self.is_completed:
-            return 
+            return
         self.stage_index += 1
         self.current = [ObjectiveState(objective=o) for o in self.stage_data.objectives]
 

@@ -27,13 +27,16 @@ from krpg.entity.bestiary import Bestiary
 from krpg.engine.executer import Executer
 from krpg.events import Event, EventHandler
 
+
 @attr.s(auto_attribs=True)
 class StateChange(Event):
     new_state: GameState
 
+
 @command
 def set_state(state: GameState) -> Generator[Event, Any, None]:
     yield StateChange(state)
+
 
 class RootActionManager(ActionManager):
     @action("exit", "Выйти из игры", ActionCategory.GAME)
@@ -81,13 +84,13 @@ class RootActionManager(ActionManager):
         welcome = f"Python {v}, KRPG {__version__}"
         code.InteractiveConsole(locals={"game": game, "exit": ExitAlt()}).interact(welcome)
 
+
 class GameBase:
     def __init__(self) -> None:
         self.state = GameState.MENU
         self.console = KrpgConsole()
         self.events = EventHandler()
         self.commands = CommandManager(self.events)
-        
 
     def show_logo(self) -> None:
         centered_logo = Align(LOGO_GAME, align="center")
@@ -112,7 +115,6 @@ class GameBase:
                 break
             choice()
 
-
     def new_game(self) -> None:
         self.state = GameState.INIT
         loop = Game(self)
@@ -123,11 +125,12 @@ class GameBase:
             self.console.print("Игра завершена")
             self.state = GameState.MENU
 
+
 class Game:
     def __init__(self, game: GameBase) -> None:
         self._game = game
         self.actions = RootActionManager()
-        
+
         self.bestiary = Bestiary()
         self.world = World()
         self.quest_manager = QuestManager()
@@ -140,26 +143,23 @@ class Game:
 
         build(self)
 
-
     @property
     def state(self) -> GameState:
         return self._game.state
-    
+
     @property
     def console(self) -> KrpgConsole:
         return self._game.console
-        
+
     @property
     def events(self) -> EventHandler:
         return self._game.events
-        
+
     @property
     def commands(self) -> CommandManager:
         return self._game.commands
-        
-        
-    def register(self, component: type[Component]) -> None:
 
+    def register(self, component: type[Component]) -> None:
         init = component()
         if isinstance(init, ActionManager):
             self.actions.submanagers.append(init)
