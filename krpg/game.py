@@ -6,24 +6,24 @@ import sys
 from itertools import groupby
 from typing import Any, Callable
 
-import attr
 from rich.align import Align
 from rich.console import Group
 from rich.panel import Panel
 from rich.text import Text
 
-from krpg.command import CommandManager, command
+from krpg.command import CommandManager
 from krpg.engine.builder import Builder
 from krpg.console import KrpgConsole
 from krpg.data.consts import ABOUT, LOGO_GAME, __version__
 from krpg.actions import Action, ActionCategory, ActionManager, action
+from krpg.engine.clock import Clock
 from krpg.engine.enums import GameState
 from krpg.engine.player import Player
 from krpg.engine.quests import QuestManager
 from krpg.engine.world import World
 from krpg.entity.bestiary import Bestiary
 from krpg.engine.executer import Executer, Extension
-from krpg.events import Event, EventHandler, listener
+from krpg.events import EventHandler
 
 
 class RootActionManager(ActionManager):
@@ -71,29 +71,6 @@ class RootActionManager(ActionManager):
         v = ".".join(map(str, sys.version_info[:3]))
         welcome = f"Python {v}, KRPG {__version__}"
         code.InteractiveConsole(locals={"game": game, "exit": ExitAlt()}).interact(welcome)
-
-    @action("test", "Тестовая команда", ActionCategory.DEBUG)
-    @staticmethod
-    def action_test(game: Game) -> None:
-        game.console.print("Тестовая команда")
-
-        @attr.s(auto_attribs=True)
-        class MyEvent(Event):
-            arg: int
-
-        @command
-        def test(x: int):
-            yield MyEvent(x)
-            yield MyEvent(x)
-
-        @listener(Event)
-        def any_event(event: Event):
-            game.console.print(f"Получено событие {event}")
-
-        game.events.subscribe(any_event)
-
-        game.commands.execute(test(1))
-        game.commands.execute(test(2))
 
 
 class Game:
@@ -151,6 +128,7 @@ class Game:
         self.quest_manager = QuestManager(self)
         self.builder = Builder(self)
         self.player = Player(self)
+        self.clock = Clock(self)
         self.builder.build()
 
     def new_game(self) -> None:
