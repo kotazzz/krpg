@@ -4,7 +4,7 @@ from rich.console import Group
 from krpg.engine.world import Location
 
 
-def render_location_info(loc: Location):
+def render_location_info(loc: Location) -> Panel:
     items = Table.grid(padding=(0, 1))
     for item, count in loc.items:
         items.add_row(f"[blue]•[/] [green]{item.name}[/] x [yellow]{count}")

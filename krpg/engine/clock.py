@@ -40,7 +40,7 @@ def wait(
 class ClockCommands(ActionManager):
     @action("time", "Узнать, сколько время", ActionCategory.INFO)
     @staticmethod
-    def time(game: Game):
+    def time(game: Game) -> None:
         c = game.clock
         game.console.print(
             f"[green]Время: День [yellow]{c.days}[green], [yellow]{c.hours:0>2}:{c.minutes:0>2}[/]"
@@ -50,7 +50,7 @@ class ClockCommands(ActionManager):
 class ClockExtension(Extension):
     @executer_command("pass")
     @staticmethod
-    def passtime(game: Game, minutes: str):
+    def passtime(game: Game, minutes: str) -> None:
         assert minutes.isdigit()
         game.commands.execute(wait(int(minutes)))
 

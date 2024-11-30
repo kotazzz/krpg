@@ -19,7 +19,7 @@ class Actions(ActionManager):
     @action("map", "Показать карту", ActionCategory.INFO)
     @staticmethod
     def action_map(game: Game) -> None:
-        def format_name(loc: Location):
+        def format_name(loc: Location) -> str:
             if loc.locked:
                 c = "red"
             elif loc == game.world.current_location:
@@ -28,7 +28,7 @@ class Actions(ActionManager):
                 c = "white"
             return f"[{c}]{loc.name}[/] - {loc.description}"
 
-        def populate(tree: Tree, loc: Location):
+        def populate(tree: Tree, loc: Location) -> Tree:
             if loc.locked:
                 return tree
             for sub in game.world.get_roads(loc):
