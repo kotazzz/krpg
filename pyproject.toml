@@ -17,10 +17,11 @@ skips = [ "B311",]
 python = "^3.9"
 rich = "^13.7.0"
 msgpack = "^1.0.7"
-prompt-toolkit = "^3.0.41"
+prompt-toolkit = "^3.0.36"
 urllib3 = "^2.1.0"
 toml = "^0.10.2"
 attrs = "^24.2.0"
+questionary = "^2.0.1"
 
 [tool.poetry.group.dev.dependencies]
 types-urllib3 = "^1.26.25.14"
