@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 from enum import Enum, StrEnum, auto
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import attr
+from rich.tree import Tree
 
+from krpg.actions import ActionCategory, ActionManager, action
 from krpg.components import component
 from krpg.engine.executer import Ctx, Extension, executer_command
 from krpg.utils import Nameable
 
+if TYPE_CHECKING:
+    from krpg.game import Game
 
 
 class RewardType(StrEnum):
@@ -63,6 +67,34 @@ class QuestCommandsExtension(Extension):
         ctx.game.quest_manager.start(quest)
 
 
+@component
+class QuestActions(ActionManager):
+    @action("quests", "Показывает квесты", ActionCategory.INFO)
+    @staticmethod
+    def quests(game: Game) -> None:
+        def _format_state(state: QuestState) -> str:
+            color = "green" if state.is_completed else "red"
+            return f"[{color}]{state.quest.name}[/] - [white]{state.quest.description}"
+        tree = Tree("[magenta]Квесты")
+        
+        branch = tree.add("[green b]Выполнено")
+        for quest in game.quest_manager.completed:
+            branch.add(_format_state(quest))
+        branch = tree.add("[yellow b]В процессе")
+        for quest in game.quest_manager.active:
+            tree_quest = branch.add(_format_state(quest))
+            for c in quest.completed_stages:
+                tree_quest.add(f"[green]{c.description}")
+            
+            tree_stage = tree_quest.add(f"[yellow]{quest.stage_data.description}")
+            for objective in quest.current:
+                if objective.completed:
+                    tree_stage.add(f'[cyan]{objective.objective.description}')
+                else:
+                    tree_stage.add(f"[blue]{objective.objective.description}")
+
+        game.console.print(tree)
+
 @attr.s(auto_attribs=True)
 class QuestManager:
     active: list[QuestState] = attr.ib(factory=list)
@@ -87,10 +119,29 @@ class Stage:
 @attr.s(auto_attribs=True)
 class QuestState:
     quest: Quest
+    stage_index: int = -1
     current: list[ObjectiveState] = attr.ib(factory=list)
 
+    @property
+    def is_completed(self) -> bool:
+        return all(i.completed for i in self.current) and self.stage_index == len(self.quest.stages)-1
+    
+    @property
+    def completed_stages(self) -> list[Stage]:
+        return self.quest.stages[:self.stage_index]
+
+    @property
+    def stage_data(self) -> Stage:
+        return self.quest.stages[self.stage_index]
+    
+    def next_stage(self) -> None:
+        if self.is_completed:
+            return 
+        self.stage_index += 1
+        self.current = [ObjectiveState(objective=o) for o in self.stage_data.objectives]
+
     def __attrs_post_init__(self) -> None:
-        self.current = [ObjectiveState(objective=stage.objectives[0]) for stage in self.quest.stages]
+        self.next_stage()
 
 
 @attr.s(auto_attribs=True)

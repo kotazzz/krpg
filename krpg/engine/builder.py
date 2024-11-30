@@ -139,7 +139,7 @@ def build_locations(game: Game, section: Section) -> None:
 
 def create_quest_stage(game: Game, section: Section) -> Stage:
     assert len(section.content) == 1, f"Expected 1 argument, got {len(section.content)}"
-    description = section.content[0]
+    stage_description = section.content[0]
 
     objectives: list[Objective] = []
     rewards: list[Reward] = []
@@ -163,7 +163,7 @@ def create_quest_stage(game: Game, section: Section) -> Stage:
         mapped = convert_args(args, reward_type)
         rew = Reward(type=reward_type, args=mapped)
         rewards.append(rew)
-    stage = Stage(description=description, objectives=objectives, rewards=rewards)
+    stage = Stage(description=stage_description, objectives=objectives, rewards=rewards)
     return stage
 
 
