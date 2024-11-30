@@ -4,15 +4,17 @@ import code
 import logging
 import sys
 from itertools import groupby
-from typing import Any, Callable
+from typing import Any, Callable, Generator
 
+import attr
 from rich.align import Align
 from rich.console import Group
 from rich.panel import Panel
 from rich.text import Text
 
-from krpg.command import CommandManager
-from krpg.engine.builder import Builder
+from krpg.components import registry, Component
+from krpg.command import CommandManager, command
+from krpg.engine.builder import build
 from krpg.console import KrpgConsole
 from krpg.data.consts import ABOUT, LOGO_GAME, __version__
 from krpg.actions import Action, ActionCategory, ActionManager, action
@@ -22,15 +24,22 @@ from krpg.engine.player import Player
 from krpg.engine.quests import QuestManager
 from krpg.engine.world import World
 from krpg.entity.bestiary import Bestiary
-from krpg.engine.executer import Executer, Extension
-from krpg.events import EventHandler
+from krpg.engine.executer import Executer
+from krpg.events import Event, EventHandler
 
+@attr.s(auto_attribs=True)
+class StateChange(Event):
+    new_state: GameState
+
+@command
+def set_state(state: GameState) -> Generator[Event, Any, None]:
+    yield StateChange(state)
 
 class RootActionManager(ActionManager):
     @action("exit", "Выйти из игры", ActionCategory.GAME)
     @staticmethod
     def action_exit(game: Game) -> None:
-        game.state = GameState.MENU
+        game.commands.execute(set_state(GameState.MENU))
 
     @action("history", "История команд", ActionCategory.GAME)
     @staticmethod
@@ -72,33 +81,13 @@ class RootActionManager(ActionManager):
         welcome = f"Python {v}, KRPG {__version__}"
         code.InteractiveConsole(locals={"game": game, "exit": ExitAlt()}).interact(welcome)
 
-
-
-
-
-class Game:
-    actions: RootActionManager
-    executer: Executer
-    bestiary: Bestiary
-    world: World
-    quest_manager: QuestManager
-    builder: Builder
-    player: Player
-    commands: CommandManager
-
+class GameBase:
     def __init__(self) -> None:
+        self.state = GameState.MENU
         self.console = KrpgConsole()
         self.events = EventHandler()
         self.commands = CommandManager(self.events)
-        self.state = GameState.MENU
-
-    def add_extension(self, extension: Extension) -> None:
-        self.executer.extensions.append(extension)
-        self.console.log.debug(f"Added extension {extension}")
-
-    def add_action_manager(self, manager: ActionManager) -> None:
-        self.actions.submanagers.append(manager)
-        self.console.log.debug(f"Added action manager {manager}")
+        
 
     def show_logo(self) -> None:
         centered_logo = Align(LOGO_GAME, align="center")
@@ -123,26 +112,62 @@ class Game:
                 break
             choice()
 
-    def init_game(self) -> None:
-        self.actions = RootActionManager()
-        self.executer = Executer(self)
-        self.bestiary = Bestiary()
-        self.world = World()
-        self.quest_manager = QuestManager(self)
-        self.builder = Builder(self)
-        self.player = Player(self)
-        self.clock = Clock(self)
-        self.builder.build()
 
     def new_game(self) -> None:
         self.state = GameState.INIT
-        self.init_game()
+        loop = Game(self)
         self.state = GameState.PLAY
         try:
-            self.play()
+            loop.play()
         except (KeyboardInterrupt, EOFError):
             self.console.print("Игра завершена")
             self.state = GameState.MENU
+
+class Game:
+    def __init__(self, game: GameBase) -> None:
+        self._game = game
+        self.actions = RootActionManager()
+        
+        self.bestiary = Bestiary()
+        self.world = World()
+        self.quest_manager = QuestManager()
+        self.executer = Executer(self)
+        self.player = Player()
+        self.clock = Clock()
+
+        for component in registry.components:
+            self.register(component)
+
+        build(self)
+
+
+    @property
+    def state(self) -> GameState:
+        return self._game.state
+    
+    @property
+    def console(self) -> KrpgConsole:
+        return self._game.console
+        
+    @property
+    def events(self) -> EventHandler:
+        return self._game.events
+        
+    @property
+    def commands(self) -> CommandManager:
+        return self._game.commands
+        
+        
+    def register(self, component: type[Component]) -> None:
+
+        init = component()
+        if isinstance(init, ActionManager):
+            self.actions.submanagers.append(init)
+            self.console.log.debug(f"Added action manager {init}")
+        # elif isinstance(init, Extension):
+        else:
+            self.executer.extensions.append(init)
+            self.console.log.debug(f"Added extension {init}")
 
     def play(self) -> None:
         while True:
@@ -155,6 +180,6 @@ class Game:
 
 
 def main(debug: bool) -> None:
-    game = Game()
+    game = GameBase()
     game.console.set_debug(debug)
     game.main()

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Iterator
+from typing import Any, Callable, Generator
 
 import attr
 from krpg.events import Event, EventHandler
 
 
-type CommandCallback = Callable[..., Iterator[Event]]
+type CommandCallback = Callable[..., Generator[Event, Any, None]]
 
 
 @attr.s(auto_attribs=True)

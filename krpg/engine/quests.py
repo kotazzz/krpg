@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 from enum import Enum, StrEnum, auto
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import attr
 
+from krpg.components import component
 from krpg.engine.executer import Ctx, Extension, executer_command
 from krpg.utils import Nameable
 
-if TYPE_CHECKING:
-    from krpg.game import Game
 
 
 class RewardType(StrEnum):
@@ -52,7 +51,7 @@ class Reward:
     type: RewardType
     args: list[Any] = attr.ib(factory=list)
 
-
+@component
 class QuestCommandsExtension(Extension):
     @executer_command("quest")
     @staticmethod
@@ -66,12 +65,8 @@ class QuestCommandsExtension(Extension):
 
 @attr.s(auto_attribs=True)
 class QuestManager:
-    game: Game
     active: list[QuestState] = attr.ib(factory=list)
     completed: list[QuestState] = attr.ib(factory=list)
-
-    def __attrs_post_init__(self) -> None:
-        self.game.add_extension(QuestCommandsExtension())
 
     def start(self, quest: Quest) -> None:
         self.active.append(QuestState(quest=quest))

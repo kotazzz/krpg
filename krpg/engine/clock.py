@@ -6,6 +6,7 @@ import attr
 
 from krpg.actions import ActionCategory, ActionManager, action
 from krpg.command import command
+from krpg.components import component
 from krpg.engine.executer import Extension, executer_command
 from krpg.events import Event
 
@@ -36,7 +37,7 @@ def wait(
     if clock.days > day:
         yield NewdayEvent(clock.days)
 
-
+@component
 class ClockCommands(ActionManager):
     @action("time", "Узнать, сколько время", ActionCategory.INFO)
     @staticmethod
@@ -46,7 +47,7 @@ class ClockCommands(ActionManager):
             f"[green]Время: День [yellow]{c.days}[green], [yellow]{c.hours:0>2}:{c.minutes:0>2}[/]"
         )
 
-
+@component
 class ClockExtension(Extension):
     @executer_command("pass")
     @staticmethod
@@ -56,7 +57,7 @@ class ClockExtension(Extension):
 
 
 class Clock:
-    def __init__(self, game: Game) -> None:  # TODO: restruct
+    def __init__(self) -> None:  
         self.global_minutes: int = 60 * 31  # Day 1, 07:00
 
     def in_range(self, start: int, end: int) -> bool:

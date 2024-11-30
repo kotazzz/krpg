@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from krpg.actions import ActionCategory, ActionManager, action
+from krpg.components import component
 from krpg.console.entities import render_entity
 from krpg.console.world import render_location_info
 from krpg.engine.world import Location
@@ -14,7 +15,7 @@ from rich.panel import Panel
 if TYPE_CHECKING:
     from krpg.game import Game
 
-
+@component
 class Actions(ActionManager):
     @action("map", "Показать карту", ActionCategory.INFO)
     @staticmethod
@@ -76,7 +77,6 @@ class Actions(ActionManager):
 
 
 class Player:
-    def __init__(self, game: Game) -> None:
-        self.game = game
+    def __init__(self) -> None:
         self.entity = Entity("player", "Игрок")
-        self.game.add_action_manager(Actions())
+        

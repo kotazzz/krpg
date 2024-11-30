@@ -185,32 +185,29 @@ def build_quests(game: Game, section: Section) -> None:
         wrap_log(game, quest, quest.name, build_quest, 1)
 
 
-class Builder:
-    def __init__(self, game: Game):
-        self.game = game
 
-    def build(self) -> None:
-        if __package__ is None:
-            raise ValueError("Package is not set")
-        path = f"{ROOT_DIR}/{BASE_FOLDER}/{MAIN_FILE}"
-        with open(path, "r", encoding="utf-8") as file:
-            self.main = parse(tokenize(file.read()))
+def build(game: Game) -> None:
+    if __package__ is None:
+        raise ValueError("Package is not set")
+    path = f"{ROOT_DIR}/{BASE_FOLDER}/{MAIN_FILE}"
+    with open(path, "r", encoding="utf-8") as file:
+        main_scenario = parse(tokenize(file.read()))
 
-        steps = [
-            ("scenarios", build_scenarios),
-            ("items", build_items),
-            ("npcs", build_npcs),
-            ("locations", build_locations),
-            ("quests", build_quests),
-        ]
-        for name, step in steps:
-            section = self.main.get(name)
-            if section:
-                assert isinstance(section, Section)
-                wrap_log(self.game, section, name, step)
+    steps = [
+        ("scenarios", build_scenarios),
+        ("items", build_items),
+        ("npcs", build_npcs),
+        ("locations", build_locations),
+        ("quests", build_quests),
+    ]
+    for name, step in steps:
+        section = main_scenario.get(name)
+        if section:
+            assert isinstance(section, Section)
+            wrap_log(game, section, name, step)
 
-        init = self.main.get("init")
-        if not init:
-            raise ValueError("No init section found")
-        assert isinstance(init, Section)
-        self.game.executer.run(init)
+    init = main_scenario.get("init")
+    if not init:
+        raise ValueError("No init section found")
+    assert isinstance(init, Section)
+    game.executer.run(init)

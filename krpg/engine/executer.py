@@ -113,8 +113,7 @@ class Executer:
         return t  # noqa
 
     def evaluate(self, text: str) -> Any:
-        game = self.game
-        env = game.executer.env | {"game": game, "env": game.executer.env}
+        env = self.env | {"game": self.game, "env": self.env}
         # Scenario allowed to use python code
         return eval(text, env)  # noqa
 
