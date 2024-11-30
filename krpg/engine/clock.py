@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Generator
 import attr
 
 from krpg.actions import ActionCategory, ActionManager, action
-from krpg.command import command
+from krpg.commands import command
 from krpg.components import component
 from krpg.engine.executer import Extension, executer_command
 from krpg.events import Event

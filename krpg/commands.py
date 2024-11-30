@@ -6,7 +6,7 @@ import attr
 from krpg.events import Event, EventHandler
 
 
-type CommandCallback = Callable[..., Generator[Event, Any, None]]
+type CommandCallback = Callable[..., Generator[Event, Any, Any]]
 
 
 @attr.s(auto_attribs=True)

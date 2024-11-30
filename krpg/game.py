@@ -13,7 +13,7 @@ from rich.panel import Panel
 from rich.text import Text
 
 from krpg.components import registry, Component
-from krpg.command import CommandManager, command
+from krpg.commands import CommandManager, command
 from krpg.engine.builder import build
 from krpg.console import KrpgConsole
 from krpg.data.consts import ABOUT, LOGO_GAME, __version__
@@ -83,7 +83,6 @@ class RootActionManager(ActionManager):
         v = ".".join(map(str, sys.version_info[:3]))
         welcome = f"Python {v}, KRPG {__version__}"
         code.InteractiveConsole(locals={"game": game, "exit": ExitAlt()}).interact(welcome)
-
 
 class GameBase:
     def __init__(self) -> None:

@@ -22,14 +22,3 @@ def add[T: Nameable](collection: MutableSequence[T], obj: T) -> None:
     if get_by_id(collection, obj.id):
         raise ValueError(f"exists: {obj.id}")
     collection.append(obj)
-
-
-def validate_select(start: int, end: int) -> Callable[[str], bool]:
-    def validator(value: str) -> bool:
-        try:
-            res = int(value)
-            return start <= res <= end
-        except ValueError:
-            return False
-
-    return validator

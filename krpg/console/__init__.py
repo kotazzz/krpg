@@ -9,8 +9,6 @@ from prompt_toolkit.shortcuts import PromptSession
 from rich.console import Console
 from rich.logging import RichHandler
 
-from krpg.utils import validate_select
-
 
 def rich_to_pt_ansi(*args: str, console: Optional[Console] = None, **kwargs: Any) -> ANSI:
     kwargs["end"] = kwargs.get("end", "")
@@ -48,12 +46,12 @@ class KrpgConsole:
         self.queue: list[str] = []
         self.history: list[str] = []
 
-        self.levels: dict[int, ANSI] = {
-            1: rich_to_pt_ansi("[bold red]> [/]", console=self.console),
-            2: rich_to_pt_ansi("[bold yellow]>> [/]", console=self.console),
-            3: rich_to_pt_ansi("[bold green]>>> [/]", console=self.console),
-            4: rich_to_pt_ansi("[bold blue]>>>> [/]", console=self.console),
-            5: rich_to_pt_ansi("[bold magenta]>>>>> [/]", console=self.console),
+        self.levels: dict[int, str] = {
+            1: "[bold red]> [/]",
+            2: "[bold yellow]>> [/]",
+            3: "[bold green]>>> [/]",
+            4: "[bold blue]>>>> [/]",
+            5: "[bold magenta]>>>>> [/]",
         }
 
     def set_debug(self, debug: bool) -> None:
@@ -76,9 +74,11 @@ class KrpgConsole:
         disable_parsing: bool = False,
         check_completer: bool = False,
         validator: Callable[[str], bool] | None = None,
-    ) -> str:
+        transformer: Callable[[str], Any] | None = None,
+    ) -> str | None:
         prompt_completer = None
         if completer:
+            completer = {shlex.quote(k): v for k, v in completer.items()}
             prompt_completer = WordCompleter(
                 list(completer.keys()),
                 meta_dict={i: rich_to_pt_ansi(j, console=self.console) for i, j in completer.items()},
@@ -89,6 +89,9 @@ class KrpgConsole:
                 text = self.levels[text]
             except KeyError:
                 raise ValueError(f"Unknown level: {text}")
+            
+        if isinstance(text, str):
+            text = rich_to_pt_ansi(text, console=self.console)
 
         def check(text: str) -> bool:
             if not text and not allow_empty:
@@ -122,7 +125,11 @@ class KrpgConsole:
                     continue
                 item = self.queue.pop(0)
 
+            if item == "e":
+                return None
             if check(item):
+                if transformer:
+                    return transformer(item)
                 return item
 
     def menu(self, title: str, options: dict[str, Any]) -> Any:
@@ -134,13 +141,11 @@ class KrpgConsole:
         )
         return questionary.select(title, choices, qmark="", instruction=" ", style=s).ask()
 
-    def select(self, title: str, options: dict[str, Any], use_console: bool = True) -> Any:
-        # use_console = True = console.prompt + validator
-        # else questionary.select
-
-        if use_console:
-            completer = {str(i): j for i, j in options.items()}
-            res = self.prompt(title, completer=completer, validator=validate_select(1, len(options)))
+    def select(self, title: str, options: dict[str, Any]) -> Any:
+        if self.queue:
+            res = self.prompt(title, completer=options, validator=lambda x: x in options)
+            if not res:
+                return None
             return options[res]
         else:
             return self.menu(title, options)

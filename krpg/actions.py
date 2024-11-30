@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any, Callable
-
+from typing import TYPE_CHECKING, Any, Callable
+if TYPE_CHECKING:
+    from krpg.game import Game
 
 class ActionCategory(StrEnum):
     GAME = "Игра"
@@ -13,6 +14,7 @@ class ActionCategory(StrEnum):
     NOT_SET = "Не установлено"
     DEBUG = "Отладка"
 
+type ActionCallback = Callable[[Game], Any]
 
 @dataclass()
 class Action:
@@ -29,8 +31,8 @@ def action(
     name: str,
     description: str = "No description",
     category: ActionCategory = ActionCategory.NOT_SET,
-) -> Callable[..., Action]:
-    def decorator(callback: Callable[..., Any]) -> Action:
+) -> Callable[[ActionCallback], Action]:
+    def decorator(callback: ActionCallback) -> Action:
         return Action(name, description, category, callback)
 
     return decorator

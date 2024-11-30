@@ -1,4 +1,6 @@
+from __future__ import annotations
 from itertools import groupby
+from typing import TYPE_CHECKING
 
 from rich.columns import Columns
 from rich.console import ConsoleRenderable, Group
@@ -6,14 +8,35 @@ from rich.panel import Panel
 from rich.progress_bar import ProgressBar
 from rich.rule import Rule
 from rich.table import Table
-
-from krpg.entity.effects import Effect, ItemModifier
-from krpg.entity.entity import Entity
 from krpg.entity.enums import Attribute, EntityScales, TargetType
-from krpg.entity.inventory import Item, Slot
-from krpg.entity.skills import SkillState
 
+if TYPE_CHECKING:
+    from krpg.entity.effects import Effect, ItemModifier
+    from krpg.entity.entity import Entity
+    from krpg.entity.inventory import Item, Slot, Inventory
+    from krpg.entity.skills import SkillState
 
+def render_inventory(inventory_data: Inventory):
+    inventory = Table.grid(padding=(0, 1))
+    groups = groupby(inventory_data.slots, key=lambda x: x.type)
+
+    def form_item(slot: Slot) -> str:
+        if not slot.item:
+            return "[yellow]-Пусто-[/]"
+        if slot.count > 1:
+            return f"[yellow]{slot.count}[/]x[green]{slot.item.name}[/]"
+        return f"[green]{slot.item.name}[/]"
+    i = 0
+    def get_index():
+        nonlocal i
+        i+=1
+        return i
+    for type, iter in groups:
+        inventory.add_row(
+            type.value[1],
+            Columns([f"({get_index()}){form_item(item)}" for item in iter], equal=True, align="center"),
+        )
+    return inventory
 def render_entity(entity: Entity) -> Panel:
     colors = {
         Attribute.STRENGTH: "red",
@@ -58,21 +81,7 @@ def render_entity(entity: Entity) -> Panel:
     for attr_type, attr in entity.attributes.items():
         table_attr.add_row(f"[b][{colors[attr_type]}]{attr.name}: [/b] {attr.value}[/{colors[attr_type]}]")
 
-    inventory = Table.grid(padding=(0, 1))
-    groups = groupby(entity.inventory.slots, key=lambda x: x.type)
-
-    def form_item(slot: Slot) -> str:
-        if not slot.item:
-            return "[yellow]-Пусто-[/]"
-        if slot.count > 1:
-            return f"[yellow]{slot.count}[/]x[green]{slot.item.name}[/]"
-        return f"[green]{slot.item.name}[/]"
-
-    for type, iter in groups:
-        inventory.add_row(
-            type.value[1],
-            Columns([form_item(i) for i in iter], equal=True, align="center"),
-        )
+    inventory = render_inventory(entity.inventory)
 
     abilities = Columns()
     for abil in entity.actions:

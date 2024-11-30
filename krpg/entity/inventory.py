@@ -1,15 +1,60 @@
 from __future__ import annotations
 
-from typing import Self
+from typing import Any, Generator, Self
 
 import attr
 from attr import field
 
+from krpg.commands import command
 from krpg.entity.effects import Effect, EffectState
 from krpg.entity.enums import ItemTag, SlotType
 from krpg.entity.skills import SkillState, SkillTree
+from krpg.events import Event
 from krpg.utils import DEFAULT_DESCRIPTION, Nameable
 
+
+@attr.s(auto_attribs=True)
+class EquipEvent(Event):
+    slot: Slot
+
+@attr.s(auto_attribs=True)
+class UnequipEvent(Event):
+    slot: Slot
+
+@attr.s(auto_attribs=True)
+class PickupEvent(Event):
+    item: Item
+    count: int
+
+@attr.s(auto_attribs=True)
+class DropEvent(Event):
+    slot: Slot
+    count: int
+    
+
+@command
+def equip(inventory: Inventory, slot: Slot) -> Generator[EquipEvent | UnequipEvent, Any, None]:
+    res = inventory.equip(slot)
+    if res is True:
+        yield EquipEvent(slot)
+    elif res is False:
+        yield UnequipEvent(slot)
+
+@command
+def pickup(inventory: Inventory, item: Item, count: int) -> Generator[PickupEvent, Any, int | None]:
+    left = inventory.pickup(item, count)
+    yield PickupEvent(item, count)
+    return left
+
+@command
+def drop(slot: Slot, count: int) -> Generator[DropEvent, Any, tuple[Item | None, int]]:
+    assert not slot.empty
+    assert slot.count >= count, f"Count must be less or equal of content ({slot.count} >= {count})"
+    dropped = (slot.item, count)
+    slot.count -= count
+    yield DropEvent(slot, count)
+    return dropped
+    
 
 @attr.s(auto_attribs=True)
 class Inventory:
@@ -80,14 +125,14 @@ class Inventory:
                 return slot
         return None
 
-    def equip(self, slot: Slot) -> bool:
+    def equip(self, slot: Slot) -> bool | None:
         if slot.type != SlotType.ITEM:
             free = self.get_free_slot()
             if free:
                 free.swap(slot)
                 return True
             else:
-                return False
+                return None
         assert slot.item is not None
         slots = self.get_slot(slot.item.slot_type)
         for s in slots:
@@ -96,7 +141,7 @@ class Inventory:
                 break
         else:
             slots[0].swap(slot)
-        return True
+        return False
 
     def pickup(self, item: Item, count: int) -> int | None:
         while count:

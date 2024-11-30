@@ -4,7 +4,7 @@ import attr
 from rich.panel import Panel
 
 from krpg.actions import Action, ActionCategory, ActionManager, action
-from krpg.command import command
+from krpg.commands import command
 from krpg.components import component
 from krpg.engine.npc import Npc
 from krpg.entity.inventory import Item
