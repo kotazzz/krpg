@@ -16,10 +16,12 @@ from krpg.utils import DEFAULT_DESCRIPTION, Nameable
 @attr.s(auto_attribs=True)
 class EquipEvent(Event):
     slot: Slot
+    item: Item
 
 @attr.s(auto_attribs=True)
 class UnequipEvent(Event):
     slot: Slot
+    item: Item
 
 @attr.s(auto_attribs=True)
 class PickupEvent(Event):
@@ -34,11 +36,13 @@ class DropEvent(Event):
 
 @command
 def equip(inventory: Inventory, slot: Slot) -> Generator[EquipEvent | UnequipEvent, Any, None]:
+    assert slot.item
+    item = slot.item
     res = inventory.equip(slot)
     if res is True:
-        yield EquipEvent(slot)
+        yield UnequipEvent(slot, item)
     elif res is False:
-        yield UnequipEvent(slot)
+        yield EquipEvent(slot, item)
 
 @command
 def pickup(inventory: Inventory, item: Item, count: int) -> Generator[PickupEvent, Any, int | None]:

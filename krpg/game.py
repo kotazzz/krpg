@@ -25,7 +25,7 @@ from krpg.engine.quests import QuestManager
 from krpg.engine.world import World
 from krpg.entity.bestiary import Bestiary
 from krpg.engine.executer import Executer
-from krpg.events import Event, EventHandler
+from krpg.events import Event, EventHandler, listener
 
 
 @attr.s(auto_attribs=True)
@@ -90,6 +90,10 @@ class GameBase:
         self.console = KrpgConsole()
         self.events = EventHandler()
         self.commands = CommandManager(self.events)
+        @listener(Event)
+        def debug_event(event: Event):
+            self.console.log.debug(f"Event: {event}")
+        self.events.subscribe(debug_event)
 
     def show_logo(self) -> None:
         centered_logo = Align(LOGO_GAME, align="center")

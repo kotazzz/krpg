@@ -42,8 +42,8 @@ class Actions(ActionManager):
         inventory = game.player.entity.inventory
         console = game.console
 
-        console.print(render_inventory(inventory))
         while True: 
+            console.print(render_inventory(inventory))
             slot: Slot | None = console.list_select("Выберите слот: ", inventory.slots, display_slot, True)
             if slot is None:
                 break
@@ -67,7 +67,7 @@ class Actions(ActionManager):
             if action == "i":
                 console.print(render_item(slot.item))
             elif action == "w":
-                game.commands.execute(equip(slot))
+                game.commands.execute(equip(inventory, slot))
             elif action == "d":
                 def validator(x: str) -> bool:
                     assert slot
