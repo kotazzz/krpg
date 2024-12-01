@@ -16,7 +16,7 @@ from krpg.engine.quests import (
 )
 from krpg.engine.world import Location
 from krpg.entity.enums import SlotType
-from krpg.entity.inventory import Item
+from krpg.entity.inventory import Item, Slot
 from krpg.parser import Section, parse, tokenize
 from krpg.utils import get_by_id
 
@@ -114,9 +114,9 @@ def build_location(game: Game, section: Section) -> None:
         assert item is not None, f"Item {id} not found"
         if len(item_data.args) == 2:
             assert item_data.args[1].isdigit(), f"Expected digit, got {item_data.args[1]}"
-            location.items.append((item, int(item_data.args[1])))
+            location.items.append(Slot(item=item, count=int(item_data.args[1])))
         else:
-            location.items.append((item, 1))
+            location.items.append(Slot(item=item, count=1))
 
     game.world.locations.append(location)
 

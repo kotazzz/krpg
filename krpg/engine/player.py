@@ -6,13 +6,19 @@ from krpg.components import component
 from krpg.console.entities import render_entity, render_item
 from krpg.console.world import render_location_info
 from krpg.entity.entity import Entity
-from krpg.entity.inventory import Slot, drop, equip
+from krpg.entity.inventory import Slot, drop, equip, pickup
 
 
 if TYPE_CHECKING:
     from krpg.game import Game
 
 from krpg.console.entities import render_inventory
+
+
+def display_slot(slot: Slot) -> str:
+    if slot.item:
+        return  f"[yelow]{slot.count}[/]x{slot.item.name}"
+    return "[red]Пусто[/]"
 
 @component
 class Actions(ActionManager):
@@ -38,20 +44,16 @@ class Actions(ActionManager):
 
         console.print(render_inventory(inventory))
         while True: 
-            slot: Slot = console.select(
-                "Выберите слот: ", {
-                    str(i): j for i, j in enumerate(inventory.slots, 1)
-                }
-            )
-            if not slot:
+            slot: Slot | None = console.list_select("Выберите слот: ", inventory.slots, display_slot, True)
+            if slot is None:
                 break
-            if slot.empty:
+            if slot.empty and not slot:
                 console.print("[red]Нельзя выбрать пустой слот")
                 continue
             assert slot.item
 
             console.print(
-                f"[bold green]Управление предметом: {slot.item.name}[/]\n" # Should never happen    
+                f"[bold green]Управление предметом: {slot.item.name}[/]\n"
                 "  [green]i[white] - информация[/]\n"
                 "  [green]w[white] - надеть/снять[/]\n"
                 "  [green]d[white] - выкинуть[/]\n"
@@ -68,11 +70,9 @@ class Actions(ActionManager):
                 game.commands.execute(equip(slot))
             elif action == "d":
                 def validator(x: str) -> bool:
+                    assert slot
                     return x.isdigit() and int(x) <= slot.count and int(x) > 0
-                
-                count = console.prompt(
-                    "Количество: ", validator=validator
-                )
+                count = console.prompt("Количество: ", validator=validator)
                 game.commands.execute(drop(slot, count))
 
     @action("pickup", "Поднять предметы на карте", ActionCategory.PLAYER)
@@ -83,7 +83,13 @@ class Actions(ActionManager):
         console = game.console
         if not loc.items:
             console.print("Нет предметов")
-        raise NotImplementedError
+        slot: Slot | None = console.list_select("Выберите предмет: ", loc.items, display_slot)
+        if not slot:
+            return
+        res: None | int = game.commands.execute(pickup(game.player.entity.inventory, slot.item, slot.count))
+        slot.count = res if res else 0
+
+        
     
 
 class Player:

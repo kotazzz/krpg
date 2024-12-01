@@ -65,7 +65,13 @@ class KrpgConsole:
     def print(self, *args: Any, **kwargs: Any) -> None:
         """Prints the given arguments."""
         self.console.print(*args, **kwargs, highlight=False)
-
+    def print_list(self, items: list[Any], display: Callable[[Any], str]=str, marked: bool = False):
+        if marked:
+            for item in items:
+                self.print(f"[blue]•[/]. [cyan]{display(item)}[/]")
+        else:
+            for i, item in enumerate(items, 1):
+                self.print(f"[blue]{i}[/]. [cyan]{display(item)}[/]")
     def prompt(
         self,
         text: str | int | ANSI,
@@ -112,8 +118,7 @@ class KrpgConsole:
 
         while True:
             if disable_parsing:
-                res = self.session.prompt(text, completer=prompt_completer)
-                return res
+                return self.session.prompt(text, completer=prompt_completer)
             if self.queue:
                 item = self.queue.pop(0)
                 escaped_item = item.replace("[", "\\[")
@@ -149,6 +154,14 @@ class KrpgConsole:
             return options[res]
         else:
             return self.menu(title, options)
+    
+    def list_select(self, title: str, options: list[Any], display:Callable[[Any], str]=str, hide: bool = False) -> Any | None:
+        if not hide:
+            self.print_list(options, display)
+        res = self.prompt(title, {str(i): display(j) for i, j in enumerate(options, 1)}, check_completer=True)
+        if res:
+            return options[int(res)-1]
+        return None
 
     def confirm(self, prompt: str, allow_exit: bool = True) -> bool | None:
         while True:

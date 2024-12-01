@@ -6,8 +6,9 @@ from krpg.engine.world import Location
 
 def render_location_info(loc: Location) -> Panel:
     items = Table.grid(padding=(0, 1))
-    for item, count in loc.items:
-        items.add_row(f"[blue]•[/] [green]{item.name}[/] x [yellow]{count}")
+    for slot in loc.items:
+        assert slot.item
+        items.add_row(f"[blue]•[/] [green]{slot.item.name}[/] x [yellow]{slot.count}")
 
     npcs = Table.grid(padding=(0, 1))
     for npc in loc.npcs:

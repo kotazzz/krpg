@@ -7,7 +7,7 @@ from krpg.actions import Action, ActionCategory, ActionManager, action
 from krpg.commands import command
 from krpg.components import component
 from krpg.engine.npc import Npc
-from krpg.entity.inventory import Item
+from krpg.entity.inventory import Slot
 from krpg.events import Event
 from krpg.utils import Nameable
 
@@ -79,7 +79,7 @@ def move(world: World, new_loc: Location) -> Generator[MoveEvent, Any, None]:
 
 @attr.s(auto_attribs=True)
 class Location(Nameable):
-    items: list[tuple[Item, int]] = attr.ib(factory=list)
+    items: list[Slot] = attr.ib(factory=list)
     npcs: list[Npc] = attr.ib(factory=list)
     locked: bool = False
     stage: int = 0

@@ -8,7 +8,7 @@ from rich.panel import Panel
 from rich.progress_bar import ProgressBar
 from rich.rule import Rule
 from rich.table import Table
-from krpg.entity.enums import Attribute, EntityScales, TargetType
+from krpg.entity.enums import Attribute, EntityScales, SlotType, TargetType
 
 if TYPE_CHECKING:
     from krpg.entity.effects import Effect, ItemModifier
@@ -16,15 +16,39 @@ if TYPE_CHECKING:
     from krpg.entity.inventory import Item, Slot, Inventory
     from krpg.entity.skills import SkillState
 
+colors = {
+    Attribute.STRENGTH: "red",
+    Attribute.PERCEPTION: "green",
+    Attribute.ENDURANCE: "blue",
+    Attribute.CHARISMA: "yellow",
+    Attribute.AGILITY: "magenta",
+    Attribute.INTELLIGENSE: "cyan",
+    Attribute.WISDOM: "white",
+    EntityScales.MP: "blue",
+    EntityScales.EXHAUSTION: "dark_orange3",
+    EntityScales.ENERGY: "yellow",
+    EntityScales.HUNGER: "dark_red",
+    EntityScales.THIRST: "cyan",
+    SlotType.HELMET: "purple4",
+    SlotType.ARMOR: "gold3",
+    SlotType.TROUSERS: "cyan",
+    SlotType.BOOTS: "grey37",
+    SlotType.SHIELD: "dark_green",
+    SlotType.WEAPON: "red",
+    SlotType.RING: "deep_sky_blue1",
+    SlotType.AMULET: "orange_red1",
+    SlotType.ITEM: "slate_blue1",
+}
+
 def render_inventory(inventory_data: Inventory):
     inventory = Table.grid(padding=(0, 1))
     groups = groupby(inventory_data.slots, key=lambda x: x.type)
 
     def form_item(slot: Slot) -> str:
         if not slot.item:
-            return "[yellow]-Пусто-[/]"
+            return "[red]-[/]"
         if slot.count > 1:
-            return f"[yellow]{slot.count}[/]x[green]{slot.item.name}[/]"
+            return f"[yellow]{slot.count:>2}[/]x[green]{slot.item.name}[/]"
         return f"[green]{slot.item.name}[/]"
     i = 0
     def get_index():
@@ -33,25 +57,11 @@ def render_inventory(inventory_data: Inventory):
         return i
     for type, iter in groups:
         inventory.add_row(
-            type.value[1],
-            Columns([f"({get_index()}){form_item(item)}" for item in iter], equal=True, align="center"),
+            f"[{colors[type]}]{type.value[1]}",
+            Columns([f"({get_index():>2}){form_item(item)}" for item in iter], equal=True, align="left"),
         )
-    return inventory
+    return Panel(inventory, title="Инвентарь")
 def render_entity(entity: Entity) -> Panel:
-    colors = {
-        Attribute.STRENGTH: "red",
-        Attribute.PERCEPTION: "green",
-        Attribute.ENDURANCE: "blue",
-        Attribute.CHARISMA: "yellow",
-        Attribute.AGILITY: "magenta",
-        Attribute.INTELLIGENSE: "cyan",
-        Attribute.WISDOM: "white",
-        EntityScales.MP: "blue",
-        EntityScales.EXHAUSTION: "dark_orange3",
-        EntityScales.ENERGY: "yellow",
-        EntityScales.HUNGER: "dark_red",
-        EntityScales.THIRST: "cyan",
-    }
     table_scales = Table.grid(padding=(0, 1))
     for scale_type, s in entity.scales.items():
         c = colors[scale_type]
@@ -82,6 +92,7 @@ def render_entity(entity: Entity) -> Panel:
         table_attr.add_row(f"[b][{colors[attr_type]}]{attr.name}: [/b] {attr.value}[/{colors[attr_type]}]")
 
     inventory = render_inventory(entity.inventory)
+    inventory.width = 40
 
     abilities = Columns()
     for abil in entity.actions:
@@ -103,7 +114,7 @@ def render_entity(entity: Entity) -> Panel:
                     Panel(table_attr, title="Аттрибуты", width=40),
                 ),
                 Group(
-                    Panel(inventory, width=40, title="Инвентарь"),
+                    inventory,
                     Panel(abilities, width=40),
                 ),
             ]
