@@ -1,22 +1,22 @@
 from krpg.actions import ActionManager
 from krpg.engine.executer import Extension
+from krpg.events import Listener
 
 
-Component = ActionManager | Extension
+Component = type[ActionManager] | type[Extension] | Listener
 
 
 class ComponentRegistry:
     def __init__(self) -> None:
-        self.components: list[type[Component]] = []
+        self.components: list[Component] = []
 
-    def register(self, component: type[Component]) -> None:
+    def register(self, component: Component) -> None:
         self.components.append(component)
 
 
 registry = ComponentRegistry()
 
 
-def component(cls: type[Component]) -> type[Component]:
-    assert issubclass(cls, Component), f"{cls} must be {Component}"
+def component(cls: Component) -> Component:
     registry.register(cls)
     return cls

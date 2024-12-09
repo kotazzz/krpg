@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Callable
 
@@ -26,11 +27,21 @@ def listener(event: EventType) -> Callable[..., Listener]:
     return decorator
 
 
+class Middleware(ABC):
+    @abstractmethod
+    def process(self, event: Event) -> None:
+        raise NotImplementedError("Subclasses must implement this method.")
+
+
 class EventHandler:
     def __init__(self, *lookup: object) -> None:
+        self.middlewares: list[Middleware] = []
         self.listeners: dict[EventType, list[Listener]] = defaultdict(list)
         for obj in lookup:
             self.lookup(obj)
+            
+    def add_middleware(self, mw: Middleware):
+        self.middlewares.append(mw)
 
     def subscribe(self, callback: Listener) -> None:
         if callback not in self.listeners[callback.event]:
@@ -43,6 +54,9 @@ class EventHandler:
                 self.subscribe(item)
 
     def publish(self, event: Event) -> None:
+        for mw in self.middlewares:
+            mw.process(event)
+
         for listener in self.listeners[type(event)]:
             listener.callback(event)
 

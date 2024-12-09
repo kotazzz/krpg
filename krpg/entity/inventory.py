@@ -9,27 +9,27 @@ from krpg.commands import command
 from krpg.entity.effects import Effect, EffectState
 from krpg.entity.enums import ItemTag, SlotType
 from krpg.entity.skills import SkillState, SkillTree
-from krpg.events import Event
+from krpg.events_middleware import GameEvent
 from krpg.utils import DEFAULT_DESCRIPTION, Nameable
 
 
 @attr.s(auto_attribs=True)
-class EquipEvent(Event):
+class EquipEvent(GameEvent):
     slot: Slot
     item: Item
 
 @attr.s(auto_attribs=True)
-class UnequipEvent(Event):
+class UnequipEvent(GameEvent):
     slot: Slot
     item: Item
 
 @attr.s(auto_attribs=True)
-class PickupEvent(Event):
+class PickupEvent(GameEvent):
     item: Item
     count: int
 
 @attr.s(auto_attribs=True)
-class DropEvent(Event):
+class DropEvent(GameEvent):
     slot: Slot
     count: int
     

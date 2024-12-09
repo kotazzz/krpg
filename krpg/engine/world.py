@@ -8,7 +8,7 @@ from krpg.commands import command
 from krpg.components import component
 from krpg.engine.npc import Npc
 from krpg.entity.inventory import Slot
-from krpg.events import Event
+from krpg.events_middleware import GameEvent
 from krpg.utils import Nameable
 
 from rich.tree import Tree
@@ -64,7 +64,7 @@ class WorldActions(ActionManager):
 
 
 @attr.s(auto_attribs=True)
-class MoveEvent(Event):
+class MoveEvent(GameEvent):
     old_loc: Location
     new_loc: Location
 

@@ -8,19 +8,19 @@ from krpg.actions import ActionCategory, ActionManager, action
 from krpg.commands import command
 from krpg.components import component
 from krpg.engine.executer import Extension, executer_command
-from krpg.events import Event
+from krpg.events_middleware import GameEvent
 
 if TYPE_CHECKING:
     from krpg.game import Game
 
 
 @attr.s(auto_attribs=True)
-class TimepassEvent(Event):
+class TimepassEvent(GameEvent):
     minutes: int
 
 
 @attr.s(auto_attribs=True)
-class NewdayEvent(Event):
+class NewdayEvent(GameEvent):
     day: int
 
 

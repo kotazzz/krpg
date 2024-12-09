@@ -26,6 +26,7 @@ from krpg.engine.world import World
 from krpg.entity.bestiary import Bestiary
 from krpg.engine.executer import Executer
 from krpg.events import Event, EventHandler, listener
+from krpg.events_middleware import GameMiddleware
 
 
 @attr.s(auto_attribs=True)
@@ -88,12 +89,6 @@ class GameBase:
     def __init__(self) -> None:
         self.state = GameState.MENU
         self.console = KrpgConsole()
-        self.events = EventHandler()
-        self.commands = CommandManager(self.events)
-        @listener(Event)
-        def debug_event(event: Event):
-            self.console.log.debug(f"Event: {event}")
-        self.events.subscribe(debug_event)
 
     def show_logo(self) -> None:
         centered_logo = Align(LOGO_GAME, align="center")
@@ -129,17 +124,27 @@ class GameBase:
             self.state = GameState.MENU
 
 
+    
 class Game:
     def __init__(self, game: GameBase) -> None:
         self._game = game
         self.actions = RootActionManager()
 
+        self.events = EventHandler()
+        self.events.middlewares.append(GameMiddleware(self))
+        self.commands = CommandManager(self.events)
+        
         self.bestiary = Bestiary()
         self.world = World()
         self.quest_manager = QuestManager()
         self.executer = Executer(self)
         self.player = Player()
         self.clock = Clock()
+
+        @listener(Event)
+        def debug_event(event: Event):
+            self.console.log.debug(f"Event: {event}")        
+        self.events.subscribe(debug_event)
 
         for component in registry.components:
             self.register(component)
@@ -154,23 +159,18 @@ class Game:
     def console(self) -> KrpgConsole:
         return self._game.console
 
-    @property
-    def events(self) -> EventHandler:
-        return self._game.events
-
-    @property
-    def commands(self) -> CommandManager:
-        return self._game.commands
-
-    def register(self, component: type[Component]) -> None:
-        init = component()
-        if isinstance(init, ActionManager):
-            self.actions.submanagers.append(init)
-            self.console.log.debug(f"Added action manager {init}")
-        # elif isinstance(init, Extension):
+    def register(self, component: Component) -> None:
+        if isinstance(component, type):
+            item = component()
+            if isinstance(item, ActionManager):
+                self.actions.submanagers.append(item)
+                self.console.log.debug(f"Added action manager {item}")
+            else:
+                self.executer.extensions.append(item)
+                self.console.log.debug(f"Added extension {item}")
         else:
-            self.executer.extensions.append(init)
-            self.console.log.debug(f"Added extension {init}")
+            self.events.subscribe(component)
+            self.console.log.debug(f"Added event subscribe {component}")
 
     def play(self) -> None:
         while True:
