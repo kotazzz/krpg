@@ -7,12 +7,11 @@ from krpg.actions import Action
 from krpg.engine.npc import Npc
 from krpg.engine.quests import (
     Objective,
-    ObjectiveType,
     Quest,
     Reward,
-    RewardType,
     Stage,
-    args_map,
+    objectives_names,
+    rewards_names
 )
 from krpg.engine.world import Location
 from krpg.entity.enums import SlotType
@@ -152,25 +151,18 @@ def create_quest_stage(game: Game, section: Section) -> Stage:
     objectives: list[Objective] = []
     rewards: list[Reward] = []
 
-    def convert_args(args: list[str], key: ObjectiveType | RewardType) -> list[Any]:
-        assert len(args) == len(args_map[key]), f"Expected {len(args_map[key])} arguments, got {len(args)}"
-        mapped = [args_map[key][i](arg) for i, arg in enumerate(args)]
-        return mapped
+
 
     for goal in section.all("goal"):
         obj_type, *args, description = goal.args
-        assert obj_type in ObjectiveType.__members__, f"Unknown objective type {obj_type}"
-        objective_type = ObjectiveType[obj_type]
-        mapped = convert_args(args, objective_type)
-        obj = Objective(description=description, type=objective_type, args=mapped)
+        assert obj_type in objectives_names, f"Unknown objective type {obj_type}"
+        obj = objectives_names[obj_type](description, *args)
         objectives.append(obj)
+
     for reward in section.all("end"):
         reward_type, *args = reward.args
-        assert reward_type in RewardType.__members__, f"Unknown reward type {reward_type}"
-        reward_type = RewardType[reward_type]
-        mapped = convert_args(args, reward_type)
-        rew = Reward(type=reward_type, args=mapped)
-        rewards.append(rew)
+        assert reward_type in rewards_names, f"Unknown reward type {reward_type}"
+        rewards.append(rewards_names[reward_type](*args))
     stage = Stage(description=stage_description, objectives=objectives, rewards=rewards)
     return stage
 

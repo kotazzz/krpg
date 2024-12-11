@@ -21,7 +21,6 @@ def rich_to_pt_ansi(*args: str, console: Optional[Console] = None, **kwargs: Any
 
 DEFAULT_LEVEL = 1000
 
-
 class KrpgConsole:
     def __init__(self) -> None:
         self.session: PromptSession[str] = PromptSession()
@@ -72,16 +71,34 @@ class KrpgConsole:
         else:
             for i, item in enumerate(items, 1):
                 self.print(f"[blue]{i}[/]. [cyan]{display(item)}[/]")
-    def prompt(
+    
+    # TODO: _create completer, _parse text
+    def raw_prompt(self,
+        text: str | int | ANSI,
+        completer: Optional[dict[str, str]] = None,) -> str:
+        prompt_completer = None
+        if completer:
+            completer = {shlex.quote(k): v for k, v in completer.items()}
+            prompt_completer = WordCompleter(
+                list(completer.keys()),
+                meta_dict={i: rich_to_pt_ansi(j, console=self.console) for i, j in completer.items()},
+            )
+        if isinstance(text, int):
+            try:
+                text = self.levels[text]
+            except KeyError:
+                raise ValueError(f"Unknown level: {text}")
+        return self.session.prompt(text, completer=prompt_completer)
+    
+    def prompt[T: Any](
         self,
         text: str | int | ANSI,
         completer: Optional[dict[str, str]] = None,
         allow_empty: bool = False,
-        disable_parsing: bool = False,
         check_completer: bool = False,
         validator: Callable[[str], bool] | None = None,
-        transformer: Callable[[str], Any] | None = None,
-    ) -> str | None:
+        transformer: Callable[[str], T] = lambda x: x, #  type: ignore
+    ) -> T | None:
         prompt_completer = None
         if completer:
             completer = {shlex.quote(k): v for k, v in completer.items()}
@@ -117,8 +134,6 @@ class KrpgConsole:
             return items
 
         while True:
-            if disable_parsing:
-                return self.session.prompt(text, completer=prompt_completer)
             if self.queue:
                 item = self.queue.pop(0)
                 escaped_item = item.replace("[", "\\[")
@@ -133,9 +148,8 @@ class KrpgConsole:
             if item == "e":
                 return None
             if check(item):
-                if transformer:
-                    return transformer(item)
-                return item
+                return transformer(item)
+                
 
     def menu(self, title: str, options: dict[str, Any]) -> Any:
         choices = [questionary.Choice([("green", i)], value=j) for i, j in options.items()]
@@ -155,7 +169,7 @@ class KrpgConsole:
         else:
             return self.menu(title, options)
     
-    def list_select(self, title: str, options: list[Any], display:Callable[[Any], str]=str, hide: bool = False) -> Any | None:
+    def list_select[T](self, title: str, options: list[T], display:Callable[[Any], str]=str, hide: bool = False) -> T | None:
         if not hide:
             self.print_list(options, display)
         res = self.prompt(title, {str(i): display(j) for i, j in enumerate(options, 1)}, check_completer=True)

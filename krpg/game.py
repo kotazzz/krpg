@@ -35,7 +35,8 @@ class StateChange(Event):
 
 
 @command
-def set_state(state: GameState) -> Generator[Event, Any, None]:
+def set_state(game: Game, state: GameState) -> Generator[Event, Any, None]:
+    game.set_state(state)
     yield StateChange(state)
 
 
@@ -43,7 +44,7 @@ class RootActionManager(ActionManager):
     @action("exit", "Выйти из игры", ActionCategory.GAME)
     @staticmethod
     def action_exit(game: Game) -> None:
-        game.commands.execute(set_state(GameState.MENU))
+        game.commands.execute(set_state(game, GameState.MENU))
 
     @action("history", "История команд", ActionCategory.GAME)
     @staticmethod
@@ -151,6 +152,9 @@ class Game:
 
         build(self)
 
+    def set_state(self, state: GameState):
+        self._game.state = state
+
     @property
     def state(self) -> GameState:
         return self._game.state
@@ -176,7 +180,7 @@ class Game:
         while True:
             actions = self.actions.actions
             command = self.console.prompt("> ", {n: a.description for n, a in actions.items()})
-            if command in actions:
+            if command and command in actions:
                 actions[command].callback(self)
             if self.state == GameState.MENU:
                 break

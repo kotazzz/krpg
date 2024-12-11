@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, Generator
 
 import attr
 
 from krpg.actions import Action, ActionCategory
+from krpg.commands import command
+from krpg.events_middleware import GameEvent
 from krpg.parser import Command, Section
 from krpg.utils import Nameable
 
@@ -14,6 +16,15 @@ if TYPE_CHECKING:
 
 type Enviroment = dict[str, Any]
 type ExecuterCommandCallback = Callable[..., None]
+
+@attr.s(auto_attribs=True)
+class ScenarioRun(GameEvent):
+    scenario: Scenario
+
+@command
+def run_scenario(scenario: Scenario) -> Generator[ScenarioRun, Any, None]:
+    yield ScenarioRun(scenario)
+    scenario.script.run()
 
 
 def executer_command(name: str) -> Callable[..., ExecuterCommand]:
@@ -98,7 +109,7 @@ class Script:
 
 @attr.s(auto_attribs=True)
 class Scenario(Nameable):
-    script: Script | None = None
+    script: Script = attr.ib(default=None)
 
 
 class Executer:
@@ -120,10 +131,10 @@ class Executer:
     def get_commands(self) -> dict[str, ExecuterCommand]:
         commands: dict[str, ExecuterCommand] = {}
         for extension in self.extensions:
-            for name, command in extension.get_commands().items():
+            for name, cmd in extension.get_commands().items():
                 if name in commands:
                     raise ValueError(f"Command with name {name} already exists")
-                commands[name] = command
+                commands[name] = cmd
         return commands
 
     def execute(self, command: Command | Section, locals: Enviroment) -> None:

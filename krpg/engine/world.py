@@ -68,6 +68,11 @@ class MoveEvent(GameEvent):
     old_loc: Location
     new_loc: Location
 
+    
+@attr.s(auto_attribs=True)
+class UnlockEvent(GameEvent):
+    loc: Location
+
 
 @command
 def move(world: World, new_loc: Location) -> Generator[MoveEvent, Any, None]:
@@ -75,6 +80,13 @@ def move(world: World, new_loc: Location) -> Generator[MoveEvent, Any, None]:
     assert old_loc, "Move from None"
     yield MoveEvent(old_loc, new_loc)
     world.current_location = new_loc
+
+
+@command
+def unlock(loc: Location) -> Generator[UnlockEvent, Any, None]:
+    loc.locked = False
+    yield UnlockEvent(loc)
+
 
 
 @attr.s(auto_attribs=True)

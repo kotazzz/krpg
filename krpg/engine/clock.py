@@ -51,7 +51,7 @@ class ClockExtension(Extension):
     @staticmethod
     def passtime(game: Game, minutes: str) -> None:
         assert minutes.isdigit()
-        game.commands.execute(wait(int(minutes)))
+        game.commands.execute(wait(game.clock, int(minutes)))
 
 
 class Clock:

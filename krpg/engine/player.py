@@ -72,7 +72,11 @@ class Actions(ActionManager):
                 def validator(x: str) -> bool:
                     assert slot
                     return x.isdigit() and int(x) <= slot.count and int(x) > 0
-                count = console.prompt("Количество: ", validator=validator)
+                count = console.prompt("Количество: ", validator=validator, transformer=int)
+                
+                if not count:
+                    console.print("Действие отмененео")
+                    continue
                 game.commands.execute(drop(slot, count))
 
     @action("pickup", "Поднять предметы на карте", ActionCategory.PLAYER)
@@ -84,7 +88,7 @@ class Actions(ActionManager):
         if not loc.items:
             console.print("Нет предметов")
         slot: Slot | None = console.list_select("Выберите предмет: ", loc.items, display_slot)
-        if not slot:
+        if not slot or not slot.item:
             return
         res: None | int = game.commands.execute(pickup(game.player.entity.inventory, slot.item, slot.count))
         slot.count = res if res else 0
