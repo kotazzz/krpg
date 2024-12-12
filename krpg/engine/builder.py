@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Callable
 
 from krpg import ROOT_DIR
-from krpg.actions import Action
+from krpg.engine.executer import Scenario
 from krpg.engine.npc import Npc
 from krpg.engine.quests import (
     Objective,
@@ -26,10 +26,10 @@ MAIN_FILE = "main.krpg"
 
 BASE_FOLDER = "content"
 
-type ScenarioBuilder = Callable[[Game, Section], Any]
 
 
-def wrap_log(game: Game, section: Section, name: str, func: ScenarioBuilder, indent: int = 0) -> Any:
+
+def wrap_log[T](game: Game, section: Section, name: str, func: Callable[[Game, Section], T], indent: int = 0) -> T:
     game.console.log.debug(f"[Builder] {'  '*indent}Building {name}")
     return func(game, section)
 
@@ -74,12 +74,12 @@ def build_items(game: Game, section: Section) -> None:
         wrap_log(game, item, item.name, build_item, 1)
 
 
-def create_stage(game: Game, section: Section) -> list[Action]:
-    stage_actions: list[Action] = []
+def create_stage(game: Game, section: Section) -> list[Scenario]:
+    stage_actions: list[Scenario] = []
     for action in section.all():
         assert isinstance(action, Section)
-        act = game.executer.create_action(action)
-        stage_actions.append(act)
+        sc = game.executer.create_scenario(action)
+        stage_actions.append(sc)
     return stage_actions
 
 
@@ -122,6 +122,12 @@ def build_location(game: Game, section: Section) -> None:
             location.items.append(Slot(item=item, count=int(item_data.args[1])))
         else:
             location.items.append(Slot(item=item, count=1))
+    for npc_data in section.all("npc"):
+        assert len(npc_data.args) == 1, "Syntax: npc [id]"
+        npc_id = npc_data.args[0]
+        npc = game.bestiary.get_entity_by_id(npc_id, Npc)
+        assert npc
+        location.npcs.append(npc)
 
     game.world.locations.append(location)
 

@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Any, Callable, Generator
 
 import attr
 
-from krpg.actions import Action, ActionCategory
 from krpg.commands import command
 from krpg.events_middleware import GameEvent
 from krpg.parser import Command, Section
@@ -162,8 +161,4 @@ class Executer:
             script=Script(self, section),
         )
 
-    def create_action(self, section: Section) -> Action:
-        script = Script(self, section)
-        assert len(section.args) == 2, f"Expected 2 arguments, got {len(section.args)}"
-        name, desc = section.args
-        return Action(name=name, description=desc, category=ActionCategory.OTHER, callback=script.run)
+    

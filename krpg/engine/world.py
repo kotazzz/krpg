@@ -3,9 +3,10 @@ from typing import TYPE_CHECKING, Any, Generator
 import attr
 from rich.panel import Panel
 
-from krpg.actions import Action, ActionCategory, ActionManager, action
+from krpg.actions import ActionCategory, ActionManager, action
 from krpg.commands import command
 from krpg.components import component
+from krpg.engine.executer import Scenario
 from krpg.engine.npc import Npc
 from krpg.entity.inventory import Slot
 from krpg.events_middleware import GameEvent
@@ -96,13 +97,13 @@ class Location(Nameable):
     npcs: list[Npc] = attr.ib(factory=list)
     locked: bool = False
     stage: int = 0
-    stages: list[list[Action]] = attr.ib(factory=list)
+    stages: list[list[Scenario]] = attr.ib(factory=list)
 
 
 @attr.s(auto_attribs=True)
 class World:
     locations: list[Location] = attr.ib(factory=list)
-    current_location: Location | None = attr.ib(default=None, repr=lambda x: repr(x.id) if x else "None")
+    current_location: Location = attr.ib(init=False, repr=lambda x: repr(x.id) if x else "None")
     start_location: Location | None = attr.ib(default=None, repr=lambda x: repr(x.id) if x else "None")
     roads: list[tuple[Location, Location]] = attr.ib(factory=list, repr=lambda x: f"{len(x)} roads")
 

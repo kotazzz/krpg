@@ -21,7 +21,7 @@ class Action:
     name: str
     description: str
     category: ActionCategory | str
-    callback: Callable[..., Any]
+    callback: ActionCallback
 
     def __repr__(self) -> str:
         return f"<Action {self.name} from {self.category}>"

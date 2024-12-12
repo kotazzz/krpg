@@ -12,7 +12,7 @@ def render_location_info(loc: Location) -> Panel:
 
     npcs = Table.grid(padding=(0, 1))
     for npc in loc.npcs:
-        npcs.add_row(str(npc))
+        npcs.add_row(f"[blue]•[/] [green]{npc.name}[/] - [yellow]{npc.description}")
 
     return Panel(
         Group(

@@ -175,7 +175,15 @@ class KrpgConsole:
                     return None
                 return options[res]
         else:
-            return self.menu(title, options)
+            val = self.menu(title, options)
+            if not val:
+                history = "e"
+            elif indexed:
+                history = str(list(options.values()).index(val) + 1)
+            else:
+                history = {v: k for k, v in options.items()}[val]
+            self.history.append(history)
+            return val
     
     def list_select[T](self, title: str, options: list[T], display:Callable[[Any], str]=str, hide: bool = False) -> T | None:
         if not hide:
