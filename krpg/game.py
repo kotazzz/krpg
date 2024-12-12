@@ -129,6 +129,9 @@ class GameBase:
 class Game:
     def __init__(self, game: GameBase) -> None:
         self._game = game
+        self.console.log.debug("[green b]Loading game")
+        self.console.history.clear()
+
         self.actions = RootActionManager()
 
         self.events = EventHandler()

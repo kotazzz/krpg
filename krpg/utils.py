@@ -1,4 +1,4 @@
-from typing import Callable, MutableSequence, Sequence
+from typing import MutableSequence, Sequence
 
 import attr
 from attr import field

@@ -47,7 +47,7 @@ class Actions(ActionManager):
             slot: Slot | None = console.list_select("Выберите слот: ", inventory.slots, display_slot, True)
             if slot is None:
                 break
-            if slot.empty and not slot:
+            if slot.empty or not slot:
                 console.print("[red]Нельзя выбрать пустой слот")
                 continue
             assert slot.item
@@ -92,6 +92,8 @@ class Actions(ActionManager):
             return
         res: None | int = game.commands.execute(pickup(game.player.entity.inventory, slot.item, slot.count))
         slot.count = res if res else 0
+        if slot.empty:
+            loc.items.remove(slot)
 
         
     

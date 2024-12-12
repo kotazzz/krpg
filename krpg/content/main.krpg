@@ -237,7 +237,7 @@ quests {
             goal PICKUP throwing_knife 3 "Взять три метательных ножа"
             goal WEAR shirt "Надеть рубашку"
             goal WEAR pants "Надеть штаны"
-            end UNLOCK steet
+            end UNLOCK street
             end RUN first_trip
             end INTRODUCE clay
         }

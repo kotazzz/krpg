@@ -11,11 +11,11 @@ from krpg.commands import Command, command
 from krpg.components import component
 from krpg.engine.executer import Ctx, Extension, Scenario, executer_command, run_scenario
 from krpg.engine.npc import Npc, TalkNpc, introduce
-from krpg.engine.world import Location, MoveEvent, unlock
+from krpg.engine.world import MoveEvent, unlock
 from krpg.entity.inventory import EquipEvent, PickupEvent, UnequipEvent
 from krpg.events import Event, listener
 from krpg.events_middleware import GameEvent, HasGame
-from krpg.utils import Nameable
+from krpg.utils import Nameable, get_by_id
 
 if TYPE_CHECKING:
     from krpg.game import Game
@@ -26,10 +26,21 @@ type StateUpdate[T] = tuple[T, bool] | bool | None
 class StartQuest(GameEvent):
     quest: Quest
 
+    
+@attr.s(auto_attribs=True)
+class RewardEvent(GameEvent):
+    reward: Reward
+
 @command
 def start_quest(qm: QuestManager, quest: Quest) -> Generator[StartQuest, Any, None]:
     yield StartQuest(quest)
     qm.start(quest)
+
+@command
+def run_reward(game: Game, reward: Reward):
+    cmd = reward.run(game)
+    yield RewardEvent(reward)
+    game.commands.execute(cmd)
 
 @component
 class QuestCommandsExtension(Extension):
@@ -65,7 +76,7 @@ class QuestActions(ActionManager):
                 tree_quest.add(f"[green]{c.description}")
 
             tree_stage = tree_quest.add(f"[yellow]{quest.stage_data.description}")
-            for objective in quest.current:
+            for objective in quest.objectives:
                 if objective.completed:
                     tree_stage.add(f"[cyan]{objective.objective.description}")
                 else:
@@ -79,7 +90,7 @@ class QuestActions(ActionManager):
 def test(e: Event):
     if not isinstance(e, HasGame):
         return
-    
+    e.game.quest_manager.check_quests(e)
 
 
 @attr.s(auto_attribs=True)
@@ -89,6 +100,16 @@ class QuestManager:
 
     def start(self, quest: Quest) -> None:
         self.active.append(QuestState(quest=quest))
+
+    def complete(self, quest: QuestState):
+        self.active.remove(quest)
+        self.completed.append(quest)
+    
+    def check_quests(self, event: Event):
+        for q in self.active:
+            q.check_stage(event)
+            if q.is_completed:
+                self.complete(q)
 
 
 @attr.s(auto_attribs=True)
@@ -100,11 +121,11 @@ class Quest(Nameable):
 class QuestState:
     quest: Quest
     stage_index: int = -1
-    current: list[ObjectiveState] = attr.ib(factory=list)
-
+    objectives: list[ObjectiveState] = attr.ib(factory=list)
+    paused: bool = False
     @property
     def is_completed(self) -> bool:
-        return all(i.completed for i in self.current) and self.stage_index == len(self.quest.stages) - 1
+        return all(i.completed for i in self.objectives) and self.stage_index == len(self.quest.stages) - 1
 
     @property
     def completed_stages(self) -> list[Stage]:
@@ -115,10 +136,26 @@ class QuestState:
         return self.quest.stages[self.stage_index]
 
     def next_stage(self) -> None:
-        if self.is_completed:
+        if self.stage_index < len(self.quest.stages):
+            self.stage_index += 1
+            self.objectives = [o.create() for o in self.stage_data.objectives]
+
+    def check_stage(self, event: Event) -> None:
+        if self.paused:
             return
-        self.stage_index += 1
-        self.current = [o.create() for o in self.stage_data.objectives]
+        if not isinstance(event, HasGame):
+            raise ValueError("Event must have game")
+        for o in self.objectives:
+            o.check(event)
+        if all(i.completed for i in self.objectives):
+            self.paused = True
+            for r in self.stage_data.rewards:
+                event.game.commands.execute(
+                    run_reward(event.game, r)
+                )
+            self.next_stage()
+            self.paused = False
+            
 
     def __attrs_post_init__(self) -> None:
         self.next_stage()
@@ -142,7 +179,7 @@ class Objective(ABC):
     description: str
     
     @abstractmethod
-    def check(self, event: GameEvent, state: StatusType, completed: bool) -> StateUpdate[StatusType]:
+    def check(self, event: Event, state: StatusType, completed: bool) -> StateUpdate[StatusType]:
         raise NotImplementedError
     
     def create(self) -> ObjectiveState:
@@ -162,7 +199,7 @@ class ObjectiveState:
     def __attrs_post_init__(self):
         self.completed = False
 
-    def check(self, event: GameEvent) -> None:
+    def check(self, event: Event) -> None:
         res = self.objective.check(event, self.state, self.completed)
         if res is None:
             return
@@ -195,17 +232,17 @@ def reward[T: type[Reward]](name: str) -> Callable[[T], T]:
 @attr.s(auto_attribs=True)
 class PickupObjective(Objective):
     item_id: str
-    count: int
+    count: int = attr.ib(converter=int)
     def create(self) -> ObjectiveState:
         return ObjectiveState(self, 0)
     
-    def check(self, event: GameEvent, state: int, completed: bool) -> StateUpdate[int]:
+    def check(self, event: Event, state: int, completed: bool) -> StateUpdate[int]:
         if not isinstance(event, PickupEvent):
             return None
         if not event.item.id == self.item_id:
             return None
         new = state + event.count
-        return new, new > self.count
+        return new, new >= self.count
     
     def status(self, state: int) -> str | None:
         return f"{state}/{self.count}"
@@ -214,19 +251,17 @@ class PickupObjective(Objective):
 @attr.s(auto_attribs=True)
 class WearObjective(Objective):
     item_id: str
-    def check(self, event: GameEvent, state: Any, completed: bool) -> StateUpdate[None]:
-        if isinstance(event, EquipEvent):
+    def check(self, event: Event, state: Any, completed: bool) -> StateUpdate[None]:
+        if isinstance(event, EquipEvent) and not completed:
             return event.item.id == self.item_id
-        if isinstance(event, UnequipEvent):
-            if not completed:
-                return 
+        if isinstance(event, UnequipEvent) and completed:
             return not event.item.id == self.item_id
         
 @objective("VISIT")
 @attr.s(auto_attribs=True)
 class VisitObjective(Objective):
     loc_id: str
-    def check(self, event: GameEvent, state: int, completed: bool) -> StateUpdate[None]:
+    def check(self, event: Event, state: int, completed: bool) -> StateUpdate[None]:
         if isinstance(event, MoveEvent):
             return event.new_loc.id == self.loc_id
 
@@ -234,14 +269,14 @@ class VisitObjective(Objective):
 @attr.s(auto_attribs=True)
 class TalkObjective(Objective):
     npc_id: str
-    def check(self, event: GameEvent, state: int, completed: bool) -> StateUpdate[None]:
+    def check(self, event: Event, state: int, completed: bool) -> StateUpdate[None]:
         if isinstance(event, TalkNpc):
             return event.npc.id == self.npc_id
     
 @objective("FREEZE")
 @attr.s(auto_attribs=True)
 class FreezeObjective(Objective):
-    def check(self, event: GameEvent, state: int, completed: bool) -> StateUpdate[None]:
+    def check(self, event: Event, state: int, completed: bool) -> StateUpdate[None]:
         return None
 
 
@@ -250,13 +285,13 @@ class FreezeObjective(Objective):
 class UnlockReward(Reward):
     loc_id: str
     def run(self, game: Game) -> Command[...]:
-        loc = game.bestiary.get_entity_by_id(self.loc_id, Location)
+        loc = get_by_id(game.world.locations, self.loc_id)
         assert loc, f"{self.loc_id} doesnt exist"
         return unlock(loc)
 
 @reward("RUN")
 @attr.s(auto_attribs=True)    
-class RunReward(Reward):
+class ScriptReward(Reward):
     scenario_id: str
     def run(self, game: Game) -> Command[...]:
         sc = game.bestiary.get_entity_by_id(self.scenario_id, Scenario)

@@ -34,12 +34,18 @@ def wrap_log(game: Game, section: Section, name: str, func: ScenarioBuilder, ind
     return func(game, section)
 
 
+def build_scenario(game: Game, section: Section):
+     game.bestiary.add(
+            game.executer.create_scenario(section),
+        )
+
 def build_scenarios(game: Game, section: Section) -> None:
     for scenario in section.all(command=False):
         assert isinstance(scenario, Section)
-        game.bestiary.add(
-            game.executer.create_scenario(scenario),
-        )
+        if not scenario.name:
+            raise ValueError
+        wrap_log(game, scenario, scenario.name, build_scenario, 1)
+       
 
 
 def build_item(game: Game, section: Section) -> None:

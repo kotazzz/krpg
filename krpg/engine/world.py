@@ -59,8 +59,9 @@ class WorldActions(ActionManager):
         for i, loc in enumerate(avail, 1):
             game.console.print(f"{i}. {loc.name}")
         # TODO: questionary
-        select = game.console.select("Выберите локацию", {loc.name: loc for loc in avail})
-        print(select)
+        select = game.console.select("Выберите локацию: ", {loc.name: loc for loc in avail}, True)
+        if select:
+            game.commands.execute(move(game.world, select))
 
 
 @attr.s(auto_attribs=True)

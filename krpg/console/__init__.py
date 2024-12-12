@@ -160,12 +160,20 @@ class KrpgConsole:
         )
         return questionary.select(title, choices, qmark="", instruction=" ", style=s).ask()
 
-    def select(self, title: str, options: dict[str, Any]) -> Any:
+    def select[T: Any](self, title: str, options: dict[str, T], indexed: bool = False) -> T | None:
         if self.queue:
-            res = self.prompt(title, completer=options, validator=lambda x: x in options)
-            if not res:
-                return None
-            return options[res]
+            if indexed:
+                completer = {str(i): v for i, v in enumerate(options.keys(), 1)}
+                res = self.prompt(title, completer, validator=lambda x: x.isdigit() and 0 < int(x) <= len(options), transformer=int)
+                if not res:
+                    return None
+                return list(options.values())[res-1]
+            else:
+                completer = {i: str(j) for i, j in options.items()}
+                res = self.prompt(title, completer, validator=lambda x: x in options)
+                if not res:
+                    return None
+                return options[res]
         else:
             return self.menu(title, options)
     
