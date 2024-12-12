@@ -39,7 +39,7 @@ class EventHandler:
         self.listeners: dict[EventType, list[Listener]] = defaultdict(list)
         for obj in lookup:
             self.lookup(obj)
-            
+
     def add_middleware(self, mw: Middleware):
         self.middlewares.append(mw)
 

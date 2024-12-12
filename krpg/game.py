@@ -86,6 +86,7 @@ class RootActionManager(ActionManager):
         welcome = f"Python {v}, KRPG {__version__}"
         code.InteractiveConsole(locals={"game": game, "exit": ExitAlt()}).interact(welcome)
 
+
 class GameBase:
     def __init__(self) -> None:
         self.state = GameState.MENU
@@ -125,7 +126,6 @@ class GameBase:
             self.state = GameState.MENU
 
 
-    
 class Game:
     def __init__(self, game: GameBase) -> None:
         self._game = game
@@ -137,7 +137,7 @@ class Game:
         self.events = EventHandler()
         self.events.middlewares.append(GameMiddleware(self))
         self.commands = CommandManager(self.events)
-        
+
         self.bestiary = Bestiary()
         self.world = World()
         self.quest_manager = QuestManager()
@@ -147,7 +147,8 @@ class Game:
 
         @listener(Event)
         def debug_event(event: Event):
-            self.console.log.debug(f"Event: {event}")        
+            self.console.log.debug(f"Event: {event}")
+
         self.events.subscribe(debug_event)
 
         for component in registry.components:

@@ -9,6 +9,7 @@ from krpg.events import Event, EventHandler
 type EventGenerator = Generator[Event, Any, Any]
 type Pt = Any
 
+
 @attr.s(auto_attribs=True)
 class Command[**P]:
     callback: Callable[P, EventGenerator]
@@ -19,10 +20,10 @@ class Command[**P]:
         self.args = args
         self.kwargs = kwargs
         return self
-    
+
+
 def command[**P](callback: Callable[P, EventGenerator]) -> Command[P]:
     return Command(callback=callback)
-
 
 
 class CommandManager:
@@ -39,6 +40,3 @@ class CommandManager:
         except StopIteration as e:
             return e.value
         return None
-
-
-

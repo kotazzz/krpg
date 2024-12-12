@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 @attr.s(auto_attribs=True)
 class Entity(Nameable):
     skills: SkillTree = SkillTree()
-    inventory: Inventory = field(factory=Inventory.basic) # TODO: Field -> attrib
+    inventory: Inventory = field(factory=Inventory.basic)  # TODO: Field -> attrib
     effects: list[EffectState] = field(factory=list)
     _parts: dict[Body, Scale] = field(factory=lambda: {}, init=False)
     _scales: dict[EntityScales, Scale] = field(factory=lambda: {}, init=False)

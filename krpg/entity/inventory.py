@@ -18,21 +18,24 @@ class EquipEvent(GameEvent):
     slot: Slot
     item: Item
 
+
 @attr.s(auto_attribs=True)
 class UnequipEvent(GameEvent):
     slot: Slot
     item: Item
+
 
 @attr.s(auto_attribs=True)
 class PickupEvent(GameEvent):
     item: Item
     count: int
 
+
 @attr.s(auto_attribs=True)
 class DropEvent(GameEvent):
     slot: Slot
     count: int
-    
+
 
 @command
 def equip(inventory: Inventory, slot: Slot) -> Generator[EquipEvent | UnequipEvent, Any, None]:
@@ -44,11 +47,13 @@ def equip(inventory: Inventory, slot: Slot) -> Generator[EquipEvent | UnequipEve
     elif res is False:
         yield EquipEvent(slot, item)
 
+
 @command
 def pickup(inventory: Inventory, item: Item, count: int) -> Generator[PickupEvent, Any, int | None]:
     left = inventory.pickup(item, count)
     yield PickupEvent(item, count)
     return left
+
 
 @command
 def drop(slot: Slot, count: int) -> Generator[DropEvent, Any, tuple[Item | None, int]]:
@@ -58,7 +63,7 @@ def drop(slot: Slot, count: int) -> Generator[DropEvent, Any, tuple[Item | None,
     slot.count -= count
     yield DropEvent(slot, count)
     return dropped
-    
+
 
 @attr.s(auto_attribs=True)
 class Inventory:

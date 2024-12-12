@@ -70,7 +70,7 @@ class MoveEvent(GameEvent):
     old_loc: Location
     new_loc: Location
 
-    
+
 @attr.s(auto_attribs=True)
 class UnlockEvent(GameEvent):
     loc: Location
@@ -88,7 +88,6 @@ def move(world: World, new_loc: Location) -> Generator[MoveEvent, Any, None]:
 def unlock(loc: Location) -> Generator[UnlockEvent, Any, None]:
     loc.locked = False
     yield UnlockEvent(loc)
-
 
 
 @attr.s(auto_attribs=True)

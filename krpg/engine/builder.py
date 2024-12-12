@@ -5,14 +5,7 @@ from typing import TYPE_CHECKING, Callable
 from krpg import ROOT_DIR
 from krpg.engine.executer import Scenario
 from krpg.engine.npc import Npc
-from krpg.engine.quests import (
-    Objective,
-    Quest,
-    Reward,
-    Stage,
-    objectives_names,
-    rewards_names
-)
+from krpg.engine.quests import Objective, Quest, Reward, Stage, objectives_names, rewards_names
 from krpg.engine.world import Location
 from krpg.entity.enums import SlotType
 from krpg.entity.inventory import Item, Slot
@@ -27,17 +20,16 @@ MAIN_FILE = "main.krpg"
 BASE_FOLDER = "content"
 
 
-
-
 def wrap_log[T](game: Game, section: Section, name: str, func: Callable[[Game, Section], T], indent: int = 0) -> T:
     game.console.log.debug(f"[Builder] {'  '*indent}Building {name}")
     return func(game, section)
 
 
 def build_scenario(game: Game, section: Section):
-     game.bestiary.add(
-            game.executer.create_scenario(section),
-        )
+    game.bestiary.add(
+        game.executer.create_scenario(section),
+    )
+
 
 def build_scenarios(game: Game, section: Section) -> None:
     for scenario in section.all(command=False):
@@ -45,7 +37,6 @@ def build_scenarios(game: Game, section: Section) -> None:
         if not scenario.name:
             raise ValueError
         wrap_log(game, scenario, scenario.name, build_scenario, 1)
-       
 
 
 def build_item(game: Game, section: Section) -> None:
@@ -162,8 +153,6 @@ def create_quest_stage(game: Game, section: Section) -> Stage:
 
     objectives: list[Objective] = []
     rewards: list[Reward] = []
-
-
 
     for goal in section.all("goal"):
         obj_type, *args, description = goal.args

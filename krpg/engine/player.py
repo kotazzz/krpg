@@ -17,8 +17,9 @@ from krpg.console.entities import render_inventory
 
 def display_slot(slot: Slot) -> str:
     if slot.item:
-        return  f"[yelow]{slot.count}[/]x{slot.item.name}"
+        return f"[yelow]{slot.count}[/]x{slot.item.name}"
     return "[red]Пусто[/]"
+
 
 @component
 class Actions(ActionManager):
@@ -42,7 +43,7 @@ class Actions(ActionManager):
         inventory = game.player.entity.inventory
         console = game.console
 
-        while True: 
+        while True:
             console.print(render_inventory(inventory))
             slot: Slot | None = console.list_select("Выберите слот: ", inventory.slots, display_slot, True)
             if slot is None:
@@ -52,16 +53,8 @@ class Actions(ActionManager):
                 continue
             assert slot.item
 
-            console.print(
-                f"[bold green]Управление предметом: {slot.item.name}[/]\n"
-                "  [green]i[white] - информация[/]\n"
-                "  [green]w[white] - надеть/снять[/]\n"
-                "  [green]d[white] - выкинуть[/]\n"
-                "  [green]e[white] - отмена[/]"
-            )
-            action = console.select(
-                "Выберите действие: ", {"i":"i", "w":"w", "d":"d"}
-            )
+            console.print(f"[bold green]Управление предметом: {slot.item.name}[/]\n" "  [green]i[white] - информация[/]\n" "  [green]w[white] - надеть/снять[/]\n" "  [green]d[white] - выкинуть[/]\n" "  [green]e[white] - отмена[/]")
+            action = console.select("Выберите действие: ", {"i": "i", "w": "w", "d": "d"})
             if not action:
                 break
             if action == "i":
@@ -69,11 +62,13 @@ class Actions(ActionManager):
             elif action == "w":
                 game.commands.execute(equip(inventory, slot))
             elif action == "d":
+
                 def validator(x: str) -> bool:
                     assert slot
                     return x.isdigit() and int(x) <= slot.count and int(x) > 0
+
                 count = console.prompt("Количество: ", validator=validator, transformer=int)
-                
+
                 if not count:
                     console.print("Действие отмененео")
                     continue
@@ -95,8 +90,6 @@ class Actions(ActionManager):
         if slot.empty:
             loc.items.remove(slot)
 
-        
-    
 
 class Player:
     def __init__(self) -> None:

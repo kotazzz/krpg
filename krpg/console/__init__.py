@@ -21,6 +21,7 @@ def rich_to_pt_ansi(*args: str, console: Optional[Console] = None, **kwargs: Any
 
 DEFAULT_LEVEL = 1000
 
+
 class KrpgConsole:
     def __init__(self) -> None:
         self.session: PromptSession[str] = PromptSession()
@@ -64,18 +65,21 @@ class KrpgConsole:
     def print(self, *args: Any, **kwargs: Any) -> None:
         """Prints the given arguments."""
         self.console.print(*args, **kwargs, highlight=False)
-    def print_list(self, items: list[Any], display: Callable[[Any], str]=str, marked: bool = False):
+
+    def print_list(self, items: list[Any], display: Callable[[Any], str] = str, marked: bool = False):
         if marked:
             for item in items:
                 self.print(f"[blue]•[/]. [cyan]{display(item)}[/]")
         else:
             for i, item in enumerate(items, 1):
                 self.print(f"[blue]{i}[/]. [cyan]{display(item)}[/]")
-    
+
     # TODO: _create completer, _parse text
-    def raw_prompt(self,
+    def raw_prompt(
+        self,
         text: str | int | ANSI,
-        completer: Optional[dict[str, str]] = None,) -> str:
+        completer: Optional[dict[str, str]] = None,
+    ) -> str:
         prompt_completer = None
         if completer:
             completer = {shlex.quote(k): v for k, v in completer.items()}
@@ -89,7 +93,7 @@ class KrpgConsole:
             except KeyError:
                 raise ValueError(f"Unknown level: {text}")
         return self.session.prompt(text, completer=prompt_completer)
-    
+
     def prompt[T: Any](
         self,
         text: str | int | ANSI,
@@ -97,7 +101,7 @@ class KrpgConsole:
         allow_empty: bool = False,
         check_completer: bool = False,
         validator: Callable[[str], bool] | None = None,
-        transformer: Callable[[str], T] = lambda x: x, #  type: ignore
+        transformer: Callable[[str], T] = lambda x: x,  #  type: ignore
     ) -> T | None:
         prompt_completer = None
         if completer:
@@ -112,7 +116,7 @@ class KrpgConsole:
                 text = self.levels[text]
             except KeyError:
                 raise ValueError(f"Unknown level: {text}")
-            
+
         if isinstance(text, str):
             text = rich_to_pt_ansi(text, console=self.console)
 
@@ -149,7 +153,6 @@ class KrpgConsole:
                 return None
             if check(item):
                 return transformer(item)
-                
 
     def menu(self, title: str, options: dict[str, Any]) -> Any:
         choices = [questionary.Choice([("green", i)], value=j) for i, j in options.items()]
@@ -167,7 +170,7 @@ class KrpgConsole:
                 res = self.prompt(title, completer, validator=lambda x: x.isdigit() and 0 < int(x) <= len(options), transformer=int)
                 if not res:
                     return None
-                return list(options.values())[res-1]
+                return list(options.values())[res - 1]
             else:
                 completer = {i: str(j) for i, j in options.items()}
                 res = self.prompt(title, completer, validator=lambda x: x in options)
@@ -184,13 +187,13 @@ class KrpgConsole:
                 history = {v: k for k, v in options.items()}[val]
             self.history.append(history)
             return val
-    
-    def list_select[T](self, title: str, options: list[T], display:Callable[[Any], str]=str, hide: bool = False) -> T | None:
+
+    def list_select[T](self, title: str, options: list[T], display: Callable[[Any], str] = str, hide: bool = False) -> T | None:
         if not hide:
             self.print_list(options, display)
         res = self.prompt(title, {str(i): display(j) for i, j in enumerate(options, 1)}, check_completer=True)
         if res:
-            return options[int(res)-1]
+            return options[int(res) - 1]
         return None
 
     def confirm(self, prompt: str, allow_exit: bool = True) -> bool | None:

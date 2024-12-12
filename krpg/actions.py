@@ -3,8 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, Callable
+
 if TYPE_CHECKING:
     from krpg.game import Game
+
 
 class ActionCategory(StrEnum):
     GAME = "Игра"
@@ -14,7 +16,9 @@ class ActionCategory(StrEnum):
     NOT_SET = "Не установлено"
     DEBUG = "Отладка"
 
+
 type ActionCallback = Callable[[Game], Any]
+
 
 @dataclass()
 class Action:

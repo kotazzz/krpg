@@ -17,9 +17,11 @@ if TYPE_CHECKING:
 type Enviroment = dict[str, Any]
 type ExecuterCommandCallback = Callable[..., None]
 
+
 @attr.s(auto_attribs=True)
 class ScenarioRun(GameEvent):
     scenario: Scenario
+
 
 @command
 def run_scenario(scenario: Scenario) -> Generator[ScenarioRun, Any, None]:
@@ -93,7 +95,6 @@ class Base(Extension):
         else:
             speech = " ".join(args)
             game.console.print("[green]" + game.executer.process_text(speech))
-        
 
 
 @attr.s(auto_attribs=True)
@@ -173,5 +174,3 @@ class Executer:
             name=section.name,
             script=Script(self, section),
         )
-
-    
