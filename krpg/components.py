@@ -1,9 +1,13 @@
-from krpg.actions import ActionManager
-from krpg.engine.executer import Extension
-from krpg.events import Listener
+from typing import TYPE_CHECKING
 
 
-Component = type[ActionManager] | type[Extension] | Listener
+if TYPE_CHECKING:
+    from krpg.actions import ActionManager
+    from krpg.engine.executer import Extension
+    from krpg.events import Listener
+
+
+type Component = type[ActionManager] | type[Extension] | Listener
 
 
 class ComponentRegistry:

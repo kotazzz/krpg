@@ -6,6 +6,7 @@ import attr
 
 from krpg.commands import command
 from krpg.events_middleware import GameEvent
+from krpg.engine.npc import Npc
 from krpg.parser import Command, Section
 from krpg.utils import Nameable
 
@@ -79,8 +80,20 @@ class Base(Extension):
     @staticmethod
     def builtin_say(ctx: Ctx, *args: str) -> None:
         game = ctx.game
-        text = " ".join(args)
-        game.console.print("[green]" + game.executer.process_text(text))
+        if len(args) > 1:
+            id, *text = args
+            speech = " ".join(text)
+            if id == "you":
+                name = f"[white b]{game.player.entity.name}[/][cyan]"
+            else:
+                npc = game.bestiary.get_entity_by_id(id, Npc)
+                assert npc, f"Where is {id} npc?"
+                name = npc.display
+            game.console.print(f"{name}[green]:[/] {speech}")
+        else:
+            speech = " ".join(args)
+            game.console.print("[green]" + game.executer.process_text(speech))
+        
 
 
 @attr.s(auto_attribs=True)
