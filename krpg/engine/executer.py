@@ -17,7 +17,8 @@ if TYPE_CHECKING:
 type Enviroment = dict[str, Any]
 
 class ExecuterCommandCallback(Protocol):
-    def __call__(self, ctx: Ctx, *args: Any, **kwds: Any) -> None:
+    # FIXME: Any to str | children
+    def __call__(self, ctx: Ctx, *args: Any, **kwargs: Any) -> None:
         ...
 
 @attr.s(auto_attribs=True)
@@ -97,6 +98,13 @@ class Base(Extension):
         else:
             speech = " ".join(args)
             game.console.print("[green]" + game.executer.process_text(speech))
+    
+    @executer_command("if")
+    @staticmethod
+    def builtin_if(ctx: Ctx, expr: str, children: list[Command | Section]):
+        res = ctx.executer.evaluate(expr)
+        if res:
+            ctx.executer.run(Section(children=children))
 
 
 @attr.s(auto_attribs=True)

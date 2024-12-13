@@ -81,7 +81,8 @@ class Actions(ActionManager):
         assert loc
         console = game.console
         if not loc.items:
-            console.print("Нет предметов")
+            console.print("[red]Нет предметов")
+            return
         slot: Slot | None = console.list_select("Выберите предмет: ", loc.items, display_slot)
         if not slot or not slot.item:
             return

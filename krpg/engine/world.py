@@ -10,6 +10,7 @@ from krpg.engine.executer import Ctx, Extension, NamedScript, executer_command
 from krpg.engine.npc import Npc
 from krpg.entity.inventory import Slot
 from krpg.events_middleware import GameEvent
+from krpg.parser import Command
 from krpg.utils import Nameable, get_by_id
 
 from rich.tree import Tree
@@ -88,6 +89,18 @@ class NpcUtils(Extension):
         loc = get_by_id(game.world.locations, loc_id)
         assert loc, f"Where is {loc_id}"
         loc.npcs.append(npc)
+
+    @executer_command("multiple")
+    @staticmethod
+    def multiple(ctx: Ctx, title: str, min: str, max: str, var_name: str, children: list[Command]):
+        minv, maxv = int(min), int(max)
+        completer: dict[str, int] = {}
+        for opt in children:
+            k, v = opt.args
+            v = ctx.executer.process_text(v)
+            completer[v] = int(k)
+        res = ctx.game.console.multiple(title, completer, minv, maxv)
+        ctx.executer.env[var_name] = res
         
 @attr.s(auto_attribs=True)
 class MoveEvent(GameEvent):

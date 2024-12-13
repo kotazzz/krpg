@@ -154,7 +154,7 @@ class KrpgConsole:
             if check(item):
                 return transformer(item)
 
-    def menu(self, title: str, options: dict[str, Any]) -> Any:
+    def menu[T](self, title: str, options: dict[str, T]) -> T:
         choices = [questionary.Choice([("green", i)], value=j) for i, j in options.items()]
         s = questionary.Style(
             [
@@ -162,6 +162,15 @@ class KrpgConsole:
             ]
         )
         return questionary.select(title, choices, qmark="", instruction=" ", style=s).ask()
+        
+    def multiple[T](self, title: str, options: dict[str, T], min: int= 0, max: int = 9) -> list[T]:
+        choices = [questionary.Choice([("green", i)], value=j) for i, j in options.items()]
+        s = questionary.Style(
+            [
+                ("question", "red bold"),
+            ]
+        )
+        return questionary.checkbox(title, choices, qmark="", instruction=" ", style=s, validate=lambda r: min <= len(r) <= max).ask()
 
     def select[T: Any](self, title: str, options: dict[str, T], indexed: bool = False) -> T | None:
         if self.queue:
