@@ -6,11 +6,11 @@ from rich.panel import Panel
 from krpg.actions import ActionCategory, ActionManager, action
 from krpg.commands import command
 from krpg.components import component
-from krpg.engine.executer import Scenario
+from krpg.engine.executer import Ctx, Extension, Scenario, executer_command
 from krpg.engine.npc import Npc
 from krpg.entity.inventory import Slot
 from krpg.events_middleware import GameEvent
-from krpg.utils import Nameable
+from krpg.utils import Nameable, get_by_id
 
 from rich.tree import Tree
 
@@ -64,7 +64,31 @@ class WorldActions(ActionManager):
         if select:
             game.commands.execute(move(game.world, select))
 
+@component
+class NpcUtils(Extension):
+    @executer_command("evolve")
+    @staticmethod
+    def evolve(ctx: Ctx, npc_id: str) -> None:
+        game = ctx.game
+        npc = game.bestiary.get_entity_by_id(npc_id, Npc)
+        assert npc, f"Where is {npc_id}"
+        npc.stage += 1
 
+    @executer_command("goto")
+    @staticmethod
+    def goto(ctx: Ctx, npc_id: str, loc_id: str) -> None:
+        game = ctx.game
+        npc = game.bestiary.get_entity_by_id(npc_id, Npc)
+        assert npc, f"Where is {npc_id}"
+        for loc in game.world.locations:
+            if npc in loc.npcs:
+                loc.npcs.remove(npc)
+                break
+        # TODO: Move locations to bestiary?
+        loc = get_by_id(game.world.locations, loc_id)
+        assert loc, f"Where is {loc_id}"
+        loc.npcs.append(npc)
+        
 @attr.s(auto_attribs=True)
 class MoveEvent(GameEvent):
     old_loc: Location
@@ -92,16 +116,16 @@ def unlock(loc: Location) -> Generator[UnlockEvent, Any, None]:
 
 @attr.s(auto_attribs=True)
 class Location(Nameable):
-    items: list[Slot] = attr.ib(factory=list)
-    npcs: list[Npc] = attr.ib(factory=list)
+    items: list[Slot] = attr.ib(factory=list, repr=lambda x: str(len(x)))
+    npcs: list[Npc] = attr.ib(factory=list, repr=lambda x: str(len(x)))
     locked: bool = False
     stage: int = 0
-    stages: list[list[Scenario]] = attr.ib(factory=list)
+    stages: list[list[Scenario]] = attr.ib(factory=list, repr=lambda x: str(len(x)))
 
 
 @attr.s(auto_attribs=True)
 class World:
-    locations: list[Location] = attr.ib(factory=list)
+    locations: list[Location] = attr.ib(factory=list, repr=lambda x: str(len(x)))
     current_location: Location = attr.ib(init=False, repr=lambda x: repr(x.id) if x else "None")
     start_location: Location | None = attr.ib(default=None, repr=lambda x: repr(x.id) if x else "None")
     roads: list[tuple[Location, Location]] = attr.ib(factory=list, repr=lambda x: f"{len(x)} roads")

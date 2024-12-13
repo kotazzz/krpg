@@ -286,6 +286,8 @@ class TalkObjective(Objective):
 
     def check(self, event: Event, state: int, completed: bool) -> StateUpdate[None]:
         if isinstance(event, TalkNpc):
+            print(event.npc.id == self.npc_id)
+            print(event, self.npc_id)
             return event.npc.id == self.npc_id
 
 

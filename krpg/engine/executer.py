@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Generator
+from typing import TYPE_CHECKING, Any, Callable, Generator, Protocol
 
 import attr
 
@@ -15,8 +15,10 @@ if TYPE_CHECKING:
 
 
 type Enviroment = dict[str, Any]
-type ExecuterCommandCallback = Callable[..., None]
 
+class ExecuterCommandCallback(Protocol):
+    def __call__(self, ctx: Ctx, *args: Any, **kwds: Any) -> None:
+        ...
 
 @attr.s(auto_attribs=True)
 class ScenarioRun(GameEvent):
@@ -29,7 +31,7 @@ def run_scenario(scenario: Scenario) -> Generator[ScenarioRun, Any, None]:
     scenario.script.run()
 
 
-def executer_command(name: str) -> Callable[..., ExecuterCommand]:
+def executer_command(name: str) -> Callable[[ExecuterCommandCallback], ExecuterCommand]:
     def wrapper(callback: ExecuterCommandCallback) -> ExecuterCommand:
         return ExecuterCommand(name, callback)
 

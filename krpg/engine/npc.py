@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Generator
 
 import attr
 
-from krpg.actions import Action, ActionCategory, ActionManager, action
+from krpg.actions import ActionCategory, ActionManager, action
 from krpg.commands import command
 from krpg.components import component
 from krpg.events_middleware import GameEvent
@@ -24,7 +24,7 @@ class IntroduceNpc(GameEvent):
 @attr.s(auto_attribs=True)
 class TalkNpc(GameEvent):
     npc: Npc
-    action: Action
+    script: Scenario
 
 
 @command
@@ -34,9 +34,9 @@ def introduce(npc: Npc) -> Generator[IntroduceNpc, Any, None]:
 
 
 @command
-def talk(game: Game, npc: Npc, action: Action) -> Generator[TalkNpc, Any, None]:
-    yield TalkNpc(npc, action)
-    action.callback(game)
+def talk(npc: Npc, scenario: Scenario) -> Generator[TalkNpc, Any, None]:
+    yield TalkNpc(npc, scenario)
+    scenario.script.run()
 
 
 @component
@@ -50,9 +50,9 @@ class TalkAction(ActionManager):
         npc = game.console.select("Выберите собеседника: ", {n.name: n for n in npcs}, True)
         if not npc:
             return
-        action = game.console.select("Выберите тему: ", {a.name: a for a in npc.actions}, True)
-        if action:
-            action.script.run()
+        scenario = game.console.select("Выберите тему: ", {a.name: a for a in npc.actions}, True)
+        if scenario:
+            game.commands.execute(talk(npc, scenario))
 
 
 @attr.s(auto_attribs=True)
