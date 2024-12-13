@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Callable
 
 from krpg import ROOT_DIR
-from krpg.engine.executer import Scenario
+from krpg.engine.executer import NamedScript
 from krpg.engine.npc import Npc
 from krpg.engine.quests import Objective, Quest, Reward, Stage, objectives_names, rewards_names
 from krpg.engine.world import Location
@@ -65,8 +65,8 @@ def build_items(game: Game, section: Section) -> None:
         wrap_log(game, item, item.name, build_item, 1)
 
 
-def create_stage(game: Game, section: Section) -> list[Scenario]:
-    stage_actions: list[Scenario] = []
+def create_stage(game: Game, section: Section) -> list[NamedScript]:
+    stage_actions: list[NamedScript] = []
     for action in section.all():
         assert isinstance(action, Section)
         sc = game.executer.create_scenario(action)

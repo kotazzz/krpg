@@ -13,7 +13,7 @@ from krpg.utils import Nameable
 
 if TYPE_CHECKING:
     from krpg.game import Game
-    from krpg.engine.executer import Scenario
+    from krpg.engine.executer import NamedScript
 
 
 @attr.s(auto_attribs=True)
@@ -24,7 +24,7 @@ class IntroduceNpc(GameEvent):
 @attr.s(auto_attribs=True)
 class TalkNpc(GameEvent):
     npc: Npc
-    script: Scenario
+    script: NamedScript
 
 
 @command
@@ -34,7 +34,7 @@ def introduce(npc: Npc) -> Generator[IntroduceNpc, Any, None]:
 
 
 @command
-def talk(npc: Npc, scenario: Scenario) -> Generator[TalkNpc, Any, None]:
+def talk(npc: Npc, scenario: NamedScript) -> Generator[TalkNpc, Any, None]:
     yield TalkNpc(npc, scenario)
     scenario.script.run()
 
@@ -59,13 +59,13 @@ class TalkAction(ActionManager):
 class Npc(Nameable):
     known: bool = False
     stage: int = 0
-    stages: list[list[Scenario]] = attr.ib(factory=list)
+    stages: list[list[NamedScript]] = attr.ib(factory=list)
 
     _color: str = attr.ib(init=False)
     _color2: str = attr.ib(init=False)
 
     @property
-    def actions(self) -> list[Scenario]:
+    def actions(self) -> list[NamedScript]:
         return self.stages[self.stage]
 
     def __attrs_post_init__(self):

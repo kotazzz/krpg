@@ -9,7 +9,7 @@ from rich.tree import Tree
 from krpg.actions import ActionCategory, ActionManager, action
 from krpg.commands import Command, command
 from krpg.components import component
-from krpg.engine.executer import Ctx, Extension, Scenario, executer_command, run_scenario
+from krpg.engine.executer import Ctx, Extension, NamedScript, executer_command, run_scenario
 from krpg.engine.npc import Npc, TalkNpc, introduce
 from krpg.engine.world import MoveEvent, unlock
 from krpg.entity.inventory import EquipEvent, PickupEvent, UnequipEvent
@@ -315,7 +315,7 @@ class ScriptReward(Reward):
     scenario_id: str
 
     def run(self, game: Game) -> Command[...]:
-        sc = game.bestiary.get_entity_by_id(self.scenario_id, Scenario)
+        sc = game.bestiary.get_entity_by_id(self.scenario_id, NamedScript)
         assert sc, f"{self.scenario_id} doesnt exist"
         return run_scenario(sc)
 

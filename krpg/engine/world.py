@@ -6,7 +6,7 @@ from rich.panel import Panel
 from krpg.actions import ActionCategory, ActionManager, action
 from krpg.commands import command
 from krpg.components import component
-from krpg.engine.executer import Ctx, Extension, Scenario, executer_command
+from krpg.engine.executer import Ctx, Extension, NamedScript, executer_command
 from krpg.engine.npc import Npc
 from krpg.entity.inventory import Slot
 from krpg.events_middleware import GameEvent
@@ -120,7 +120,7 @@ class Location(Nameable):
     npcs: list[Npc] = attr.ib(factory=list, repr=lambda x: str(len(x)))
     locked: bool = False
     stage: int = 0
-    stages: list[list[Scenario]] = attr.ib(factory=list, repr=lambda x: str(len(x)))
+    stages: list[list[NamedScript]] = attr.ib(factory=list, repr=lambda x: str(len(x)))
 
 
 @attr.s(auto_attribs=True)

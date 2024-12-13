@@ -22,11 +22,11 @@ class ExecuterCommandCallback(Protocol):
 
 @attr.s(auto_attribs=True)
 class ScenarioRun(GameEvent):
-    scenario: Scenario
+    scenario: NamedScript
 
 
 @command
-def run_scenario(scenario: Scenario) -> Generator[ScenarioRun, Any, None]:
+def run_scenario(scenario: NamedScript) -> Generator[ScenarioRun, Any, None]:
     yield ScenarioRun(scenario)
     scenario.script.run()
 
@@ -123,7 +123,7 @@ class Script:
 
 
 @attr.s(auto_attribs=True)
-class Scenario(Nameable):
+class NamedScript(Nameable):
     script: Script = attr.ib(default=None)
 
 
@@ -168,10 +168,10 @@ class Executer:
         script = Script(self, section)
         script.run()
 
-    def create_scenario(self, section: Section) -> Scenario:
+    def create_scenario(self, section: Section) -> NamedScript:
         if not section.name:
             raise ValueError("Scenario name is required")
-        return Scenario(
+        return NamedScript(
             id=section.name,
             name=section.name,
             script=Script(self, section),
