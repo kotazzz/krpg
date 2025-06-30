@@ -64,10 +64,55 @@ def drop(slot: Slot, count: int) -> Generator[DropEvent, Any, tuple[Item | None,
     yield DropEvent(slot, count)
     return dropped
 
+@attr.s(auto_attribs=True)
+class Slot:
+    type: SlotType = SlotType.ITEM
+    item: Item | None = attr.field(default=None, repr=lambda x: x and repr(x.id))
+    count: int = 0
+
+    def fill(self, item: Item, count: int) -> int:
+        if not self.item:
+            self.item = item
+        if item != self.item:
+            raise ValueError(f"Cant insert {item.id} into slot with {self.item.id}")
+        available = min(item.stack, count + self.count)
+        count -= available - self.count
+        self.count = available
+        return count
+
+    @property
+    def full(self) -> bool:
+        if self.empty:
+            raise Exception("Slot is empty")
+        assert self.item is not None
+        return self.count == self.item.stack
+
+    @property
+    def empty(self) -> bool:
+        if self.count == 0:
+            self.item = None
+            return True
+        if self.item is None:
+            self.count = 0
+            return True
+        return False
+
+    def swap(self, slot: Slot) -> None:
+        self.item, slot.item = (slot.item, self.item)
+        self.count, slot.count = (slot.count, self.count)
+
+    @property
+    def use_skills(self) -> list[SkillState]:
+        assert self.item is not None
+        skills = self.item.use_skills
+        for skill in skills:
+            skill.use_slot = self
+        return skills
+
 
 @attr.s(auto_attribs=True)
 class Inventory:
-    slots: list[Slot] = field(factory=list)
+    slots: list[Slot] = field(factory=lambda: [])
 
     @classmethod
     def basic(cls) -> Self:
@@ -168,61 +213,15 @@ class Inventory:
 
 
 @attr.s(auto_attribs=True)
-class Slot:
-    type: SlotType = SlotType.ITEM
-    item: Item | None = attr.field(default=None, repr=lambda x: x and repr(x.id))
-    count: int = 0
-
-    def fill(self, item: Item, count: int) -> int:
-        if not self.item:
-            self.item = item
-        if item != self.item:
-            raise ValueError(f"Cant insert {item.id} into slot with {self.item.id}")
-        available = min(item.stack, count + self.count)
-        count -= available - self.count
-        self.count = available
-        return count
-
-    @property
-    def full(self) -> bool:
-        if self.empty:
-            raise Exception("Slot is empty")
-        assert self.item is not None
-        return self.count == self.item.stack
-
-    @property
-    def empty(self) -> bool:
-        if self.count == 0:
-            self.item = None
-            return True
-        if self.item is None:
-            self.count = 0
-            return True
-        return False
-
-    def swap(self, slot: Slot) -> None:
-        self.item, slot.item = (slot.item, self.item)
-        self.count, slot.count = (slot.count, self.count)
-
-    @property
-    def use_skills(self) -> list[SkillState]:
-        assert self.item is not None
-        skills = self.item.use_skills
-        for skill in skills:
-            skill.use_slot = self
-        return skills
-
-
-@attr.s(auto_attribs=True)
 class Item(Nameable):
     slot_type: SlotType = SlotType.ITEM
 
     description: str = DEFAULT_DESCRIPTION
-    use_skills: list[SkillState] = field(factory=list)
+    use_skills: list[SkillState] = field(factory=lambda: [])
     wear_skill: SkillTree | None = None
-    effects: list[Effect] = field(factory=list)
+    effects: list[Effect] = field(factory=lambda: [])
 
     buy_cost: int = -1
     sell_cost: int = -1
     stack: int = 1
-    tags: list[ItemTag] = field(factory=list)
+    tags: list[ItemTag] = field(factory=lambda: [])

@@ -10,7 +10,7 @@ from krpg.utils import Nameable, add, get_by_id
 
 @attr.s(auto_attribs=True)
 class Bestiary:
-    data: list[Any] = field(factory=list)
+    data: list[Any] = field(factory=lambda: [])
 
     def add(self, entity: Nameable) -> None:
         add(self.data, entity)

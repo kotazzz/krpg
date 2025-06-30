@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from krpg.entity.inventory import Item, Slot, Inventory
     from krpg.entity.skills import SkillState
 
-colors = {
+colors: dict[Attribute | EntityScales | SlotType, str] = {
     Attribute.STRENGTH: "red",
     Attribute.PERCEPTION: "green",
     Attribute.ENDURANCE: "blue",

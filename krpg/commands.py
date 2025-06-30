@@ -14,7 +14,7 @@ type Pt = Any
 class Command[**P]:
     callback: Callable[P, EventGenerator]
     args: tuple[Any, ...] = attr.ib(factory=tuple)
-    kwargs: dict[str, Any] = attr.ib(factory=dict)
+    kwargs: dict[str, Any] = attr.ib(factory=lambda: {})
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> Command[P]:
         self.args = args

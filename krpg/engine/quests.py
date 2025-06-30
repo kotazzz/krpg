@@ -22,6 +22,8 @@ if TYPE_CHECKING:
 
 type StateUpdate[T] = tuple[T, bool] | bool | None
 
+type StatusType = Any
+
 
 @attr.s(auto_attribs=True)
 class StartQuest(GameEvent):
@@ -97,35 +99,65 @@ def test(e: Event):
     e.game.quest_manager.check_quests(e)
 
 
+class Reward:
+    @abstractmethod
+    def run(self, game: Game) -> Command[...]:
+        raise NotImplementedError
+
+
 @attr.s(auto_attribs=True)
-class QuestManager:
-    active: list[QuestState] = attr.ib(factory=list)
-    completed: list[QuestState] = attr.ib(factory=list)
+class Objective(ABC):
+    description: str
 
-    def start(self, quest: Quest) -> None:
-        self.active.append(QuestState(quest=quest))
+    @abstractmethod
+    def check(self, event: Event, state: StatusType, completed: bool) -> StateUpdate[StatusType]:
+        raise NotImplementedError
 
-    def complete(self, quest: QuestState):
-        self.active.remove(quest)
-        self.completed.append(quest)
+    def create(self) -> ObjectiveState:
+        return ObjectiveState(self)
 
-    def check_quests(self, event: Event):
-        for q in self.active:
-            q.check_stage(event)
-            if q.is_completed:
-                self.complete(q)
+    def status(self, state: StatusType) -> str | None:
+        return None
+
+
+@attr.s(auto_attribs=True)
+class Stage:
+    description: str
+    objectives: list[Objective] = attr.ib(factory=lambda: [])
+    rewards: list[Reward] = attr.ib(factory=lambda: [])
+
+
+@attr.s(auto_attribs=True)
+class ObjectiveState:
+    objective: Objective
+    state: StatusType | None = None
+    completed: bool = attr.ib(init=False)
+
+    def __attrs_post_init__(self):
+        self.completed = False
+
+    def check(self, event: Event) -> None:
+        res = self.objective.check(event, self.state, self.completed)
+        if res is None:
+            return
+        if isinstance(res, tuple):
+            state, completed = res
+            self.state = state
+            self.completed = completed
+        else:
+            self.completed = res
 
 
 @attr.s(auto_attribs=True)
 class Quest(Nameable):
-    stages: list[Stage] = attr.ib(factory=list, repr=lambda x: str(len(x)))
+    stages: list[Stage] = attr.ib(factory=lambda: [])
 
 
 @attr.s(auto_attribs=True)
 class QuestState:
     quest: Quest
     stage_index: int = -1
-    objectives: list[ObjectiveState] = attr.ib(factory=list)
+    objectives: list[ObjectiveState] = attr.ib(factory=lambda: [])
     paused: bool = False
 
     @property
@@ -164,55 +196,22 @@ class QuestState:
 
 
 @attr.s(auto_attribs=True)
-class Stage:
-    description: str
-    objectives: list[Objective] = attr.ib(factory=list)
-    rewards: list[Reward] = attr.ib(factory=list)
+class QuestManager:
+    active: list[QuestState] = attr.ib(factory=lambda: [])
+    completed: list[QuestState] = attr.ib(factory=lambda: [])
 
+    def start(self, quest: Quest) -> None:
+        self.active.append(QuestState(quest=quest))
 
-class Reward:
-    @abstractmethod
-    def run(self, game: Game) -> Command[...]:
-        raise NotImplementedError
+    def complete(self, quest: QuestState):
+        self.active.remove(quest)
+        self.completed.append(quest)
 
-
-type StatusType = Any
-
-
-@attr.s(auto_attribs=True)
-class Objective(ABC):
-    description: str
-
-    @abstractmethod
-    def check(self, event: Event, state: StatusType, completed: bool) -> StateUpdate[StatusType]:
-        raise NotImplementedError
-
-    def create(self) -> ObjectiveState:
-        return ObjectiveState(self)
-
-    def status(self, state: StatusType) -> str | None:
-        return None
-
-
-@attr.s(auto_attribs=True)
-class ObjectiveState:
-    objective: Objective
-    state: StatusType | None = None
-    completed: bool = attr.ib(init=False)
-
-    def __attrs_post_init__(self):
-        self.completed = False
-
-    def check(self, event: Event) -> None:
-        res = self.objective.check(event, self.state, self.completed)
-        if res is None:
-            return
-        if isinstance(res, tuple):
-            state, completed = res
-            self.state = state
-            self.completed = completed
-        else:
-            self.completed = res
+    def check_quests(self, event: Event):
+        for q in self.active:
+            q.check_stage(event)
+            if q.is_completed:
+                self.complete(q)
 
 
 # TODO: Create Register as commands

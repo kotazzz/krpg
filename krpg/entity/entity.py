@@ -20,11 +20,11 @@ if TYPE_CHECKING:
 class Entity(Nameable):
     skills: SkillTree = SkillTree()
     inventory: Inventory = field(factory=Inventory.basic)  # TODO: Field -> attrib
-    effects: list[EffectState] = field(factory=list)
+    effects: list[EffectState] = field(factory=lambda: [])
     _parts: dict[Body, Scale] = field(factory=lambda: {}, init=False)
     _scales: dict[EntityScales, Scale] = field(factory=lambda: {}, init=False)
     _attributes: dict[Attribute, Scale] = field(factory=lambda: {}, init=False)
-    queue_actions: list[SkillState] = field(factory=list)
+    queue_actions: list[SkillState] = field(factory=lambda: [])
 
     def __attrs_post_init__(self) -> None:
         for _ in Body:
@@ -93,7 +93,7 @@ class Entity(Nameable):
 
     @property
     def parts(self) -> dict[Body, Scale]:
-        p = {i: 0 for i in self._parts}
+        p = {i: 0.0 for i in self._parts}
 
         for mod in self.modifiers:
             if isinstance(mod, ItemModifier):
@@ -107,7 +107,7 @@ class Entity(Nameable):
 
     @property
     def attributes(self) -> dict[Attribute, Scale]:
-        p = {i: 0 for i in self._attributes}
+        p = {i: 0.0 for i in self._attributes}
 
         for mod in self.modifiers:
             if isinstance(mod, ItemModifier):

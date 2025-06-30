@@ -7,7 +7,7 @@ import attr
 from krpg.actions import ActionCategory, ActionManager, action
 from krpg.commands import command
 from krpg.components import component
-from krpg.engine.executer import Extension, executer_command
+from krpg.engine.executer import Ctx, Extension, executer_command
 from krpg.events_middleware import GameEvent
 
 if TYPE_CHECKING:
@@ -24,11 +24,13 @@ class NewdayEvent(GameEvent):
     day: int
 
 
+MINUTES_PER_DAY = 24 * 60
+
 @command
 def wait(clock: Clock, minutes: int) -> Generator[TimepassEvent | NewdayEvent, Any, None]:
     assert minutes, "Must be number"
     assert minutes > 0, "Must be greater than zero"
-    assert minutes < 24 * 60, "Cant skip more, than 1 day"  # TODO: ???
+    assert minutes < MINUTES_PER_DAY, "Cant skip more, than 1 day"  # TODO: ???
     day = clock.days
     clock.global_minutes += minutes
     yield TimepassEvent(minutes)
@@ -49,9 +51,9 @@ class ClockCommands(ActionManager):
 class ClockExtension(Extension):
     @executer_command("pass")
     @staticmethod
-    def passtime(game: Game, minutes: str) -> None:
+    def passtime(ctx: Ctx, minutes: str) -> None:
         assert minutes.isdigit()
-        game.commands.execute(wait(game.clock, int(minutes)))
+        ctx.game.commands.execute(wait(ctx.game.clock, int(minutes)))
 
 
 class Clock:

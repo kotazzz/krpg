@@ -129,19 +129,19 @@ def unlock(loc: Location) -> Generator[UnlockEvent, Any, None]:
 
 @attr.s(auto_attribs=True)
 class Location(Nameable):
-    items: list[Slot] = attr.ib(factory=list, repr=lambda x: str(len(x)))
-    npcs: list[Npc] = attr.ib(factory=list, repr=lambda x: str(len(x)))
+    items: list[Slot] = attr.ib(factory=lambda: [], repr=lambda x: str(len(x)))
+    npcs: list[Npc] = attr.ib(factory=lambda: [], repr=lambda x: str(len(x)))
     locked: bool = False
     stage: int = 0
-    stages: list[list[NamedScript]] = attr.ib(factory=list, repr=lambda x: str(len(x)))
+    stages: list[list[NamedScript]] = attr.ib(factory=lambda: [], repr=lambda x: str(len(x)))
 
 
 @attr.s(auto_attribs=True)
 class World:
-    locations: list[Location] = attr.ib(factory=list, repr=lambda x: str(len(x)))
+    locations: list[Location] = attr.ib(factory=lambda: [], repr=lambda x: str(len(x)))
     current_location: Location = attr.ib(init=False, repr=lambda x: repr(x.id) if x else "None")
     start_location: Location | None = attr.ib(default=None, repr=lambda x: repr(x.id) if x else "None")
-    roads: list[tuple[Location, Location]] = attr.ib(factory=list, repr=lambda x: f"{len(x)} roads")
+    roads: list[tuple[Location, Location]] = attr.ib(factory=lambda: [], repr=lambda x: f"{len(x)} roads")
 
     def get_roads(self, location: Location) -> list[Location]:
         froms = [road[0] for road in self.roads if road[1] == location]

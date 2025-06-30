@@ -111,16 +111,14 @@ class GameBase:
         self.show_logo()
         while True:
             choice = self.console.menu("Добро пожаловать", options)
-            if not choice:
-                break
             choice()
 
     def new_game(self) -> None:
         self.state = GameState.INIT
-        loop = Game(self)
+        game_loop = Game(self)
         self.state = GameState.PLAY
         try:
-            loop.play()
+            game_loop.play()
         except (KeyboardInterrupt, EOFError):
             self.console.print("Игра завершена")
             self.state = GameState.MENU

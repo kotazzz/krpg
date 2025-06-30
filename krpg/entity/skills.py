@@ -15,9 +15,48 @@ if TYPE_CHECKING:
 
 
 @attr.s(auto_attribs=True)
+class Skill(Nameable):
+    cooldown: int = 0
+    prepare_time: int = 0
+    target: TargetType = TargetType.ENTITY
+
+    level: int = 1
+    difficulty: int = 1
+
+    cost_mp: int = 0
+    cost_item: Item | ItemTag | None = None
+
+    parent: Skill = field(default=None, repr=False)
+    children: list[Skill] = field(factory=lambda: [], repr=False)
+
+    effects: list[Effect] = field(factory=lambda: [], repr=False)
+    description: str = DEFAULT_DESCRIPTION
+
+    def link_children(self, skill: Skill) -> None:
+        skill.parent = self
+        self.children.append(skill)
+
+    @property
+    def new_instance(self) -> SkillState:
+        return SkillState(self)
+
+
+@attr.s(auto_attribs=True)
+class SkillState:
+    skill: Skill = field(repr=lambda x: repr(x.id))
+    cooldown: int = 0
+    use_slot: Slot | None = None
+    prepare: int = 0
+
+    @property
+    def available(self) -> bool:
+        return self.cooldown == 0
+
+
+@attr.s(auto_attribs=True)
 class SkillTree:
-    skills: list[Skill] = field(factory=list)
-    learned: list[SkillState] = field(factory=list)
+    skills: list[Skill] = field(factory=list[Skill])
+    learned: list[SkillState] = field(factory=list[SkillState])
     points: int = 0
     xp: int = 0
     _last_level: int = 0
@@ -53,41 +92,3 @@ class SkillTree:
         self.learned.append(skill.new_instance)
         return self
 
-
-@attr.s(auto_attribs=True)
-class Skill(Nameable):
-    cooldown: int = 0
-    prepare_time: int = 0
-    target: TargetType = TargetType.ENTITY
-
-    level: int = 1
-    difficulty: int = 1
-
-    cost_mp: int = 0
-    cost_item: Item | ItemTag | None = None
-
-    parrent: Skill = field(default=None, repr=False)
-    childrens: list[Skill] = field(factory=list, repr=False)
-
-    effects: list[Effect] = field(factory=list)
-    description: str = DEFAULT_DESCRIPTION
-
-    def link_children(self, skill: Skill) -> None:
-        skill.parrent = self
-        self.childrens.append(skill)
-
-    @property
-    def new_instance(self) -> SkillState:
-        return SkillState(self)
-
-
-@attr.s(auto_attribs=True)
-class SkillState:
-    skill: Skill = field(repr=lambda x: repr(x.id))
-    cooldown: int = 0
-    use_slot: Slot | None = None
-    prepare: int = 0
-
-    @property
-    def available(self) -> bool:
-        return self.cooldown == 0
