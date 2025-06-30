@@ -3,11 +3,12 @@ import shlex
 from typing import Any, Callable, Literal, Optional
 
 import questionary
-from prompt_toolkit import ANSI
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.shortcuts import PromptSession
 from rich.console import Console
 from rich.logging import RichHandler
+from prompt_toolkit.formatted_text import ANSI, to_formatted_text
+from questionary.prompts.common import FormattedText
 
 
 def rich_to_pt_ansi(*args: str, console: Optional[Console] = None, **kwargs: Any) -> ANSI:
@@ -74,26 +75,6 @@ class KrpgConsole:
             for i, item in enumerate(items, 1):
                 self.print(f"[blue]{i}[/]. [cyan]{display(item)}[/]")
 
-    # TODO: _create completer, _parse text
-    def raw_prompt(
-        self,
-        text: str | int | ANSI,
-        completer: Optional[dict[str, str]] = None,
-    ) -> str:
-        prompt_completer = None
-        if completer:
-            completer = {shlex.quote(k): v for k, v in completer.items()}
-            prompt_completer = WordCompleter(
-                list(completer.keys()),
-                meta_dict={i: rich_to_pt_ansi(j, console=self.console) for i, j in completer.items()},
-            )
-        if isinstance(text, int):
-            try:
-                text = self.levels[text]
-            except KeyError:
-                raise ValueError(f"Unknown level: {text}")
-        return self.session.prompt(text, completer=prompt_completer)
-
     def prompt[T: Any](
         self,
         text: str | int | ANSI,
@@ -153,27 +134,93 @@ class KrpgConsole:
                 return None
             if check(item):
                 return transformer(item)
-
-    def menu[T](self, title: str, options: dict[str, T]) -> T:
-        choices = [questionary.Choice([("green", i)], value=j) for i, j in options.items()]
+    def _rich_to_prompt_toolkit(self, str: str) -> FormattedText:
+        with self.console.capture() as capture:
+            self.console.print(f"[green]{str}[/]", end="")
+        str_output = capture.get()
+        result: FormattedText = to_formatted_text(ANSI(str_output)) # type: ignore
+        return result
+    def interactive_select[T](self, title: str, options: dict[str, T]) -> T | None:
+        choices = [questionary.Choice(self._rich_to_prompt_toolkit(k), value=v) for k, v in options.items()]
+        # formatted_title = self._rich_to_prompt_toolkit(title) # Не работает
         s = questionary.Style(
             [
                 ("question", "red bold"),
             ]
         )
         return questionary.select(title, choices, qmark="", instruction=" ", style=s).ask()
-        
-    def multiple[T](self, title: str, options: dict[str, T], min: int= 0, max: int = 9) -> list[T]:
-        choices = [questionary.Choice([("green", i)], value=j) for i, j in options.items()]
+
+    def interactive_multiple[T](self, title: str, options: dict[str, T], min: int= 0, max: int = 9) -> list[T] | None:
+        choices = [questionary.Choice(self._rich_to_prompt_toolkit(k), value=v) for k, v in options.items()]
         s = questionary.Style(
             [
                 ("question", "red bold"),
             ]
         )
-        return questionary.checkbox(title, choices, qmark="", instruction=" ", style=s, validate=lambda r: min <= len(r) <= max).ask()
+        return questionary.checkbox(title, choices, qmark="", instruction=" ", validate=lambda r: min <= len(r) <= max, style=s).ask()
 
-    def select[T: Any](self, title: str, options: dict[str, T], indexed: bool = False) -> T | None:
+    def multiple[T](self, title: str, options: dict[str, T], min: int = 0, max: int = 9) -> list[T]:
+        filtered_options = {s.partition('\n')[0]: v for s, v in options.items()}
         if self.queue:
+            selected: list[T] = []
+            history_entries: list[str] = []
+            
+            while True:
+                # Показываем текущий статус
+                self.print(f"\n[bold]{title}[/]")
+                self.print("\nОпции:")
+                for name, value in filtered_options.items():
+                    status = "[green]✓[/]" if value in selected else "[red]✗[/]"
+                    self.print(f"  {status} {name}")
+                
+                extended_options: dict[str, T | Literal["CONFIRM_SELECTION", "CLEAR_SELECTION"]] = dict(filtered_options)
+                extended_options["confirm"] = "CONFIRM_SELECTION"
+                extended_options["clear"] = "CLEAR_SELECTION"
+
+                res = self.select("\nВыберите опцию для переключения (или 'confirm' для завершения, 'clear' для сброса):",
+                                extended_options, indexed=True, non_interactive=True)
+
+                if not res:
+                    return []
+                
+                if res == "CONFIRM_SELECTION":
+                    if min <= len(selected) <= max:
+                        return selected
+                    else:
+                        self.print(f"[red]Количество элементов должно быть между {min} и {max}.[/]")
+                        continue
+                elif res == "CLEAR_SELECTION":
+                    selected.clear()
+                    self.print("[yellow]Выбор очищен.[/]")
+                else:
+                    if res in selected:
+                        selected.remove(res)
+                        option_name = {v: k for k, v in filtered_options.items()}[res]
+                        self.print(f"[yellow]Удалено: {option_name}[/]")
+                    else:
+                        if len(selected) < max:
+                            selected.append(res)
+                            option_name = {v: k for k, v in filtered_options.items()}[res]
+                            self.print(f"[green]Добавлено: {option_name}[/]")
+                        else:
+                            self.print(f"[red]Невозможно добавить больше элементов. Максимум {max}.[/]")
+        else:
+            result = self.interactive_multiple(title, filtered_options, min, max)
+            if result is None:
+                self.history.append("e")
+                return []
+            
+            history_entries = []
+            for item in result:
+                option_name = {v: k for k, v in filtered_options.items()}[item]
+                history_entries.append(option_name)
+            history_entries.append("confirm")
+            self.history.extend(history_entries)
+            
+            return result
+
+    def select[T: Any](self, title: str, options: dict[str, T], indexed: bool = False, non_interactive:bool = False) -> T | None:
+        if self.queue or non_interactive:
             if indexed:
                 completer = {str(i): v for i, v in enumerate(options.keys(), 1)}
                 res = self.prompt(title, completer, validator=lambda x: x.isdigit() and 0 < int(x) <= len(options), transformer=int)
@@ -187,7 +234,7 @@ class KrpgConsole:
                     return None
                 return options[res]
         else:
-            val = self.menu(title, options)
+            val = self.interactive_select(title, options)
             if not val:
                 history = "e"
             elif indexed:
@@ -196,7 +243,7 @@ class KrpgConsole:
                 history = {v: k for k, v in options.items()}[val]
             self.history.append(history)
             return val
-
+    
     def list_select[T](self, title: str, options: list[T], display: Callable[[Any], str] = str, hide: bool = False) -> T | None:
         if not hide:
             self.print_list(options, display)

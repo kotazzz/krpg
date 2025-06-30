@@ -69,7 +69,7 @@ def create_stage(game: Game, section: Section) -> list[NamedScript]:
     stage_actions: list[NamedScript] = []
     for action in section.all():
         assert isinstance(action, Section)
-        sc = game.executer.create_scenario(action)
+        sc = game.executer.create_scenario(action, name=action.args[1])
         stage_actions.append(sc)
     return stage_actions
 

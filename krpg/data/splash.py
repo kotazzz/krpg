@@ -1,3 +1,4 @@
+# TODO: Add splashes back to the game
 SPLASHES = [
     "Кто придумал эту игру?",
     "Да, это игра.",

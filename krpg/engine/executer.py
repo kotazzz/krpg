@@ -18,7 +18,7 @@ type Enviroment = dict[str, Any]
 
 class ExecuterCommandCallback(Protocol):
     # FIXME: Any to str | children
-    def __call__(self, ctx: Ctx, *args: Any, **kwargs: Any) -> None:
+    def __call__(self, ctx: Ctx, *args: Any, **kwargs: Any) -> None | int:
         ...
 
 @attr.s(auto_attribs=True)
@@ -101,10 +101,15 @@ class Base(Extension):
     
     @executer_command("if")
     @staticmethod
-    def builtin_if(ctx: Ctx, expr: str, children: list[Command | Section]):
+    def builtin_if(ctx: Ctx, expr: str, children: list[Command | Section]) -> None | int:
         res = ctx.executer.evaluate(expr)
         if res:
-            ctx.executer.run(Section(children=children))
+            return ctx.executer.run(Section(children=children))
+    
+    @executer_command("return")
+    @staticmethod
+    def builtin_return(ctx: Ctx):
+        return 0
 
 
 @attr.s(auto_attribs=True)
@@ -121,13 +126,15 @@ class Script:
     position = 0
     env: Enviroment = {}
 
-    def run(self) -> None:
+    def run(self) -> None | int:
         while True:
             if self.position >= len(self.section.children):
                 break
             command = self.section.children[self.position]
-            self.executer.execute(command, self.env)
+            returned = self.executer.execute(command, self.env)
             self.position += 1
+            if returned is not None:
+                return returned
 
 
 @attr.s(auto_attribs=True)
@@ -160,27 +167,33 @@ class Executer:
                 commands[name] = cmd
         return commands
 
-    def execute(self, command: Command | Section, locals: Enviroment) -> None:
+    def execute(self, command: Command | Section, locals: Enviroment) -> None | int:
         game = self.game
         ctx = Ctx(game, self, locals)
         cmds = self.get_commands()
         if command.name in cmds:
             if isinstance(command, Section):
-                cmds[command.name].callback(ctx, *command.args, children=command.children)
+                return cmds[command.name].callback(ctx, *command.args, children=command.children)
             else:
-                cmds[command.name].callback(ctx, *command.args)
-            return
+                return cmds[command.name].callback(ctx, *command.args)
         raise ValueError(f"Command {command.name} not found")
 
-    def run(self, section: Section) -> None:
+    def run(self, section: Section) -> None | int:
         script = Script(self, section)
-        script.run()
+        return script.run()
 
-    def create_scenario(self, section: Section) -> NamedScript:
-        if not section.name:
-            raise ValueError("Scenario name is required")
+    def create_scenario(self, section: Section, id: str|None = None, name: str|None = None, description: str|None = None,) -> NamedScript:
+        id = id or section.name
+        name = name or section.args[0] if section.args else section.name
+        description = section.args[1] if len(section.args) > 1 else description
+        if not id:
+            raise ValueError("Scenario ID is required")
         return NamedScript(
-            id=section.name,
-            name=section.name,
+            id=id,
+            name=name or id,
+            description=description or id,
             script=Script(self, section),
         )
+    
+    def __str__(self) -> str:
+        return "<Executer>"

@@ -47,6 +47,7 @@ class TalkAction(ActionManager):
         npcs = game.world.current_location.npcs
         if not npcs:
             game.console.print("[red]Нет собеседника")
+            return
         npc = game.console.select("Выберите собеседника: ", {n.name: n for n in npcs}, True)
         if not npc:
             return

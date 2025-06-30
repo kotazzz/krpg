@@ -110,7 +110,9 @@ class GameBase:
         }
         self.show_logo()
         while True:
-            choice = self.console.menu("Добро пожаловать", options)
+            choice = self.console.interactive_select("Добро пожаловать", options)
+            if not choice:
+                return
             choice()
 
     def new_game(self) -> None:

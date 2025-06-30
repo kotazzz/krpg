@@ -150,7 +150,7 @@ class ObjectiveState:
 
 @attr.s(auto_attribs=True)
 class Quest(Nameable):
-    stages: list[Stage] = attr.ib(factory=lambda: [])
+    stages: list[Stage] = attr.ib(factory=lambda: [], repr=False)
 
 
 @attr.s(auto_attribs=True)
@@ -285,8 +285,6 @@ class TalkObjective(Objective):
 
     def check(self, event: Event, state: int, completed: bool) -> StateUpdate[None]:
         if isinstance(event, TalkNpc):
-            print(event.npc.id == self.npc_id)
-            print(event, self.npc_id)
             return event.npc.id == self.npc_id
 
 
