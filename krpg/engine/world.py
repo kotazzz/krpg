@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, Generator
 import attr
 from rich.panel import Panel
 
-from krpg.actions import ActionCategory, ActionManager, action
+from krpg.actions import Action, ActionCategory, ActionManager, action
 from krpg.commands import command
 from krpg.components import component
 from krpg.engine.executer import Ctx, Extension, NamedScript, executer_command
@@ -135,6 +135,11 @@ class Location(Nameable):
     stage: int = 0
     stages: list[list[NamedScript]] = attr.ib(factory=lambda: [], repr=lambda x: str(len(x)))
 
+    @property
+    def actions(self) -> list[Action]:
+        if not self.stages:
+            return []
+        return [a.as_action for a in self.stages[self.stage]]
 
 @attr.s(auto_attribs=True)
 class World:

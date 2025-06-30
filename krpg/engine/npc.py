@@ -51,7 +51,7 @@ class TalkAction(ActionManager):
         npc = game.console.select("Выберите собеседника: ", {n.name: n for n in npcs}, True)
         if not npc:
             return
-        scenario = game.console.select("Выберите тему: ", {a.name: a for a in npc.actions}, True)
+        scenario = game.console.select("Выберите тему: ", {a.description: a for a in npc.actions}, True)
         if scenario:
             game.commands.execute(talk(npc, scenario))
 

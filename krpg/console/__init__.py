@@ -160,7 +160,7 @@ class KrpgConsole:
         return questionary.checkbox(title, choices, qmark="", instruction=" ", validate=lambda r: min <= len(r) <= max, style=s).ask()
 
     def multiple[T](self, title: str, options: dict[str, T], min: int = 0, max: int = 9) -> list[T]:
-        filtered_options = {s.partition('\n')[0]: v for s, v in options.items()}
+        filtered_options = options # {s.partition('\n')[0]: v for s, v in options.items()}
         if self.queue:
             selected: list[T] = []
             history_entries: list[str] = []
@@ -213,8 +213,9 @@ class KrpgConsole:
             history_entries = []
             for item in result:
                 option_name = {v: k for k, v in filtered_options.items()}[item]
-                history_entries.append(option_name)
-            history_entries.append("confirm")
+                index = list(filtered_options.values()).index(item) + 1
+                history_entries.append(str(index))
+            history_entries.append(str(len(filtered_options) + 1))  # confirm index
             self.history.extend(history_entries)
             
             return result

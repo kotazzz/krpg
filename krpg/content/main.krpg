@@ -164,11 +164,11 @@ locations {
                 set _time game.random.randint(1, 4)
                 wait _time
                 if "_random > 90" {
-                    require quest collect_herbs stage 0 {
+                    require quest collect_herbs stage 0 { # TODO: inverse condition
                         say "Ты идешь по лесу, внимательно осматривая каждый куст и дерево. Вдруг ты замечаешь редкое растение, которое тебе нужно."
                         pickup herbs
                     }
-                    flag stop_now
+                    flag stop_now # TODO: Remove
                 }
                 if "_random > 85" {
                     require quest catch_rabbits stage 0 {
@@ -184,7 +184,7 @@ locations {
                     }
                     flag stop_now
                 }
-                stop stop_now
+                stop stop_now # TODO: Remove
             }
         }
     }

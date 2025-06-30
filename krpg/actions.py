@@ -15,7 +15,7 @@ class ActionCategory(StrEnum):
     OTHER = "Другое"
     NOT_SET = "Не установлено"
     DEBUG = "Отладка"
-
+    LOCATION = "Локация"
 
 type ActionCallback = Callable[[Game], Any]
 
@@ -41,7 +41,7 @@ def action(
 
     return decorator
 
-
+# TODO: Unused code
 def merge_actions(*managers: ActionManager) -> dict[str, Action]:
     actions: dict[str, Action] = {}
     for manager in managers:
@@ -69,7 +69,7 @@ class ActionManager:
     @property
     def actions(self) -> dict[str, Action]:
         actions = self._actions.copy()
-        actions.extend(self.extract())
+        actions.extend(self.extract()) # TODO: Unused code
         for manager in self.submanagers:
             actions.extend(manager.actions.values())
         return {act.name: act for act in actions}

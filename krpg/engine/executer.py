@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, Callable, Generator, Protocol
 
 import attr
 
+from krpg.actions import Action, ActionCategory
 from krpg.commands import command
 from krpg.events_middleware import GameEvent
 from krpg.engine.npc import Npc
@@ -127,6 +128,7 @@ class Script:
     env: Enviroment = {}
 
     def run(self) -> None | int:
+        self.position = 0
         while True:
             if self.position >= len(self.section.children):
                 break
@@ -140,6 +142,10 @@ class Script:
 @attr.s(auto_attribs=True)
 class NamedScript(Nameable):
     script: Script = attr.ib(default=None)
+
+    @property
+    def as_action(self) -> Action:
+        return Action(self.name, self.description, ActionCategory.LOCATION, lambda g: self.script.run())
 
 
 class Executer:
@@ -182,16 +188,29 @@ class Executer:
         script = Script(self, section)
         return script.run()
 
-    def create_scenario(self, section: Section, id: str|None = None, name: str|None = None, description: str|None = None,) -> NamedScript:
-        id = id or section.name
-        name = name or section.args[0] if section.args else section.name
-        description = section.args[1] if len(section.args) > 1 else description
-        if not id:
-            raise ValueError("Scenario ID is required")
+    def create_scenario(self, section: Section, force_id: str|None = None, force_name: str|None = None, force_description: str|None = None,) -> NamedScript:
+        match section.name, section.args:
+            case None, _:
+                raise ValueError("Scenario name is required")
+            case id, []:
+                id = force_id or id
+                name = force_name or id
+                description = force_description or id
+            case id, [name]:
+                id = force_id or id
+                name = force_name or name
+                description = force_description or name
+            case id, [name, description]:
+                id = force_id or id
+                name = force_name or name
+                description = force_description or description
+            case _:
+                raise Exception("Invalid scenario definition")
+
         return NamedScript(
             id=id,
-            name=name or id,
-            description=description or id,
+            name=name,
+            description=description,
             script=Script(self, section),
         )
     

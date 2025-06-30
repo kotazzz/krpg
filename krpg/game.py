@@ -183,6 +183,7 @@ class Game:
     def play(self) -> None:
         while True:
             actions = self.actions.actions
+            actions |= {a.name: a for a in self.world.current_location.actions}
             command = self.console.prompt("> ", {n: a.description for n, a in actions.items()})
             if command and command in actions:
                 actions[command].callback(self)
