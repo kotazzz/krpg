@@ -17,7 +17,7 @@ from krpg.commands import CommandManager, command
 from krpg.engine.builder import build
 from krpg.console import KrpgConsole
 from krpg.data.consts import ABOUT, LOGO_GAME, __version__
-from krpg.actions import Action, ActionCategory, ActionManager, action
+from krpg.actions import Action, ActionCategory, ActionManager, ActionState, action
 from krpg.engine.clock import Clock
 from krpg.engine.enums import GameState
 from krpg.engine.player import Player
@@ -26,13 +26,16 @@ from krpg.engine.world import World
 from krpg.entity.bestiary import Bestiary
 from krpg.engine.executer import Executer
 from krpg.events import Event, EventHandler, listener
-from krpg.events_middleware import GameMiddleware
+from krpg.events_middleware import GameEvent, GameMiddleware
 
 
 @attr.s(auto_attribs=True)
 class StateChange(Event):
     new_state: GameState
 
+@attr.s(auto_attribs=True)
+class ActionExecuted(GameEvent):
+    action: Action
 
 @command
 def set_state(game: Game, state: GameState) -> Generator[Event, Any, None]:
@@ -57,8 +60,7 @@ class RootActionManager(ActionManager):
     def action_help(game: Game) -> None:
         def get_key(act: Action) -> ActionCategory | str:
             return act.category
-
-        actions = sorted(game.actions.actions.values(), key=get_key)
+        actions = sorted(game.actions.actions, key=get_key)
         cmdcat = groupby(actions, key=get_key)
         for cat, cmds in cmdcat:
             game.console.print(f"[b red]{cat}")
@@ -184,13 +186,40 @@ class Game:
     def play(self) -> None:
         while True:
             actions = self.actions.actions
-            actions |= {a.name: a for a in self.world.current_location.actions}
-            command = self.console.prompt("> ", {n: a.description for n, a in actions.items()})
-            if command and command in actions:
-                actions[command].callback(self)
+            actions += self.world.current_location.actions
+
+            self.execute_action(actions)
             if self.state == GameState.MENU:
                 break
 
+    def execute_action(self, actions: list[Action], prompt: str = "> ", interactive: bool = False) -> Action | None:
+        def _name(a: Action):
+            state = a.check(self)
+            return f'{"red" if state == ActionState.LOCKED else ""}{a.description}'
+
+        actions_dict = {
+            a.name: a
+            for a in actions
+            if (state := a.check(self)) != ActionState.HIDDEN
+        }
+        if interactive:
+            action = self.console.select(prompt, {
+                _name(a): a
+                for a in actions
+                if (state := a.check(self)) != ActionState.HIDDEN
+            }, True)
+        else:
+            command = self.console.prompt(prompt, {a.name: a.description for a in actions})
+            action = actions_dict.get(command or "")
+        if not action:
+            return None
+        state = action.check(self)
+        if state == ActionState.ACTIVE:
+            action.callback(self)
+            return action
+        elif state == ActionState.LOCKED:
+            self.console.print("Действие заблокировано")
+        return None
 
 def main(debug: bool) -> None:
     game = GameBase()

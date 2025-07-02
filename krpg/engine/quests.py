@@ -9,7 +9,7 @@ from rich.tree import Tree
 from krpg.actions import ActionCategory, ActionManager, action
 from krpg.commands import Command, command
 from krpg.components import component
-from krpg.engine.executer import Ctx, Extension, NamedScript, executer_command, require_predicate, run_scenario
+from krpg.engine.executer import Ctx, Extension, NamedScript, Predicate, executer_command, add_predicate, run_scenario
 from krpg.engine.npc import Npc, TalkNpc, introduce
 from krpg.engine.world import MoveEvent, unlock
 from krpg.entity.inventory import EquipEvent, PickupEvent, UnequipEvent
@@ -60,16 +60,24 @@ class QuestCommandsExtension(Extension):
         g = ctx.game
         g.commands.execute(start_quest(g.quest_manager, quest))
 
-    @require_predicate("quest")
+@add_predicate
+class QuestPredicate(Predicate):
+    name = "quest"
     @staticmethod
-    def quest_predicate(ctx: Ctx, quest_id: str, cond: str, *args: str) -> bool:
-        quest = ctx.game.bestiary.get_entity_by_id(quest_id, Quest)
+    def parse(*args: str) -> tuple[tuple[str, str, int], int]:
+        match args:
+            case [quest_id, "stage", stage_id]:
+                return (quest_id, "stage", int(stage_id)), 3
+            case _:
+                raise ValueError(f"Unknown arguments: {args}")
+    @staticmethod
+    def eval(game: Game, quest_id: str, cond: str, *args: Any) -> bool:
+        quest = game.bestiary.get_entity_by_id(quest_id, Quest)
         if not quest:
             raise ValueError(f"Quest {quest_id} not found")
         match cond, args:
             case "stage", [stage_id]:
-                stage_id = int(stage_id)
-                state = ctx.game.quest_manager.get_state(quest)
+                state = game.quest_manager.get_state(quest)
                 if not state:
                     return False
                 return state.stage_index == stage_id
@@ -111,7 +119,7 @@ class QuestActions(ActionManager):
 @component
 @listener(Event)
 def test(e: Event):
-    if not isinstance(e, HasGame):
+    if not isinstance(e, HasGame): # TODO: Rewrite to GameEvent listen
         return
     e.game.quest_manager.check_quests(e)
 

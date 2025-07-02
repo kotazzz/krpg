@@ -139,7 +139,7 @@ class Location(Nameable):
     def actions(self) -> list[Action]:
         if not self.stages:
             return []
-        return [a.as_action for a in self.stages[self.stage]]
+        return [a.as_action for a in self.stages[self.stage]] #
 
 @attr.s(auto_attribs=True)
 class World:

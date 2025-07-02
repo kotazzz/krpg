@@ -148,8 +148,8 @@ locations {
     forest "Лес" "Лес на окраине города. Здесь я могу найти много интересных растений и животных." {
         stage {
             action explore "Исследовать" {
-                set _random game.random.randint(0, 100)
-                set _time game.random.randint(1, 4)
+                set _random "game.random.randint(0, 100)"
+                set _time "game.random.randint(1, 4)"
                 wait _time
                 if "_random > 90" {
                     require quest collect_herbs stage 0

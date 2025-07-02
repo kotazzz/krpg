@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Generator
 
 import attr
 
-from krpg.actions import ActionCategory, ActionManager, action
+from krpg.actions import Action, ActionCategory, ActionManager, action
 from krpg.commands import command
 from krpg.components import component
 from krpg.events_middleware import GameEvent
@@ -24,7 +24,7 @@ class IntroduceNpc(GameEvent):
 @attr.s(auto_attribs=True)
 class TalkNpc(GameEvent):
     npc: Npc
-    script: NamedScript
+    action: Action
 
 
 @command
@@ -34,10 +34,8 @@ def introduce(npc: Npc) -> Generator[IntroduceNpc, Any, None]:
 
 
 @command
-def talk(npc: Npc, scenario: NamedScript) -> Generator[TalkNpc, Any, None]:
-    yield TalkNpc(npc, scenario)
-    scenario.script.run()
-
+def talk(npc: Npc, action: Action) -> Generator[TalkNpc, Any, None]:
+    yield TalkNpc(npc, action)
 
 @component
 class TalkAction(ActionManager):
@@ -51,9 +49,9 @@ class TalkAction(ActionManager):
         npc = game.console.select("Выберите собеседника: ", {n.name: n for n in npcs}, True)
         if not npc:
             return
-        scenario = game.console.select("Выберите тему: ", {a.description: a for a in npc.actions}, True)
-        if scenario:
-            game.commands.execute(talk(npc, scenario))
+        action = game.execute_action(npc.actions, "Выберите тему", interactive=True)
+        if action:
+            game.commands.execute(talk(npc, action))
 
 
 @attr.s(auto_attribs=True)
@@ -66,8 +64,8 @@ class Npc(Nameable):
     _color2: str = attr.ib(init=False)
 
     @property
-    def actions(self) -> list[NamedScript]:
-        return self.stages[self.stage]
+    def actions(self) -> list[Action]:
+        return [a.as_action for a in self.stages[self.stage]]
 
     def __attrs_post_init__(self):
         hash_hex = hashlib.md5(self.id.encode()).hexdigest()

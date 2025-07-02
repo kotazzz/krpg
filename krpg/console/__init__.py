@@ -91,7 +91,6 @@ class KrpgConsole:
                 list(completer.keys()),
                 meta_dict={i: rich_to_pt_ansi(j, console=self.console) for i, j in completer.items()},
             )
-
         if isinstance(text, int):
             try:
                 text = self.levels[text]
@@ -99,6 +98,8 @@ class KrpgConsole:
                 raise ValueError(f"Unknown level: {text}")
 
         if isinstance(text, str):
+            if not text.endswith(" "):
+                text += ": "
             text = rich_to_pt_ansi(text, console=self.console)
 
         def check(text: str) -> bool:
@@ -134,7 +135,7 @@ class KrpgConsole:
                 return None
             if check(item):
                 return transformer(item)
-    def _rich_to_prompt_toolkit(self, str: str) -> FormattedText:
+    def _rich_to_prompt_toolkit(self, str: str) -> FormattedText: # TODO: extract to global
         with self.console.capture() as capture:
             self.console.print(f"[green]{str}[/]", end="")
         str_output = capture.get()

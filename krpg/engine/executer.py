@@ -22,18 +22,30 @@ class ExecuterCommandCallback(Protocol):
     def __call__(self, ctx: Ctx, *args: Any, **kwargs: Any) -> None | int:
         ...
 
-class RequirePredicate(Protocol):
-    def __call__(self, ctx: Ctx, *args: Any) -> bool:
+class Parse(Protocol):
+    def __call__(self, *args: str) -> tuple[Any, int]:
         ...
 
+class Eval(Protocol):
+    def __call__(self, game: Game, *args: Any) -> bool:
+        ...
 
-predicates: dict[str, RequirePredicate] = {}
+class Predicate(Protocol):
+    name: str
+    parse: Parse
+    eval: Eval
 
-def require_predicate(name: str) -> Callable[[RequirePredicate], RequirePredicate]:
-    def wrapper(func: RequirePredicate) -> RequirePredicate:
-        predicates[name] = func
-        return func
-    return wrapper
+    def __repr__(self) -> str:
+        return f"<Predicate {self.name}>" 
+
+
+predicates: dict[str, Predicate] = {}
+
+def add_predicate(obj: type[Predicate]) -> Predicate:
+    item = obj()
+    predicates[item.name] = item
+    return item
+    
 
 @attr.s(auto_attribs=True)
 class ScenarioRun(GameEvent):
@@ -71,6 +83,19 @@ class Extension:
 
     def __repr__(self) -> str:
         return f"<Extension {self.__class__.__name__}>"
+
+@add_predicate
+class ValuePredicate(Predicate):
+    name = "value"
+    @staticmethod
+    def parse(*args: str) -> tuple[str, int]:
+        if args:
+            return args[0], 1
+        raise ValueError("No value provided")
+
+    @staticmethod
+    def eval(game: Game, key: str, *_) -> bool:
+        return game.executer.env.get(key) is not None
 
 
 class Base(Extension):
@@ -129,15 +154,13 @@ class Base(Extension):
     def builtin_require(ctx: Ctx, name: str, *args: str, children: list[Command | Section] | None= None,) -> None | int:
         if name not in predicates:
            raise ValueError(f"Unknown require predicate: {name}")
-        if not predicates[name](ctx, *args):
+        parsed = predicates[name].parse(*args)
+        if not predicates[name].eval(ctx.game, *parsed):
             if children:
                 ctx.executer.run(Section(children=children))
             return 0
         
-    @require_predicate("value")
-    @staticmethod
-    def require_value(ctx: Ctx, value: str, *_: str) -> bool:
-        return ctx.executer.env.get(value) is not None
+
 
 @attr.s(auto_attribs=True)
 class Ctx:
@@ -171,7 +194,7 @@ class NamedScript(Nameable):
 
     @property
     def as_action(self) -> Action:
-        return Action(self.name, self.description, ActionCategory.LOCATION, lambda g: self.script.run())
+        return Action(self.name, self.description, ActionCategory.ACTION, lambda g: self.script.run()) # 
 
 
 class Executer:

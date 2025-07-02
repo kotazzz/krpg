@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from enum import StrEnum
+from enum import Enum, StrEnum
 from typing import TYPE_CHECKING, Any, Callable
+
+import attr
 
 if TYPE_CHECKING:
     from krpg.game import Game
@@ -15,17 +16,23 @@ class ActionCategory(StrEnum):
     OTHER = "Другое"
     NOT_SET = "Не установлено"
     DEBUG = "Отладка"
-    LOCATION = "Локация"
+    ACTION = "Действие"
+
+class ActionState(Enum):
+    ACTIVE = "Активно"
+    LOCKED = "Заблокировано"
+    HIDDEN = "Скрыто"
 
 type ActionCallback = Callable[[Game], Any]
 
 
-@dataclass()
+@attr.s(auto_attribs=True)
 class Action:
     name: str
     description: str
     category: ActionCategory | str
     callback: ActionCallback
+    check: Callable[[Game], ActionState] = lambda game: ActionState.ACTIVE
 
     def __repr__(self) -> str:
         return f"<Action {self.name} from {self.category}>"
@@ -45,10 +52,10 @@ def action(
 def merge_actions(*managers: ActionManager) -> dict[str, Action]:
     actions: dict[str, Action] = {}
     for manager in managers:
-        for name, act in manager.actions.items():
-            if name in actions:
-                raise ValueError(f"Action with name {name} already exists")
-            actions[name] = act
+        for act in manager.actions:
+            if act.name in actions:
+                raise ValueError(f"Action with name {act.name} already exists")
+            actions[act.name] = act
     return actions
 
 
@@ -57,22 +64,22 @@ class ActionManager:
         self.submanagers: list[ActionManager] = []
         self._actions: list[Action] = []
 
-        for attr in dir(self):
-            if attr == "actions":
+        for attrib in dir(self):
+            if attrib == "actions":
                 continue
-            get = getattr(self, attr)
+            get = getattr(self, attrib)
             if isinstance(get, Action):
                 if get in self._actions:
                     raise ValueError(f"Action with name {get.name} already exists")
                 self._actions.append(get)
 
     @property
-    def actions(self) -> dict[str, Action]:
+    def actions(self) -> list[Action]:
         actions = self._actions.copy()
         actions.extend(self.extract()) # TODO: Unused code
         for manager in self.submanagers:
-            actions.extend(manager.actions.values())
-        return {act.name: act for act in actions}
+            actions.extend(manager.actions)
+        return actions
 
     def extract(self) -> list[Action]:
         return []
