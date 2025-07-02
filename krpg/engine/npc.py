@@ -58,10 +58,10 @@ class TalkAction(ActionManager):
 class Npc(Nameable):
     known: bool = False
     stage: int = 0
-    stages: list[list[NamedScript]] = attr.ib(factory=lambda: [])
+    stages: list[list[NamedScript]] = attr.ib(factory=lambda: [], repr=False)
 
-    _color: str = attr.ib(init=False)
-    _color2: str = attr.ib(init=False)
+    _color: str = attr.ib(init=False, repr=False)
+    _color2: str = attr.ib(init=False, repr=False)
 
     @property
     def actions(self) -> list[Action]:

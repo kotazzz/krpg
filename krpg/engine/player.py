@@ -54,7 +54,7 @@ class Actions(ActionManager):
             assert slot.item
 
             console.print(f"[bold green]Управление предметом: {slot.item.name}[/]\n" "  [green]i[white] - информация[/]\n" "  [green]w[white] - надеть/снять[/]\n" "  [green]d[white] - выкинуть[/]\n" "  [green]e[white] - отмена[/]")
-            action = console.select("Выберите действие: ", {"i": "i", "w": "w", "d": "d"})
+            action = console.select("Выберите действие: ", {"i": "i", "w": "w", "d": "d"}) # TODO: clarify actions
             if not action:
                 break
             if action == "i":
@@ -89,7 +89,7 @@ class Actions(ActionManager):
         res: None | int = game.commands.execute(pickup(game.player.entity.inventory, slot.item, slot.count))
         slot.count = res if res else 0
         if slot.empty:
-            loc.items.remove(slot)
+            loc.items.remove(slot) # TODO: move logic to inventory
 
 
 class Player:

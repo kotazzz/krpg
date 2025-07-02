@@ -26,6 +26,9 @@ items {
     pants "Штаны" "Обычные штаны" {
         slot_type TROUSERS
     }
+    herbs "Травы" "Медицинские травы, используемые для лечения." {}
+    berries "Ягоды" "Съедобные ягоды, растущие в лесу." {}
+    rabbits "Кролики" "Маленькие пушистые существа, которых можно поймать." {}
 }
 
 npcs {
@@ -115,6 +118,15 @@ npcs {
             }
         }
     }
+    morin "Морин" "Упс, кто-то сгрыз все описание" {
+
+    }
+    garret "Гаррет" "Упс, кто-то сгрыз все описание" {
+        
+    }
+    lana "Лана" "Упс, кто-то сгрыз все описание" {
+        
+    }
 }
 
 locations {
@@ -125,7 +137,7 @@ locations {
         item pants
         stage {
             action sleep "Пойти спать" {
-                require sleep quest main stage 4 {
+                require quest council_meet started {
                     say "Сейчас пока еще не время спать..."
                 }
                 wait until 18 00
@@ -151,19 +163,19 @@ locations {
                 set _random "game.random.randint(0, 100)"
                 set _time "game.random.randint(1, 4)"
                 wait _time
-                if "_random > 90" {
+                if "_random > 80" {
                     require quest collect_herbs stage 0
                     say "Ты идешь по лесу, внимательно осматривая каждый куст и дерево. Вдруг ты замечаешь несколько трав, которые тебе нужно собрать."
                     pickup herbs
                     return
                 }
-                if "_random > 85" {
+                if "_random > 75" {
                     require quest catch_rabbits stage 0
                     say "Ты идешь по лесу, внимательно осматривая каждый куст и дерево. Вдруг ты замечаешь двух кроликов, которых тебе нужно поймать."
                     pickup rabbits
                     return
                 }
-                if "_random > 80" {
+                if "_random > 60" {
                     require quest find_berries stage 0
                     say "Ты идешь по лесу, внимательно осматривая каждый куст и дерево. Вдруг ты замечаешь редкие ягоды, которые тебе нужно собрать."
                     pickup berries
@@ -176,7 +188,7 @@ locations {
     council "Совет" "Тут обсуждается самое важное" {
         stage {
             action start "Зайти в зал совета" {
-                require quest main stage 5 {
+                require time after 18 00 {
                     say "Ты еще не готов войти в зал совета. Собрание начнется после 18:00"
                 }
                 say "Ты входишь в зал совета. Здесь собрались все важные люди города. В центре зала стоит стол, за которым сидит мэр. Он внимательно слушает каждого, кто хочет что-то сказать."

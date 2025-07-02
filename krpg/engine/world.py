@@ -66,7 +66,7 @@ class WorldActions(ActionManager):
             game.commands.execute(move(game.world, select))
 
 @component
-class NpcUtils(Extension):
+class NpcUtils(Extension): # TODO: move to npc
     @executer_command("evolve")
     @staticmethod
     def evolve(ctx: Ctx, npc_id: str) -> None:
@@ -90,8 +90,16 @@ class NpcUtils(Extension):
         assert loc, f"Where is {loc_id}"
         loc.npcs.append(npc)
 
-    @executer_command("multiple")
+    @executer_command("unlock")
     @staticmethod
+    def unlock(ctx: Ctx, loc_id: str) -> None:
+        loc = get_by_id(ctx.game.world.locations, loc_id)
+        if not loc:
+            raise ValueError(f"Location {loc_id} not found")
+        ctx.game.commands.execute(unlock(loc))
+
+    @executer_command("multiple")
+    @staticmethod # TODO: move to std
     def multiple(ctx: Ctx, title: str, min: str, max: str, var_name: str, children: list[Command]):
         minv, maxv = int(min), int(max)
         completer: dict[str, int] = {}

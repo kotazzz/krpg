@@ -34,6 +34,9 @@ class StartQuest(GameEvent):
 class RewardEvent(GameEvent):
     reward: Reward
 
+@attr.s(auto_attribs=True)
+class UnfreezeEvent(GameEvent):
+    quest: Quest
 
 @command
 def start_quest(qm: QuestManager, quest: Quest) -> Generator[StartQuest, Any, None]:
@@ -42,11 +45,14 @@ def start_quest(qm: QuestManager, quest: Quest) -> Generator[StartQuest, Any, No
 
 
 @command
-def run_reward(game: Game, reward: Reward):
+def run_reward(game: Game, reward: Reward) -> Generator[RewardEvent, Any, None]:
     cmd = reward.run(game)
     yield RewardEvent(reward)
     game.commands.execute(cmd)
 
+@command
+def unfreeze_quest(quest: Quest) -> Generator[UnfreezeEvent, Any, None]:
+    yield UnfreezeEvent(quest)
 
 @component
 class QuestCommandsExtension(Extension):
@@ -60,14 +66,26 @@ class QuestCommandsExtension(Extension):
         g = ctx.game
         g.commands.execute(start_quest(g.quest_manager, quest))
 
+    @executer_command("complete")
+    @staticmethod
+    def complete(ctx: Ctx, *args: str) -> None:
+        assert len(args) == 1, f"Expected 1 argument, got {len(args)}"
+        quest_id = args[0]
+        quest = ctx.game.bestiary.get_entity_by_id(quest_id, Quest)
+        assert quest, f"Quest {quest_id} not found"
+        g = ctx.game
+        g.commands.execute(unfreeze_quest(quest))
+
 @add_predicate
 class QuestPredicate(Predicate):
     name = "quest"
     @staticmethod
-    def parse(*args: str) -> tuple[tuple[str, str, int], int]:
+    def parse(*args: str) -> tuple[tuple[Any, ...], int]:
         match args:
             case [quest_id, "stage", stage_id]:
                 return (quest_id, "stage", int(stage_id)), 3
+            case [quest_id, "started"]:
+                return (quest_id, "started"), 2
             case _:
                 raise ValueError(f"Unknown arguments: {args}")
     @staticmethod
@@ -80,7 +98,12 @@ class QuestPredicate(Predicate):
                 state = game.quest_manager.get_state(quest)
                 if not state:
                     return False
-                return state.stage_index == stage_id
+                return state.stage_index == stage_id and not state.is_completed
+            case "started", []:
+                state = game.quest_manager.get_state(quest)
+                if not state:
+                    return False
+                return not state.is_completed
             case _:
                 raise ValueError(f"Unknown condition: {cond}")
         return False
@@ -111,7 +134,7 @@ class QuestActions(ActionManager):
                 if objective.completed:
                     tree_stage.add(f"[cyan]{objective.objective.description}")
                 else:
-                    tree_stage.add(f"[blue]{objective.objective.description}")
+                    tree_stage.add(f"[blue]{objective.objective.description} [yellow]{objective.progress}")
 
         game.console.print(tree)
 
@@ -138,10 +161,10 @@ class Objective(ABC):
     def check(self, event: Event, state: StatusType, completed: bool) -> StateUpdate[StatusType]:
         raise NotImplementedError
 
-    def create(self) -> ObjectiveState:
-        return ObjectiveState(self)
+    def create(self, state: StatusType[QuestState]) -> ObjectiveStatus:
+        return ObjectiveStatus(self, state=state)
 
-    def status(self, state: StatusType) -> str | None:
+    def status(self, status: StatusType) -> str | None:
         return None
 
 
@@ -153,7 +176,7 @@ class Stage:
 
 
 @attr.s(auto_attribs=True)
-class ObjectiveState:
+class ObjectiveStatus:
     objective: Objective
     state: StatusType | None = None
     completed: bool = attr.ib(init=False)
@@ -171,6 +194,10 @@ class ObjectiveState:
             self.completed = completed
         else:
             self.completed = res
+    
+    @property
+    def progress(self) -> str:
+        return self.objective.status(self.state) or ""
 
 
 @attr.s(auto_attribs=True)
@@ -182,7 +209,7 @@ class Quest(Nameable):
 class QuestState:
     quest: Quest
     stage_index: int = -1
-    objectives: list[ObjectiveState] = attr.ib(factory=lambda: [])
+    objectives: list[ObjectiveStatus] = attr.ib(factory=lambda: [])
     paused: bool = False
 
     @property
@@ -198,9 +225,9 @@ class QuestState:
         return self.quest.stages[self.stage_index]
 
     def next_stage(self) -> None:
-        if self.stage_index < len(self.quest.stages):
+        if self.stage_index + 1 < len(self.quest.stages):
             self.stage_index += 1
-            self.objectives = [o.create() for o in self.stage_data.objectives]
+            self.objectives = [o.create(self) for o in self.stage_data.objectives]
 
     def check_stage(self, event: Event) -> None:
         if self.paused:
@@ -273,8 +300,8 @@ class PickupObjective(Objective):
     item_id: str
     count: int = attr.ib(converter=int)
 
-    def create(self) -> ObjectiveState:
-        return ObjectiveState(self, 0)
+    def create(self, state: QuestState) -> ObjectiveStatus:
+        return ObjectiveStatus(self, 0)
 
     def check(self, event: Event, state: int, completed: bool) -> StateUpdate[int]:
         if not isinstance(event, PickupEvent):
@@ -284,8 +311,8 @@ class PickupObjective(Objective):
         new = state + event.count
         return new, new >= self.count
 
-    def status(self, state: int) -> str | None:
-        return f"{state}/{self.count}"
+    def status(self, status: int) -> str:
+        return f"{status}/{self.count}"
 
 
 @objective("WEAR")
@@ -323,8 +350,9 @@ class TalkObjective(Objective):
 @objective("FREEZE")
 @attr.s(auto_attribs=True)
 class FreezeObjective(Objective):
-    def check(self, event: Event, state: int, completed: bool) -> StateUpdate[None]:
-        return None
+    def check(self, event: Event, state: QuestState, completed: bool) -> StateUpdate[None]:
+        if isinstance(event, UnfreezeEvent):
+            return event.quest.id == state.quest.id
 
 
 @reward("UNLOCK")

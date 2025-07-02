@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generator
+from typing import TYPE_CHECKING, Any, Generator, Literal
 
 import attr
 
 from krpg.actions import ActionCategory, ActionManager, action
 from krpg.commands import command
 from krpg.components import component
-from krpg.engine.executer import Ctx, Extension, executer_command
+from krpg.engine.executer import Ctx, Extension, Predicate, add_predicate, executer_command
 from krpg.events_middleware import GameEvent
 
 if TYPE_CHECKING:
@@ -28,7 +28,6 @@ MINUTES_PER_DAY = 24 * 60
 
 @command
 def wait(clock: Clock, minutes: int) -> Generator[TimepassEvent | NewdayEvent, Any, None]:
-    assert minutes, "Must be number"
     assert minutes > 0, "Must be greater than zero"
     assert minutes < MINUTES_PER_DAY, "Cant skip more, than 1 day"  # TODO: ???
     day = clock.days
@@ -37,6 +36,39 @@ def wait(clock: Clock, minutes: int) -> Generator[TimepassEvent | NewdayEvent, A
     if clock.days > day:
         yield NewdayEvent(clock.days)
 
+@command
+def wait_until(clock: Clock, hours: int, minutes: int) -> Generator[TimepassEvent | NewdayEvent, Any, None]:
+    total = (hours * 60 + minutes)
+    assert total > 0, "Must be greater than zero"
+    assert total < MINUTES_PER_DAY, "Cant skip more, than 1 day"  # TODO: ???
+    target_minutes = (hours * 60 + minutes) - clock.today_minutes
+    
+    day = clock.days
+    clock.global_minutes += target_minutes
+    yield TimepassEvent(target_minutes)
+    if clock.days > day:
+        yield NewdayEvent(clock.days)
+
+@add_predicate
+class TimePredicate(Predicate):
+    name = "time"
+
+    @staticmethod
+    def parse(*args: str) -> tuple[tuple[str, int, int], int]:
+        match args:
+            case ["after", hh, mm]:
+                return (("after", int(hh), int(mm)), 3)
+            case ["before", hh, mm]:
+                return (("before", int(hh), int(mm)), 3)
+            case _:
+                raise ValueError(f"Invalid time predicate: {args}")
+    @staticmethod
+    def eval(game: Game, type: Literal["before", "after"], hh: int, mm: int, *_) -> bool:
+        match type:
+            case "before":
+                return (game.clock.hours, game.clock.minutes) <= (hh, mm)
+            case "after":
+                return (game.clock.hours, game.clock.minutes) >= (hh, mm)
 
 @component
 class ClockCommands(ActionManager):
@@ -65,7 +97,7 @@ class ClockExtension(Extension):
             case ["until", hh, mm]:
                 hh = ctx.executer.evaluate(hh)
                 mm = ctx.executer.evaluate(mm)
-                ctx.game.commands.execute(wait(ctx.game.clock, (int(hh) * 60 + int(mm)) - ctx.game.clock.global_minutes))
+                ctx.game.commands.execute(wait_until(ctx.game.clock, int(hh), int(mm)))
             case _:
                 raise ValueError("Invalid wait command")
 
@@ -80,15 +112,19 @@ class Clock:
 
     @property
     def days(self) -> int:
-        return self.global_minutes // (24 * 60)
+        return self.global_minutes // (MINUTES_PER_DAY)
 
     @property
     def hours(self) -> int:
-        return (self.global_minutes % (24 * 60)) // 60
+        return (self.global_minutes % (MINUTES_PER_DAY)) // 60
 
     @property
     def minutes(self) -> int:
-        return (self.global_minutes % (24 * 60)) % 60
+        return (self.global_minutes % (MINUTES_PER_DAY)) % 60
+    
+    @property
+    def today_minutes(self) -> int:
+        return self.global_minutes % (MINUTES_PER_DAY)
 
     def __repr__(self) -> str:
         return f"<Clock d={self.days} h={self.hours} m={self.minutes} ({self.global_minutes})>"

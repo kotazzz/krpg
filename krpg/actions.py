@@ -31,11 +31,8 @@ class Action:
     name: str
     description: str
     category: ActionCategory | str
-    callback: ActionCallback
+    callback: ActionCallback = attr.ib(repr=False)
     check: Callable[[Game], ActionState] = lambda game: ActionState.ACTIVE
-
-    def __repr__(self) -> str:
-        return f"<Action {self.name} from {self.category}>"
 
 
 def action(
