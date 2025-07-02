@@ -168,6 +168,7 @@ class Game:
         return self._game.console
 
     def register(self, component: Component) -> None:
+        # TODO: rewrite to match?
         if isinstance(component, type):
             item = component()
             if isinstance(item, ActionManager):

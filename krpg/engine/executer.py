@@ -22,6 +22,19 @@ class ExecuterCommandCallback(Protocol):
     def __call__(self, ctx: Ctx, *args: Any, **kwargs: Any) -> None | int:
         ...
 
+class RequirePredicate(Protocol):
+    def __call__(self, ctx: Ctx, *args: Any) -> bool:
+        ...
+
+
+predicates: dict[str, RequirePredicate] = {}
+
+def require_predicate(name: str) -> Callable[[RequirePredicate], RequirePredicate]:
+    def wrapper(func: RequirePredicate) -> RequirePredicate:
+        predicates[name] = func
+        return func
+    return wrapper
+
 @attr.s(auto_attribs=True)
 class ScenarioRun(GameEvent):
     scenario: NamedScript
@@ -38,7 +51,6 @@ def executer_command(name: str) -> Callable[[ExecuterCommandCallback], ExecuterC
         return ExecuterCommand(name, callback)
 
     return wrapper
-
 
 class ExecuterCommand:
     def __init__(self, name: str, callback: ExecuterCommandCallback) -> None:
@@ -112,6 +124,20 @@ class Base(Extension):
     def builtin_return(ctx: Ctx):
         return 0
 
+    @executer_command("require")
+    @staticmethod
+    def builtin_require(ctx: Ctx, name: str, *args: str, children: list[Command | Section] | None= None,) -> None | int:
+        if name not in predicates:
+           raise ValueError(f"Unknown require predicate: {name}")
+        if not predicates[name](ctx, *args):
+            if children:
+                ctx.executer.run(Section(children=children))
+            return 0
+        
+    @require_predicate("value")
+    @staticmethod
+    def require_value(ctx: Ctx, value: str, *_: str) -> bool:
+        return ctx.executer.env.get(value) is not None
 
 @attr.s(auto_attribs=True)
 class Ctx:
