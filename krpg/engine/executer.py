@@ -88,9 +88,9 @@ class Extension:
 class ValuePredicate(Predicate):
     name = "value"
     @staticmethod
-    def parse(*args: str) -> tuple[str, int]:
+    def parse(*args: str) -> tuple[tuple[str], int]:
         if args:
-            return args[0], 1
+            return (args[0],), 1
         raise ValueError("No value provided")
 
     @staticmethod
@@ -154,7 +154,7 @@ class Base(Extension):
     def builtin_require(ctx: Ctx, name: str, *args: str, children: list[Command | Section] | None= None,) -> None | int:
         if name not in predicates:
            raise ValueError(f"Unknown require predicate: {name}")
-        parsed = predicates[name].parse(*args)
+        parsed, _ = predicates[name].parse(*args) # TODO: move logic out
         if not predicates[name].eval(ctx.game, *parsed):
             if children:
                 ctx.executer.run(Section(children=children))
