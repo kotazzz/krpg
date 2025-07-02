@@ -1,4 +1,4 @@
-"""Module of game"""
+"""Консольная ролевая игра (КРПГ)"""
 
 import argparse
 

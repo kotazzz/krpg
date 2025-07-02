@@ -1,0 +1,9 @@
+[git]
+repo = "."
+
+[parser]
+tag_match = "^v(?P<version>\\d+\\.\\d+\\.\\d+)$"
+ignore_merge_commit = true
+
+[formatter]
+template = "keepachangelog"
