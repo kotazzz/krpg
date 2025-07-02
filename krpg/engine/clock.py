@@ -55,6 +55,19 @@ class ClockExtension(Extension):
         assert minutes.isdigit()
         ctx.game.commands.execute(wait(ctx.game.clock, int(minutes)))
 
+    @executer_command("wait")
+    @staticmethod
+    def wait(ctx: Ctx, *args: str) -> None:
+        match args:
+            case [minutes]:
+                minutes = ctx.executer.evaluate(minutes)
+                ctx.game.commands.execute(wait(ctx.game.clock, int(minutes)))
+            case ["until", hh, mm]:
+                hh = ctx.executer.evaluate(hh)
+                mm = ctx.executer.evaluate(mm)
+                ctx.game.commands.execute(wait(ctx.game.clock, (int(hh) * 60 + int(mm)) - ctx.game.clock.global_minutes))
+            case _:
+                raise ValueError("Invalid wait command")
 
 class Clock:
     def __init__(self) -> None:

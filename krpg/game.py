@@ -22,6 +22,7 @@ from krpg.engine.clock import Clock
 from krpg.engine.enums import GameState
 from krpg.engine.player import Player
 from krpg.engine.quests import QuestManager
+from krpg.engine.random import RandomManager
 from krpg.engine.world import World
 from krpg.entity.bestiary import Bestiary
 from krpg.engine.executer import Executer
@@ -146,6 +147,7 @@ class Game:
         self.executer = Executer(self)
         self.player = Player()
         self.clock = Clock()
+        self.random = RandomManager()
 
         @listener(Event)
         def debug_event(event: Event):
