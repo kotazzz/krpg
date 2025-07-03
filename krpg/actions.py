@@ -1,132 +1,88 @@
-"""
-Actions module contains classes and functions for actions in the game.
-"""
-
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Callable
+from enum import Enum, StrEnum
+from typing import TYPE_CHECKING, Any, Callable
+
+import attr
+
+if TYPE_CHECKING:
+    from krpg.game import Game
 
 
-@dataclass()
+class ActionCategory(StrEnum):
+    GAME = "Игра"
+    PLAYER = "Игрок"
+    INFO = "Информация"
+    OTHER = "Другое"
+    NOT_SET = "Не установлено"
+    DEBUG = "Отладка"
+    ACTION = "Действие"
+
+
+class ActionState(Enum):
+    ACTIVE = "Активно"
+    LOCKED = "Заблокировано"
+    HIDDEN = "Скрыто"
+
+
+type ActionCallback = Callable[[Game], Any]
+
+
+@attr.s(auto_attribs=True)
 class Action:
-    """
-    Main class for actions in the game
-    """
-
     name: str
     description: str
-    category: str
-    callback: Callable
-
-    def __repr__(self):
-        return f"<Action {self.name} from {self.category}>"
+    category: ActionCategory | str
+    callback: ActionCallback = attr.ib(repr=False)
+    check: Callable[[Game], ActionState] = lambda game: ActionState.ACTIVE
 
 
 def action(
-    name: str, description: str = "No description", category: str = ""
-) -> Callable[..., Action]:
-    """
-    Decorator function for creating actions.
-
-    Args:
-        name (str): The name of the action.
-        description (str, optional): The description of the action. Defaults to "No description".
-        category (str, optional): The category of the action. Defaults to "".
-        time (int, optional): The time required for the action. Defaults to 0.
-
-    Returns:
-        Callable: The decorated callback function.
-    """
-
-    def decorator(callback: Callable):
+    name: str,
+    description: str = "No description",
+    category: ActionCategory = ActionCategory.NOT_SET,
+) -> Callable[[ActionCallback], Action]:
+    def decorator(callback: ActionCallback) -> Action:
         return Action(name, description, category, callback)
 
     return decorator
 
 
-class HasExtract:
-    """Interface for classes that can extract actions."""
-
-    def extract(self) -> list[Action]:
-        """Extracts actions from the class.
-
-        Returns
-        -------
-        list[Action]
-            A list of extracted actions.
-        """
-        raise NotImplementedError
+# TODO: Unused code
+def merge_actions(*managers: ActionManager) -> dict[str, Action]:
+    actions: dict[str, Action] = {}
+    for manager in managers:
+        for act in manager.actions:
+            if act.name in actions:
+                raise ValueError(f"Action with name {act.name} already exists")
+            actions[act.name] = act
+    return actions
 
 
 class ActionManager:
-    """
-    ActionManager class represents a manager for actions in a game.
+    def __init__(self) -> None:
+        self.submanagers: list[ActionManager] = []
+        self._actions: list[Action] = []
 
-    Attributes:
-        submanagers (list[object | ActionManager]): A list of submanagers.
-        actions (list[Action]): A list of actions.
+        for attrib in dir(self):
+            if attrib == "actions":
+                continue
+            get = getattr(self, attrib)
+            if isinstance(get, Action):
+                if get in self._actions:
+                    raise ValueError(f"Action with name {get.name} already exists")
+                self._actions.append(get)
 
-    Methods:
-        __init__(): Initializes an instance of ActionManager.
-        extract(item: object) -> list[Action]: Extracts actions from an item.
-        get_actions() -> list[Action]: Retrieves all actions from submanagers and actions attribute.
-        __repr__(): Returns a string representation of ActionManager.
-    """
-
-    def __init__(self, *submanagers: ActionManager | HasExtract | object):
-        self.submanagers: list[ActionManager | HasExtract | object] = list(submanagers)
-        self.actions: list[Action] = []
-        self.actions = self.extract(self)
-        self.submanagers.clear()
-
-    def extract(self, item: ActionManager | HasExtract | object) -> list[Action]:
-        """
-        Extracts actions from an item.
-
-        Args:
-            item (object): The item to extract actions from.
-
-        Returns:
-            list[Action]: A list of extracted actions.
-        """
-        if isinstance(item, ActionManager):
-            return item.get_actions()
-
-        if hasattr(item, "extract"):
-            if not isinstance(item, HasExtract):
-                raise ValueError(f"Item {item} does not have extract method")
-            return item.extract()
-        actions = []
-        for name in dir(item):
-            attr = getattr(item, name)
-            if isinstance(attr, Action):
-                actions.append(attr)
+    @property
+    def actions(self) -> list[Action]:
+        actions = self._actions.copy()
+        actions.extend(self.extract())  # TODO: Unused code
+        for manager in self.submanagers:
+            actions.extend(manager.actions)
         return actions
 
-    def get_actions(self) -> list[Action]:
-        """
-        Retrieves all actions from submanagers and actions attribute.
+    def extract(self) -> list[Action]:
+        return []
 
-        Returns:
-            list[Action]: A list of all actions.
-        """
-        actions: list[Action] = []
-        for submanager in self.submanagers:
-            actions.extend(self.extract(submanager))
-        actions.extend(self.actions)
-        names: dict[str, Action] = {}
-        for act in actions:
-            if act.name in names:
-                raise ValueError(f"Same names: {names[act.name]} and {act}")
-            names[act.name] = act
-        return actions
-
-    def __repr__(self):
-        """
-        Returns a string representation of ActionManager.
-
-        Returns:
-            str: A string representation of ActionManager.
-        """
-        return f"<ActionManager act={len(self.actions)} sub={len(self.submanagers)}>"
+    def __repr__(self) -> str:
+        return f"<ActionManager act={len(self.actions)}>"

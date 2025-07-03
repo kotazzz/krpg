@@ -1,93 +1,67 @@
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
 from collections import defaultdict
-from enum import StrEnum, auto
 from typing import Callable
 
+import attr
 
-class Events(StrEnum):
-    # clock.py
-    TIMEPASS = auto()  # minutes: int
-    NEWDAY = auto()  # day: int
+type EventType = type[Event]
+type Callback = Callable[[Event], None]
 
-    # game.py
-    SAVE = auto()  # -
-    LOAD = auto()  # successcb=None
-    STATE_CHANGE = auto()  # state: str
-    COMMAND = auto()  # command: str
 
-    # player.py
-    PICKUP = auto()  # item: Item, amount: int, total: int
-    ADD_MONEY = auto()  # amount: int, new_balance: int
-    REMOVE_MONEY = auto()  # amount: int, new_balance: int
-    ADD_FREE = auto()  # amount: int, new_balance: int
-    REMOVE_FREE = auto()  # amount: int, new_balance: int
-    HEAL = auto()  # amount: int
-    DAMAGE = auto()  # amount: int
-    DEAD = auto()  # -
+@attr.s(auto_attribs=True)
+class Listener:
+    event: EventType
+    callback: Callback
 
-    # world.py
-    WORLD_ITEM_TAKE = auto()  # item_id: str, remain: int
-    WORLD_ITEM_DROP = auto()  # item_id: str, count: int
-    MOVE = auto()  # before: Location, after: Location
 
-    # settings.py
-    SETTING_CHANGE = auto()  # setting: str, value: Any
+class Event:
+    pass
 
-    # battle.py
-    KILL = auto()  # monster_id: str
 
-    # quests.py
-    QUEST_START = auto()  # quest_id: str
-    QUEST_END = auto()  # state: QuestState
+def listener(event: EventType) -> Callable[..., Listener]:
+    def decorator(callback: Callback) -> Listener:
+        return Listener(event, callback)
 
-    # nps.py
-    NPC_MEET = auto()  # npc_id: str
-    NPC_STATE = auto()  # npc_id: str, state: str
+    return decorator
+
+
+class Middleware(ABC):
+    @abstractmethod
+    def process(self, event: Event) -> None:
+        raise NotImplementedError("Subclasses must implement this method.")
 
 
 class EventHandler:
-    def __init__(self, *lookup: object):
-        self.listeners: dict[str, list[Callable]] = defaultdict(list)
+    def __init__(self, *lookup: object) -> None:
+        self.middlewares: list[Middleware] = []
+        self.listeners: dict[EventType, list[Listener]] = defaultdict(list)
         for obj in lookup:
             self.lookup(obj)
 
-    def listen(self, event: str, callback: Callable):
-        """Listen to an event.
+    def add_middleware(self, mw: Middleware):
+        self.middlewares.append(mw)
 
-        Parameters
-        ----------
-        event : str
-            Event name.
-        callback : Callable
-            Callback function.
-        """
-        self.listeners[event].append(callback)
+    def subscribe(self, callback: Listener) -> None:
+        if callback not in self.listeners[callback.event]:
+            self.listeners[callback.event].append(callback)
 
-    def lookup(self, obj: object):
-        """Lookup for event handlers in an object.
+    def lookup(self, obj: object) -> None:
+        for attrib in dir(obj):
+            item = getattr(obj, attrib)
+            if isinstance(item, Listener):
+                self.subscribe(item)
 
-        Parameters
-        ----------
-        obj : object
-            Object to lookup.
-        """
-        for attr in filter(lambda x: x.startswith("on_"), dir(obj)):
-            cb = getattr(obj, attr)
-            if callable(cb):
-                self.listen(attr[3:], cb)
+    def publish(self, event: Event) -> None:
+        for mw in self.middlewares:
+            mw.process(event)
 
-    def dispatch(self, event: str, *args, **kwargs):
-        """Dispatch an event.
+        for listener in self.listeners[type(event)]:
+            listener.callback(event)
 
-        Parameters
-        ----------
-        event : str
-            Event name.
-        """
-        for listener in self.listeners["*"] + self.listeners["event"]:
-            listener(event, *args, **kwargs)
-        if event not in ["*", "event"]:
-            for listener in self.listeners[event]:
-                listener(*args, **kwargs)
+        for listener in self.listeners[Event]:
+            listener.callback(event)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<EventHandler listeners={len(self.listeners)}>"
