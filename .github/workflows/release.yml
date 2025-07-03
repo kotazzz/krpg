@@ -34,6 +34,9 @@ jobs:
           VERSION_IN_TAG=${GITHUB_REF##*/}        # v1.2.3
           VERSION_IN_FILE=$(python -c "import tomli; print(tomli.load(open('pyproject.toml', 'rb'))['project']['version'])")
           if [ "$VERSION_IN_TAG" != "v$VERSION_IN_FILE" ]; then
+            echo "Version mismatch: tag $VERSION_IN_TAG vs file $VERSION_IN_FILE"
+            exit 1
+          fi
           
       - name: Generate a changelog
         uses: orhun/git-cliff-action@v3
