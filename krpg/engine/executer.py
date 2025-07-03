@@ -17,18 +17,19 @@ if TYPE_CHECKING:
 
 type Enviroment = dict[str, Any]
 
+
 class ExecuterCommandCallback(Protocol):
     # FIXME: Any to str | children
-    def __call__(self, ctx: Ctx, *args: Any, **kwargs: Any) -> None | int:
-        ...
+    def __call__(self, ctx: Ctx, *args: Any, **kwargs: Any) -> None | int: ...
+
 
 class Parse(Protocol):
-    def __call__(self, *args: str) -> tuple[Any, int]:
-        ...
+    def __call__(self, *args: str) -> tuple[Any, int]: ...
+
 
 class Eval(Protocol):
-    def __call__(self, game: Game, *args: Any) -> bool:
-        ...
+    def __call__(self, game: Game, *args: Any) -> bool: ...
+
 
 class Predicate(Protocol):
     name: str
@@ -36,16 +37,17 @@ class Predicate(Protocol):
     eval: Eval
 
     def __repr__(self) -> str:
-        return f"<Predicate {self.name}>" 
+        return f"<Predicate {self.name}>"
 
 
 predicates: dict[str, Predicate] = {}
+
 
 def add_predicate(obj: type[Predicate]) -> Predicate:
     item = obj()
     predicates[item.name] = item
     return item
-    
+
 
 @attr.s(auto_attribs=True)
 class ScenarioRun(GameEvent):
@@ -63,6 +65,7 @@ def executer_command(name: str) -> Callable[[ExecuterCommandCallback], ExecuterC
         return ExecuterCommand(name, callback)
 
     return wrapper
+
 
 class ExecuterCommand:
     def __init__(self, name: str, callback: ExecuterCommandCallback) -> None:
@@ -84,9 +87,11 @@ class Extension:
     def __repr__(self) -> str:
         return f"<Extension {self.__class__.__name__}>"
 
+
 @add_predicate
 class ValuePredicate(Predicate):
     name = "value"
+
     @staticmethod
     def parse(*args: str) -> tuple[tuple[str], int]:
         if args:
@@ -136,14 +141,14 @@ class Base(Extension):
         else:
             speech = " ".join(args)
             game.console.print("[green]" + game.executer.process_text(speech))
-    
+
     @executer_command("if")
     @staticmethod
     def builtin_if(ctx: Ctx, expr: str, children: list[Command | Section]) -> None | int:
         res = ctx.executer.evaluate(expr)
         if res:
             return ctx.executer.run(Section(children=children))
-    
+
     @executer_command("return")
     @staticmethod
     def builtin_return(ctx: Ctx):
@@ -151,15 +156,19 @@ class Base(Extension):
 
     @executer_command("require")
     @staticmethod
-    def builtin_require(ctx: Ctx, name: str, *args: str, children: list[Command | Section] | None= None,) -> None | int:
+    def builtin_require(
+        ctx: Ctx,
+        name: str,
+        *args: str,
+        children: list[Command | Section] | None = None,
+    ) -> None | int:
         if name not in predicates:
-           raise ValueError(f"Unknown require predicate: {name}")
-        parsed, _ = predicates[name].parse(*args) # TODO: move logic out
+            raise ValueError(f"Unknown require predicate: {name}")
+        parsed, _ = predicates[name].parse(*args)  # TODO: move logic out
         if not predicates[name].eval(ctx.game, *parsed):
             if children:
                 ctx.executer.run(Section(children=children))
             return 0
-        
 
 
 @attr.s(auto_attribs=True)
@@ -194,7 +203,7 @@ class NamedScript(Nameable):
 
     @property
     def as_action(self) -> Action:
-        return Action(self.name, self.description, ActionCategory.ACTION, lambda g: self.script.run()) # 
+        return Action(self.name, self.description, ActionCategory.ACTION, lambda g: self.script.run())  #
 
 
 class Executer:
@@ -237,7 +246,13 @@ class Executer:
         script = Script(self, section)
         return script.run()
 
-    def create_scenario(self, section: Section, force_id: str|None = None, force_name: str|None = None, force_description: str|None = None,) -> NamedScript:
+    def create_scenario(
+        self,
+        section: Section,
+        force_id: str | None = None,
+        force_name: str | None = None,
+        force_description: str | None = None,
+    ) -> NamedScript:
         match section.name, section.args:
             case None, _:
                 raise ValueError("Scenario name is required")
@@ -262,6 +277,6 @@ class Executer:
             description=description,
             script=Script(self, section),
         )
-    
+
     def __str__(self) -> str:
         return "<Executer>"

@@ -21,7 +21,7 @@ BASE_FOLDER = "content"
 
 
 def wrap_log[T](game: Game, section: Section, name: str, func: Callable[[Game, Section], T], indent: int = 0) -> T:
-    game.console.log.debug(f"[Builder] {'  '*indent}Building {name}")
+    game.console.log.debug(f"[Builder] {'  ' * indent}Building {name}")
     return func(game, section)
 
 
@@ -69,7 +69,7 @@ def create_stage(game: Game, section: Section) -> list[NamedScript]:
     stage_actions: list[NamedScript] = []
     for action in section.all():
         assert isinstance(action, Section)
-        sc = game.executer.create_scenario(action) # TODO: rename to create_script
+        sc = game.executer.create_scenario(action)  # TODO: rename to create_script
         stage_actions.append(sc)
     return stage_actions
 

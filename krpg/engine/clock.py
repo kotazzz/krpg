@@ -26,6 +26,7 @@ class NewdayEvent(GameEvent):
 
 MINUTES_PER_DAY = 24 * 60
 
+
 @command
 def wait(clock: Clock, minutes: int) -> Generator[TimepassEvent | NewdayEvent, Any, None]:
     assert minutes > 0, "Must be greater than zero"
@@ -36,18 +37,20 @@ def wait(clock: Clock, minutes: int) -> Generator[TimepassEvent | NewdayEvent, A
     if clock.days > day:
         yield NewdayEvent(clock.days)
 
+
 @command
 def wait_until(clock: Clock, hours: int, minutes: int) -> Generator[TimepassEvent | NewdayEvent, Any, None]:
-    total = (hours * 60 + minutes)
+    total = hours * 60 + minutes
     assert total > 0, "Must be greater than zero"
     assert total < MINUTES_PER_DAY, "Cant skip more, than 1 day"  # TODO: ???
     target_minutes = (hours * 60 + minutes) - clock.today_minutes
-    
+
     day = clock.days
     clock.global_minutes += target_minutes
     yield TimepassEvent(target_minutes)
     if clock.days > day:
         yield NewdayEvent(clock.days)
+
 
 @add_predicate
 class TimePredicate(Predicate):
@@ -62,6 +65,7 @@ class TimePredicate(Predicate):
                 return (("before", int(hh), int(mm)), 3)
             case _:
                 raise ValueError(f"Invalid time predicate: {args}")
+
     @staticmethod
     def eval(game: Game, type: Literal["before", "after"], hh: int, mm: int, *_) -> bool:
         match type:
@@ -69,6 +73,7 @@ class TimePredicate(Predicate):
                 return (game.clock.hours, game.clock.minutes) <= (hh, mm)
             case "after":
                 return (game.clock.hours, game.clock.minutes) >= (hh, mm)
+
 
 @component
 class ClockCommands(ActionManager):
@@ -101,6 +106,7 @@ class ClockExtension(Extension):
             case _:
                 raise ValueError("Invalid wait command")
 
+
 class Clock:
     def __init__(self) -> None:
         self.global_minutes: int = 60 * 31  # Day 1, 07:00
@@ -121,7 +127,7 @@ class Clock:
     @property
     def minutes(self) -> int:
         return (self.global_minutes % (MINUTES_PER_DAY)) % 60
-    
+
     @property
     def today_minutes(self) -> int:
         return self.global_minutes % (MINUTES_PER_DAY)

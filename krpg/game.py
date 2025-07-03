@@ -34,9 +34,11 @@ from krpg.events_middleware import GameEvent, GameMiddleware
 class StateChange(Event):
     new_state: GameState
 
+
 @attr.s(auto_attribs=True)
 class ActionExecuted(GameEvent):
     action: Action
+
 
 @command
 def set_state(game: Game, state: GameState) -> Generator[Event, Any, None]:
@@ -61,6 +63,7 @@ class RootActionManager(ActionManager):
     def action_help(game: Game) -> None:
         def get_key(act: Action) -> ActionCategory | str:
             return act.category
+
         actions = sorted(game.actions.actions, key=get_key)
         cmdcat = groupby(actions, key=get_key)
         for cat, cmds in cmdcat:
@@ -80,7 +83,9 @@ class RootActionManager(ActionManager):
                 if confirm == 1:
                     raise SystemExit
                 else:
-                    game.console.print("[red b]Выполнение этой команды приведет к завершению игры. Для подтверждения введите exit(1)\nДля возврата в игру используйте Ctrl + D (или Z)[/]")
+                    game.console.print(
+                        "[red b]Выполнение этой команды приведет к завершению игры. Для подтверждения введите exit(1)\nДля возврата в игру используйте Ctrl + D (или Z)[/]"
+                    )
 
             def __repr__(self) -> str:
                 return "Команда приведет к закрытию. Используйте exit(1) для подтверждения"
@@ -197,19 +202,11 @@ class Game:
     def execute_action(self, actions: list[Action], prompt: str = "> ", interactive: bool = False) -> Action | None:
         def _name(a: Action):
             state = a.check(self)
-            return f'{"red" if state == ActionState.LOCKED else ""}{a.description}'
+            return f"{'red' if state == ActionState.LOCKED else ''}{a.description}"
 
-        actions_dict = {
-            a.name: a
-            for a in actions
-            if (state := a.check(self)) != ActionState.HIDDEN
-        }
+        actions_dict = {a.name: a for a in actions if (state := a.check(self)) != ActionState.HIDDEN}
         if interactive:
-            action = self.console.select(prompt, {
-                _name(a): a
-                for a in actions
-                if (state := a.check(self)) != ActionState.HIDDEN
-            }, True)
+            action = self.console.select(prompt, {_name(a): a for a in actions if (state := a.check(self)) != ActionState.HIDDEN}, True)
         else:
             command = self.console.prompt(prompt, {a.name: a.description for a in actions})
             action = actions_dict.get(command or "")
@@ -222,6 +219,7 @@ class Game:
         elif state == ActionState.LOCKED:
             self.console.print("Действие заблокировано")
         return None
+
 
 def main(debug: bool) -> None:
     game = GameBase()

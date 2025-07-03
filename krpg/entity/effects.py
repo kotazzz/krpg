@@ -87,6 +87,7 @@ class EntityModifier:
                 arr[i], arr[j] = arr[j], arr[i]
 
         return arr
+
     def apply_modifiers_to_dict(self, dict_to_modify: dict[TKey, float]) -> None:
         values = self.unpack(dict_to_modify)
         funcs: dict[ModifierType, Callable[[list[float], int], list[float]]] = {
@@ -100,6 +101,7 @@ class EntityModifier:
             else:
                 raise TypeError
         self.pack(dict_to_modify, values)
+
     def __attrs_post_init__(self) -> None:
         i: Any
         for i in Body:
@@ -111,7 +113,6 @@ class EntityModifier:
         for i in Attribute:
             if i not in self._attributes:
                 self._attributes[i] = 0
-
 
         self.apply_modifiers_to_dict(self._parts)
         self.apply_modifiers_to_dict(self._scales)

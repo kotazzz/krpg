@@ -37,6 +37,7 @@ def introduce(npc: Npc) -> Generator[IntroduceNpc, Any, None]:
 def talk(npc: Npc, action: Action) -> Generator[TalkNpc, Any, None]:
     yield TalkNpc(npc, action)
 
+
 @component
 class TalkAction(ActionManager):
     @action("talk", "Поговорить", ActionCategory.GAME)

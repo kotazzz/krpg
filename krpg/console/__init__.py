@@ -135,12 +135,14 @@ class KrpgConsole:
                 return None
             if check(item):
                 return transformer(item)
-    def _rich_to_prompt_toolkit(self, str: str) -> FormattedText: # TODO: extract to global
+
+    def _rich_to_prompt_toolkit(self, str: str) -> FormattedText:  # TODO: extract to global
         with self.console.capture() as capture:
             self.console.print(f"[green]{str}[/]", end="")
         str_output = capture.get()
-        result: FormattedText = to_formatted_text(ANSI(str_output)) # type: ignore
+        result: FormattedText = to_formatted_text(ANSI(str_output))  # type: ignore
         return result
+
     def interactive_select[T](self, title: str, options: dict[str, T]) -> T | None:
         choices = [questionary.Choice(self._rich_to_prompt_toolkit(k), value=v) for k, v in options.items()]
         # formatted_title = self._rich_to_prompt_toolkit(title) # Не работает
@@ -151,7 +153,7 @@ class KrpgConsole:
         )
         return questionary.select(title, choices, qmark="", instruction=" ", style=s).ask()
 
-    def interactive_multiple[T](self, title: str, options: dict[str, T], min: int= 0, max: int = 9) -> list[T] | None:
+    def interactive_multiple[T](self, title: str, options: dict[str, T], min: int = 0, max: int = 9) -> list[T] | None:
         choices = [questionary.Choice(self._rich_to_prompt_toolkit(k), value=v) for k, v in options.items()]
         s = questionary.Style(
             [
@@ -161,11 +163,11 @@ class KrpgConsole:
         return questionary.checkbox(title, choices, qmark="", instruction=" ", validate=lambda r: min <= len(r) <= max, style=s).ask()
 
     def multiple[T](self, title: str, options: dict[str, T], min: int = 0, max: int = 9) -> list[T]:
-        filtered_options = options # {s.partition('\n')[0]: v for s, v in options.items()}
+        filtered_options = options  # {s.partition('\n')[0]: v for s, v in options.items()}
         if self.queue:
             selected: list[T] = []
             history_entries: list[str] = []
-            
+
             while True:
                 # Показываем текущий статус
                 self.print(f"\n[bold]{title}[/]")
@@ -173,17 +175,21 @@ class KrpgConsole:
                 for name, value in filtered_options.items():
                     status = "[green]✓[/]" if value in selected else "[red]✗[/]"
                     self.print(f"  {status} {name}")
-                
+
                 extended_options: dict[str, T | Literal["CONFIRM_SELECTION", "CLEAR_SELECTION"]] = dict(filtered_options)
                 extended_options["confirm"] = "CONFIRM_SELECTION"
                 extended_options["clear"] = "CLEAR_SELECTION"
 
-                res = self.select("\nВыберите опцию для переключения (или 'confirm' для завершения, 'clear' для сброса):",
-                                extended_options, indexed=True, non_interactive=True)
+                res = self.select(
+                    "\nВыберите опцию для переключения (или 'confirm' для завершения, 'clear' для сброса):",
+                    extended_options,
+                    indexed=True,
+                    non_interactive=True,
+                )
 
                 if not res:
                     return []
-                
+
                 if res == "CONFIRM_SELECTION":
                     if min <= len(selected) <= max:
                         return selected
@@ -210,7 +216,7 @@ class KrpgConsole:
             if result is None:
                 self.history.append("e")
                 return []
-            
+
             history_entries = []
             for item in result:
                 option_name = {v: k for k, v in filtered_options.items()}[item]
@@ -218,10 +224,10 @@ class KrpgConsole:
                 history_entries.append(str(index))
             history_entries.append(str(len(filtered_options) + 1))  # confirm index
             self.history.extend(history_entries)
-            
+
             return result
 
-    def select[T: Any](self, title: str, options: dict[str, T], indexed: bool = False, non_interactive:bool = False) -> T | None:
+    def select[T: Any](self, title: str, options: dict[str, T], indexed: bool = False, non_interactive: bool = False) -> T | None:
         if self.queue or non_interactive:
             if indexed:
                 completer = {str(i): v for i, v in enumerate(options.keys(), 1)}
@@ -245,7 +251,7 @@ class KrpgConsole:
                 history = {v: k for k, v in options.items()}[val]
             self.history.append(history)
             return val
-    
+
     def list_select[T](self, title: str, options: list[T], display: Callable[[Any], str] = str, hide: bool = False) -> T | None:
         if not hide:
             self.print_list(options, display)

@@ -18,10 +18,12 @@ class ActionCategory(StrEnum):
     DEBUG = "Отладка"
     ACTION = "Действие"
 
+
 class ActionState(Enum):
     ACTIVE = "Активно"
     LOCKED = "Заблокировано"
     HIDDEN = "Скрыто"
+
 
 type ActionCallback = Callable[[Game], Any]
 
@@ -44,6 +46,7 @@ def action(
         return Action(name, description, category, callback)
 
     return decorator
+
 
 # TODO: Unused code
 def merge_actions(*managers: ActionManager) -> dict[str, Action]:
@@ -73,7 +76,7 @@ class ActionManager:
     @property
     def actions(self) -> list[Action]:
         actions = self._actions.copy()
-        actions.extend(self.extract()) # TODO: Unused code
+        actions.extend(self.extract())  # TODO: Unused code
         for manager in self.submanagers:
             actions.extend(manager.actions)
         return actions

@@ -9,7 +9,6 @@ from typing import Optional, List
 
 
 class RandomManager:
-
     def __init__(self):
         self.seed = int(time.time() * 1e6)
         self.rnd = random.Random(self.seed)

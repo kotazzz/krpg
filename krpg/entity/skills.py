@@ -91,4 +91,3 @@ class SkillTree:
             raise ValueError(f"No skill: {item}")
         self.learned.append(skill.new_instance)
         return self
-

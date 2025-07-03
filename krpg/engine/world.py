@@ -65,8 +65,9 @@ class WorldActions(ActionManager):
         if select:
             game.commands.execute(move(game.world, select))
 
+
 @component
-class NpcUtils(Extension): # TODO: move to npc
+class NpcUtils(Extension):  # TODO: move to npc
     @executer_command("evolve")
     @staticmethod
     def evolve(ctx: Ctx, npc_id: str) -> None:
@@ -99,7 +100,7 @@ class NpcUtils(Extension): # TODO: move to npc
         ctx.game.commands.execute(unlock(loc))
 
     @executer_command("multiple")
-    @staticmethod # TODO: move to std
+    @staticmethod  # TODO: move to std
     def multiple(ctx: Ctx, title: str, min: str, max: str, var_name: str, children: list[Command]):
         minv, maxv = int(min), int(max)
         completer: dict[str, int] = {}
@@ -109,7 +110,8 @@ class NpcUtils(Extension): # TODO: move to npc
             completer[v] = int(k)
         res = ctx.game.console.multiple(title, completer, minv, maxv)
         ctx.executer.env[var_name] = res
-        
+
+
 @attr.s(auto_attribs=True)
 class MoveEvent(GameEvent):
     old_loc: Location
@@ -147,7 +149,8 @@ class Location(Nameable):
     def actions(self) -> list[Action]:
         if not self.stages:
             return []
-        return [a.as_action for a in self.stages[self.stage]] #
+        return [a.as_action for a in self.stages[self.stage]]  #
+
 
 @attr.s(auto_attribs=True)
 class World:

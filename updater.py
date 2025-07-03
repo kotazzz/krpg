@@ -53,7 +53,7 @@ def get_hashes() -> Dict[str, int]:
     http: urllib3.PoolManager = urllib3.PoolManager()
     r: BaseHTTPResponse = http.request("GET", LINK + "hashes.json")
     if r.status == 200:
-        return json.loads(r.data.decode('utf-8'))
+        return json.loads(r.data.decode("utf-8"))
     raise ValueError("Can't get hashes")
 
 

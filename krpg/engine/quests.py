@@ -34,9 +34,11 @@ class StartQuest(GameEvent):
 class RewardEvent(GameEvent):
     reward: Reward
 
+
 @attr.s(auto_attribs=True)
 class UnfreezeEvent(GameEvent):
     quest: Quest
+
 
 @command
 def start_quest(qm: QuestManager, quest: Quest) -> Generator[StartQuest, Any, None]:
@@ -50,9 +52,11 @@ def run_reward(game: Game, reward: Reward) -> Generator[RewardEvent, Any, None]:
     yield RewardEvent(reward)
     game.commands.execute(cmd)
 
+
 @command
 def unfreeze_quest(quest: Quest) -> Generator[UnfreezeEvent, Any, None]:
     yield UnfreezeEvent(quest)
+
 
 @component
 class QuestCommandsExtension(Extension):
@@ -76,9 +80,11 @@ class QuestCommandsExtension(Extension):
         g = ctx.game
         g.commands.execute(unfreeze_quest(quest))
 
+
 @add_predicate
 class QuestPredicate(Predicate):
     name = "quest"
+
     @staticmethod
     def parse(*args: str) -> tuple[tuple[Any, ...], int]:
         match args:
@@ -88,6 +94,7 @@ class QuestPredicate(Predicate):
                 return (quest_id, "started"), 2
             case _:
                 raise ValueError(f"Unknown arguments: {args}")
+
     @staticmethod
     def eval(game: Game, quest_id: str, cond: str, *args: Any) -> bool:
         quest = game.bestiary.get_entity_by_id(quest_id, Quest)
@@ -142,7 +149,7 @@ class QuestActions(ActionManager):
 @component
 @listener(Event)
 def test(e: Event):
-    if not isinstance(e, HasGame): # TODO: Rewrite to GameEvent listen
+    if not isinstance(e, HasGame):  # TODO: Rewrite to GameEvent listen
         return
     e.game.quest_manager.check_quests(e)
 
@@ -194,7 +201,7 @@ class ObjectiveStatus:
             self.completed = completed
         else:
             self.completed = res
-    
+
     @property
     def progress(self) -> str:
         return self.objective.status(self.state) or ""

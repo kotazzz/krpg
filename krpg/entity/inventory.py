@@ -67,21 +67,20 @@ def drop(slot: Slot, count: int) -> Generator[DropEvent, Any, tuple[Item | None,
     yield DropEvent(slot, count)
     return dropped
 
+
 @component
 class InventoryCommands(Extension):
     @executer_command("pickup")
     @staticmethod
-    def pickup(ctx: Ctx,item_id: str):
+    def pickup(ctx: Ctx, item_id: str):
         item = ctx.game.bestiary.get_entity_by_id(item_id, Item)
         if not item:
             raise ValueError(f"Item with ID {item_id} not found")
-        remain = ctx.game.commands.execute(pickup(ctx.game.player.entity.inventory, item, 1)) # TODO: property inventory to player
+        remain = ctx.game.commands.execute(pickup(ctx.game.player.entity.inventory, item, 1))  # TODO: property inventory to player
         if remain:
             # ctx.game.console.print(f"[yellow]Не удалось получить все предметы. [green]{remain}[/]x[green]{item.name}[/] остались лежать тут[/]")
             # TODO: implement world item placing
             ctx.game.console.print(f"[yellow]Не удалось получить все предметы. [green]{remain}[/]x[green]{item.name}[/] были утеряны[/]")
-
-
 
 
 @attr.s(auto_attribs=True)
