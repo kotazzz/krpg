@@ -243,7 +243,13 @@ class Executer(Savable):
         self.extensions: list[Extension] = [Base()]
         self.env: Enviroment = {}
 
+    def clear_env(self) -> None:
+        for key in list(self.env.keys()):
+            if key.startswith("_"):
+                del self.env[key]
+
     def serialize(self) -> dict[str, Any]:
+        self.clear_env()
         return self.env
 
     @classmethod

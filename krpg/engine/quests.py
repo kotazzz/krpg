@@ -201,12 +201,17 @@ class ObjectiveStatus(Savable):
     completed: bool = False
 
     def serialize(self) -> dict[str, Any]:
-        return {"objective": self.objective.serialize(), "state": self.state, "completed": self.completed}
+        data: dict[str, Any] = {"objective": self.objective.serialize(), "completed": self.completed}
+        if not isinstance(self.state, QuestState):
+            data["state"] = self.state
+        return data
 
     @classmethod
     def deserialize(cls, data: dict[str, Any]) -> ObjectiveStatus:
-        self = cls(objective=Objective.deserialize(data["objective"]), state=data["state"], completed=data["completed"])
-
+        state = data.get("state", None)
+        self = cls(objective=Objective.deserialize(data["objective"]), completed=data["completed"])
+        if state is not None:
+            self.state = state
         return self
 
     def __attrs_post_init__(self):
@@ -248,10 +253,14 @@ class QuestState(Savable):
     quest: Quest
     stage_index: int = -1
     objectives: list[ObjectiveStatus] = attr.ib(factory=lambda: [])
-    paused: bool = False
+    ignore_events: bool = False
 
     def serialize(self) -> dict[str, Any]:
-        return {"quest": self.quest.serialize(), "stage_index": self.stage_index, "objectives": [o.serialize() for o in self.objectives], "paused": self.paused}
+        return {
+            "quest": self.quest.serialize(),
+            "stage_index": self.stage_index,
+            "objectives": [o.serialize() for o in self.objectives],
+        }
 
     @classmethod
     def deserialize(cls, data: dict[str, Any]) -> QuestState:
@@ -259,7 +268,6 @@ class QuestState(Savable):
             quest=Quest.deserialize(data["quest"]),
             stage_index=data["stage_index"],
             objectives=[ObjectiveStatus.deserialize(o) for o in data["objectives"]],
-            paused=data["paused"],
         )
         return self
 
@@ -281,18 +289,18 @@ class QuestState(Savable):
             self.objectives = [o.create(self) for o in self.stage_data.objectives]
 
     def check_stage(self, event: Event) -> None:
-        if self.paused:
+        if self.ignore_events:
             return
         if not isinstance(event, HasGame):
             raise ValueError("Event must have game")
         for o in self.objectives:
             o.check(event)
         if all(i.completed for i in self.objectives):
-            self.paused = True
+            self.ignore_events = True
             for r in self.stage_data.rewards:
                 event.game.commands.execute(run_reward(event.game, r))
             self.next_stage()
-            self.paused = False
+            self.ignore_events = False
 
     def __attrs_post_init__(self) -> None:
         self.next_stage()

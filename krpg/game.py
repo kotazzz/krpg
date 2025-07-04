@@ -96,6 +96,13 @@ class RootActionManager(ActionManager):
         welcome = f"Python {v}, KRPG {__version__}"
         code.InteractiveConsole(locals={"game": game, "exit": ExitAlt()}).interact(welcome)
 
+    @action("save", "Сохранить игру", ActionCategory.GAME)
+    @staticmethod
+    def action_save(game: Game) -> None:
+        game.console.print("[green]Игра сохранена[/]")
+        save_data = game.serialize()
+        game.console.console.print(save_data)
+
 
 class GameBase:
     def __init__(self) -> None:
