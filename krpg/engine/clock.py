@@ -9,6 +9,7 @@ from krpg.commands import command
 from krpg.components import component
 from krpg.engine.executer import Ctx, Extension, Predicate, add_predicate, executer_command
 from krpg.events_middleware import GameEvent
+from krpg.saves import Savable
 
 if TYPE_CHECKING:
     from krpg.game import Game
@@ -107,9 +108,18 @@ class ClockExtension(Extension):
                 raise ValueError("Invalid wait command")
 
 
-class Clock:
+class Clock(Savable):
     def __init__(self) -> None:
         self.global_minutes: int = 60 * 31  # Day 1, 07:00
+
+    def serialize(self) -> dict[str, Any]:
+        return {"global_minutes": self.global_minutes}
+
+    @classmethod
+    def deserialize(cls, data: dict[str, Any]) -> Clock:
+        self = cls()
+        self.global_minutes = data["global_minutes"]
+        return self
 
     def in_range(self, start: int, end: int) -> bool:
         if start > end:

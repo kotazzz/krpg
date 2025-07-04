@@ -1,10 +1,10 @@
 from rich.panel import Panel
 from rich.table import Table
 from rich.console import Group
-from krpg.engine.world import Location
+from krpg.engine.world import LocationState
 
 
-def render_location_info(loc: Location) -> Panel:
+def render_location_info(loc: LocationState) -> Panel:
     items = Table.grid(padding=(0, 1))
     if loc.items:
         items.add_row("[cyan]Предметы:[/]")
@@ -26,10 +26,10 @@ def render_location_info(loc: Location) -> Panel:
 
     return Panel(
         Group(
-            f"[cyan]Описание: [/]{str(loc.description)}",
+            f"[cyan]Описание: [/]{str(loc.location.description)}",
             items,
             npcs,
             actions,
         ),
-        title=f"[b blue]{loc.name}[/]",
+        title=f"[b blue]{loc.location.name}[/]",
     )

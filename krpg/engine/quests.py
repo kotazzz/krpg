@@ -7,15 +7,17 @@ import attr
 from rich.tree import Tree
 
 from krpg.actions import ActionCategory, ActionManager, action
+from krpg.bestiary import BESTIARY
 from krpg.commands import Command, command
 from krpg.components import component
 from krpg.engine.executer import Ctx, Extension, NamedScript, Predicate, executer_command, add_predicate, run_scenario
-from krpg.engine.npc import Npc, TalkNpc, introduce
+from krpg.engine.npc import TalkNpc, introduce
 from krpg.engine.world import MoveEvent, unlock
 from krpg.entity.inventory import EquipEvent, PickupEvent, UnequipEvent
 from krpg.events import Event, listener
 from krpg.events_middleware import GameEvent, HasGame
-from krpg.utils import Nameable, get_by_id
+from krpg.saves import Savable
+from krpg.utils import Nameable
 
 if TYPE_CHECKING:
     from krpg.game import Game
@@ -65,7 +67,7 @@ class QuestCommandsExtension(Extension):
     def quest(ctx: Ctx, *args: str) -> None:
         assert len(args) == 1, f"Expected 1 argument, got {len(args)}"
         quest_id = args[0]
-        quest = ctx.game.bestiary.get_entity_by_id(quest_id, Quest)
+        quest = BESTIARY.get_entity_by_id(quest_id, Quest)
         assert quest, f"Quest {quest_id} not found"
         g = ctx.game
         g.commands.execute(start_quest(g.quest_manager, quest))
@@ -75,7 +77,7 @@ class QuestCommandsExtension(Extension):
     def complete(ctx: Ctx, *args: str) -> None:
         assert len(args) == 1, f"Expected 1 argument, got {len(args)}"
         quest_id = args[0]
-        quest = ctx.game.bestiary.get_entity_by_id(quest_id, Quest)
+        quest = BESTIARY.get_entity_by_id(quest_id, Quest)
         assert quest, f"Quest {quest_id} not found"
         g = ctx.game
         g.commands.execute(unfreeze_quest(quest))
@@ -97,7 +99,7 @@ class QuestPredicate(Predicate):
 
     @staticmethod
     def eval(game: Game, quest_id: str, cond: str, *args: Any) -> bool:
-        quest = game.bestiary.get_entity_by_id(quest_id, Quest)
+        quest = BESTIARY.get_entity_by_id(quest_id, Quest)
         if not quest:
             raise ValueError(f"Quest {quest_id} not found")
         match cond, args:
@@ -161,8 +163,18 @@ class Reward:
 
 
 @attr.s(auto_attribs=True)
-class Objective(ABC):
+class Objective(ABC, Savable):
     description: str
+
+    def serialize(self) -> Any:
+        return get_objective_name(self), self.__dict__
+
+    @classmethod
+    def deserialize(cls, data: Any) -> Objective:
+        rcls = objectives_names.get(data[0])
+        if not rcls:
+            raise ValueError(f"Unknown objective type {data[0]}")
+        return rcls(**data[1])
 
     @abstractmethod
     def check(self, event: Event, state: StatusType, completed: bool) -> StateUpdate[StatusType]:
@@ -183,10 +195,24 @@ class Stage:
 
 
 @attr.s(auto_attribs=True)
-class ObjectiveStatus:
+class ObjectiveStatus(Savable):
     objective: Objective
     state: StatusType | None = None
-    completed: bool = attr.ib(init=False)
+    completed: bool = False
+
+    def serialize(self) -> dict[str, Any]:
+        data: dict[str, Any] = {"objective": self.objective.serialize(), "completed": self.completed}
+        if not isinstance(self.state, QuestState):
+            data["state"] = self.state
+        return data
+
+    @classmethod
+    def deserialize(cls, data: dict[str, Any]) -> ObjectiveStatus:
+        state = data.get("state", None)
+        self = cls(objective=Objective.deserialize(data["objective"]), completed=data["completed"])
+        if state is not None:
+            self.state = state
+        return self
 
     def __attrs_post_init__(self):
         self.completed = False
@@ -208,16 +234,42 @@ class ObjectiveStatus:
 
 
 @attr.s(auto_attribs=True)
-class Quest(Nameable):
+class Quest(Nameable, Savable):
     stages: list[Stage] = attr.ib(factory=lambda: [], repr=False)
+
+    def serialize(self) -> str:
+        return self.id
+
+    @classmethod
+    def deserialize(cls, data: str) -> Quest:
+        q = BESTIARY.get_entity_by_id(data, Quest)
+        if not q:
+            raise ValueError(f"Quest {data} not found")
+        return q
 
 
 @attr.s(auto_attribs=True)
-class QuestState:
+class QuestState(Savable):
     quest: Quest
     stage_index: int = -1
     objectives: list[ObjectiveStatus] = attr.ib(factory=lambda: [])
-    paused: bool = False
+    ignore_events: bool = False
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "quest": self.quest.serialize(),
+            "stage_index": self.stage_index,
+            "objectives": [o.serialize() for o in self.objectives],
+        }
+
+    @classmethod
+    def deserialize(cls, data: dict[str, Any]) -> QuestState:
+        self = cls(
+            quest=Quest.deserialize(data["quest"]),
+            stage_index=data["stage_index"],
+            objectives=[ObjectiveStatus.deserialize(o) for o in data["objectives"]],
+        )
+        return self
 
     @property
     def is_completed(self) -> bool:
@@ -237,26 +289,35 @@ class QuestState:
             self.objectives = [o.create(self) for o in self.stage_data.objectives]
 
     def check_stage(self, event: Event) -> None:
-        if self.paused:
+        if self.ignore_events:
             return
         if not isinstance(event, HasGame):
             raise ValueError("Event must have game")
         for o in self.objectives:
             o.check(event)
         if all(i.completed for i in self.objectives):
-            self.paused = True
+            self.ignore_events = True
             for r in self.stage_data.rewards:
                 event.game.commands.execute(run_reward(event.game, r))
             self.next_stage()
-            self.paused = False
+            self.ignore_events = False
 
     def __attrs_post_init__(self) -> None:
         self.next_stage()
 
 
 @attr.s(auto_attribs=True)
-class QuestManager:
+class QuestManager(Savable):
     quests: list[QuestState] = attr.ib(factory=lambda: [])
+
+    def serialize(self) -> dict[str, Any]:
+        return {"quests": [q.serialize() for q in self.quests]}
+
+    @classmethod
+    def deserialize(cls, data: dict[str, Any]) -> QuestManager:
+        self = cls()
+        self.quests = [QuestState.deserialize(q) for q in data["quests"]]
+        return self
 
     @property
     def active(self) -> list[QuestState]:
@@ -301,6 +362,20 @@ def reward[T: type[Reward]](name: str) -> Callable[[T], T]:
     return decorator
 
 
+def get_reward_name(reward: Reward) -> str | None:
+    for name, cls in rewards_names.items():
+        if cls == reward.__class__:
+            return name
+    return None
+
+
+def get_objective_name(objective: Objective) -> str | None:
+    for name, cls in objectives_names.items():
+        if cls == objective.__class__:
+            return name
+    return None
+
+
 @objective("PICKUP")
 @attr.s(auto_attribs=True)
 class PickupObjective(Objective):
@@ -341,7 +416,7 @@ class VisitObjective(Objective):
 
     def check(self, event: Event, state: int, completed: bool) -> StateUpdate[None]:
         if isinstance(event, MoveEvent):
-            return event.new_loc.id == self.loc_id
+            return event.new_loc.location.id == self.loc_id
 
 
 @objective("TALK")
@@ -351,7 +426,7 @@ class TalkObjective(Objective):
 
     def check(self, event: Event, state: int, completed: bool) -> StateUpdate[None]:
         if isinstance(event, TalkNpc):
-            return event.npc.id == self.npc_id
+            return event.npc.npc.id == self.npc_id
 
 
 @objective("FREEZE")
@@ -368,7 +443,7 @@ class UnlockReward(Reward):
     loc_id: str
 
     def run(self, game: Game) -> Command[...]:
-        loc = get_by_id(game.world.locations, self.loc_id)
+        loc = game.world.get_location_by_id(self.loc_id)
         assert loc, f"{self.loc_id} doesnt exist"
         return unlock(loc)
 
@@ -379,9 +454,9 @@ class ScriptReward(Reward):
     scenario_id: str
 
     def run(self, game: Game) -> Command[...]:
-        sc = game.bestiary.get_entity_by_id(self.scenario_id, NamedScript)
+        sc = BESTIARY.get_entity_by_id(self.scenario_id, NamedScript)
         assert sc, f"{self.scenario_id} doesnt exist"
-        return run_scenario(sc)
+        return run_scenario(game.executer, sc)
 
 
 @reward("INTRODUCE")
@@ -390,7 +465,7 @@ class IntroduceReward(Reward):
     npc_id: str
 
     def run(self, game: Game) -> Command[...]:
-        npc = game.bestiary.get_entity_by_id(self.npc_id, Npc)
+        npc = game.npc_manager.npcs[self.npc_id]
         assert npc, f"{self.npc_id} doesnt exist"
         return introduce(npc)
 
@@ -401,6 +476,6 @@ class QuestReward(Reward):
     quest_id: str
 
     def run(self, game: Game) -> Command[...]:
-        q = game.bestiary.get_entity_by_id(self.quest_id, Quest)
+        q = BESTIARY.get_entity_by_id(self.quest_id, Quest)
         assert q, f"{self.quest_id} doesnt exist"
         return start_quest(game.quest_manager, q)

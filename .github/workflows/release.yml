@@ -1,5 +1,9 @@
 name: Release
 
+permissions:
+  contents: write  # для чтения и записи файлов + пуша
+  actions: write   # для создания релизов через actions
+
 on:
   push:
     tags:
@@ -46,6 +50,14 @@ jobs:
         env:
           OUTPUT: CHANGELOG.md
           GITHUB_REPO: ${{ github.repository }}
+
+      - name: Commit changelog
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          git add CHANGELOG.md
+          git commit -m "chore: update changelog for release ${{ github.ref_name }} [skip ci]"
+          git push
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

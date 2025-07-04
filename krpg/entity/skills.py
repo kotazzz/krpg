@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Any, Self
 
 import attr
 from attr import field
 
+from krpg.bestiary import BESTIARY
 from krpg.entity.enums import TargetType
+from krpg.saves import Savable
 from krpg.utils import DEFAULT_DESCRIPTION, Nameable, get_by_id
 
 if TYPE_CHECKING:
@@ -42,11 +44,29 @@ class Skill(Nameable):
 
 
 @attr.s(auto_attribs=True)
-class SkillState:
+class SkillState(Savable):
     skill: Skill = field(repr=lambda x: repr(x.id))
     cooldown: int = 0
     use_slot: Slot | None = None
     prepare: int = 0
+
+    def serialize(self) -> Any:
+        return {
+            "skill": self.skill.id,
+            "cooldown": self.cooldown,
+            # FIXME: use link to inventory
+            "use_slot": self.use_slot.serialize() if self.use_slot else None,
+            "prepare": self.prepare,
+        }
+
+    @classmethod
+    def deserialize(cls, data: Any, *args: Any, **kwargs: Any) -> SkillState:
+        instance = cls.__new__(cls)
+        instance.skill = BESTIARY.strict_get_entity_by_id(data["skill"], Skill)
+        instance.cooldown = data["cooldown"]
+        instance.use_slot = BESTIARY.strict_get_entity_by_id(data["use_slot"], Slot) if data["use_slot"] else None
+        instance.prepare = data["prepare"]
+        return instance
 
     @property
     def available(self) -> bool:
@@ -54,12 +74,31 @@ class SkillState:
 
 
 @attr.s(auto_attribs=True)
-class SkillTree:
+class SkillTree(Savable):
     skills: list[Skill] = field(factory=list[Skill])
     learned: list[SkillState] = field(factory=list[SkillState])
     points: int = 0
     xp: int = 0
     _last_level: int = 0
+
+    def serialize(self) -> Any:
+        return {
+            "skills": [skill.id for skill in self.skills],
+            "learned": [state.serialize() for state in self.learned],
+            "points": self.points,
+            "xp": self.xp,
+            "last_level": self._last_level,
+        }
+
+    @classmethod
+    def deserialize(cls, data: Any, *args: Any, **kwargs: Any) -> SkillTree:
+        instance = cls.__new__(cls)
+        instance.skills = [BESTIARY.strict_get_entity_by_id(skill_data, Skill) for skill_data in data["skills"]]
+        instance.learned = [SkillState.deserialize(state_data) for state_data in data["learned"]]
+        instance.points = data["points"]
+        instance.xp = data["xp"]
+        instance._last_level = data["last_level"]
+        return instance
 
     def add_xp(self, xp: int) -> None:
         self.xp += xp

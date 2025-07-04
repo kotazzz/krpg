@@ -10,6 +10,7 @@ from krpg.entity.enums import Attribute, Body, EntityScales, ItemTag, TargetType
 from krpg.entity.inventory import Inventory, Item
 from krpg.entity.scale import Scale
 from krpg.entity.skills import SkillState, SkillTree
+from krpg.saves import Savable
 from krpg.utils import Nameable
 
 if TYPE_CHECKING:
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
 
 
 @attr.s(auto_attribs=True)
-class Entity(Nameable):
+class Entity(Nameable, Savable):
     skills: SkillTree = SkillTree()
     inventory: Inventory = field(factory=Inventory.basic)  # TODO: Field -> attrib
     effects: list[EffectState] = field(factory=lambda: [])
@@ -25,6 +26,35 @@ class Entity(Nameable):
     _scales: dict[EntityScales, Scale] = field(factory=lambda: {}, init=False)
     _attributes: dict[Attribute, Scale] = field(factory=lambda: {}, init=False)
     queue_actions: list[SkillState] = field(factory=lambda: [])
+
+    def serialize(self) -> Any:
+        part_data = {k.serialize(): v.serialize() for k, v in self.parts.items()}
+        scale_data = {k.serialize(): v.serialize() for k, v in self.scales.items()}
+        attr_data = {k.serialize(): v.serialize() for k, v in self.attributes.items()}
+        return {
+            # TODO: id and name serialization
+            "id": self.id,
+            "name": self.name,
+            "skills": self.skills.serialize(),
+            "inventory": self.inventory.serialize(),
+            "effects": [effect.serialize() for effect in self.effects],
+            "parts": part_data,
+            "scales": scale_data,
+            "attributes": attr_data,
+        }
+
+    @classmethod
+    def deserialize(cls, data: Any, *args: Any, **kwargs: Any) -> Entity:
+        instance = cls.__new__(cls)
+        instance.id = data.get("id")
+        instance.name = data.get("name")
+        instance.skills = SkillTree.deserialize(data["skills"])
+        instance.inventory = Inventory.deserialize(data["inventory"])
+        instance.effects = [EffectState.deserialize(effect) for effect in data["effects"]]
+        instance._parts = {Body.deserialize(k): Scale.deserialize(v) for k, v in data["parts"].items()}
+        instance._scales = {EntityScales.deserialize(k): Scale.deserialize(v) for k, v in data["scales"].items()}
+        instance._attributes = {Attribute.deserialize(k): Scale.deserialize(v) for k, v in data["attributes"].items()}
+        return instance
 
     def __attrs_post_init__(self) -> None:
         for _ in Body:
