@@ -16,7 +16,7 @@ def render_location_info(loc: LocationState) -> Panel:
     if loc.npcs:
         npcs.add_row("[cyan]Рядом:[/]")
     for npc in loc.npcs:
-        npcs.add_row(f"[blue]•[/] [green]{npc.npc.name}[/] - [yellow]{npc.npc.description}")
+        npcs.add_row(f"[blue]•[/] [green]{npc.name}[/] - [yellow]{npc.description}")
 
     actions = Table.grid(padding=(0, 1))
     if loc.actions:
