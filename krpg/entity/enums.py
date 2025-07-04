@@ -1,9 +1,24 @@
+from __future__ import annotations
 from enum import Enum, auto
+from typing import Any, Self
 
 
 class NamedEnum(Enum):
     def __repr__(self) -> str:
         return repr(self.name)
+
+    def serialize(self) -> str:
+        if isinstance(self.value, tuple):
+            return self.value[0]  # type: ignore
+        return self.value
+
+    @classmethod
+    def deserialize(cls, data: Any, *args: Any, **kwargs: Any) -> Self:
+        if isinstance(data, str):
+            for item in cls:
+                if item.value[0] == data:
+                    return item
+        raise ValueError(f"Unknown {cls.__name__}: {data}")
 
 
 class SlotType(NamedEnum):

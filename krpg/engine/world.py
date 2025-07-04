@@ -217,8 +217,14 @@ class World(Savable):
         return {"locations": [loc.serialize() for loc in self.locations], "current_location": self.current_location.location.id}
 
     @classmethod
-    def deserialize(cls, data: dict[str, Any]) -> Savable:
-        return cls()
+    def deserialize(cls, data: dict[str, Any]) -> World:
+        instance = cls()
+        instance.locations = [LocationState.deserialize(loc) for loc in data["locations"]]
+        loc = instance.get_location_by_id(data["current_location"])
+        if not loc:
+            raise ValueError("Current location not found")
+        instance.current_location = loc
+        return instance
 
     def get_roads(self, location: LocationState) -> list[LocationState]:
         connections = location.location.connections

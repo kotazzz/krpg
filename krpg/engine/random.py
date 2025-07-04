@@ -20,7 +20,7 @@ class RandomManager(Savable):
         return {"seed": self.seed, "state": self.state}
 
     @classmethod
-    def deserialize(cls, data: dict[str, Any]) -> Savable:
+    def deserialize(cls, data: dict[str, Any]) -> RandomManager:
         self = cls()
         self.seed = data["seed"]
         self.state = data["state"]

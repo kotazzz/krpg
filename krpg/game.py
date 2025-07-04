@@ -14,6 +14,7 @@ from rich.text import Text
 
 from krpg.components import registry, Component
 from krpg.commands import CommandManager, command
+from krpg.encoder import create_save
 from krpg.engine.builder import build
 from krpg.console import KrpgConsole
 from krpg.data.consts import ABOUT, LOGO_GAME, __version__
@@ -101,7 +102,10 @@ class RootActionManager(ActionManager):
     def action_save(game: Game) -> None:
         game.console.print("[green]Игра сохранена[/]")
         save_data = game.serialize()
-        game.console.console.print(save_data)
+        if game.console.log.level == logging.DEBUG:
+            game.console.console.print("Сохраненные данные:", save_data)
+        save = create_save(save_data)
+        game.console.print("[yellow]Сохраненные данные:[cyan]", save)
 
 
 class GameBase:
@@ -162,6 +166,8 @@ class GameBase:
             loop.play()
         except (KeyboardInterrupt, EOFError):
             self.console.print("Игра завершена")
+            self.console.print("[red]История команд: ", self.console.history)
+            self.console.print("[red]Ваше сохранение: ", create_save(loop.serialize()))
             self.state = GameState.MENU
 
 
@@ -187,6 +193,7 @@ class Game(Savable):
         self._post_init()
 
     def serialize(self) -> dict[str, Any]:
+        # TODO: Use component to find all root items
         data: dict[str, Any] = {
             "world": self.world.serialize(),
             "npc_manager": self.npc_manager.serialize(),

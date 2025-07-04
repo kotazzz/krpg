@@ -253,7 +253,7 @@ class Executer(Savable):
         return self.env
 
     @classmethod
-    def deserialize(cls, data: dict[str, Any], game: Game) -> Savable:
+    def deserialize(cls, data: dict[str, Any], game: Game) -> Executer:
         self = cls(game)
         self.env = data
         return self

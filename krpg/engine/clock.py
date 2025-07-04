@@ -116,7 +116,7 @@ class Clock(Savable):
         return {"global_minutes": self.global_minutes}
 
     @classmethod
-    def deserialize(cls, data: dict[str, Any]) -> Savable:
+    def deserialize(cls, data: dict[str, Any]) -> Clock:
         self = cls()
         self.global_minutes = data["global_minutes"]
         return self

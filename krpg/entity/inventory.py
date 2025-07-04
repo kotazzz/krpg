@@ -93,11 +93,11 @@ class Slot(Savable):
 
     def serialize(self) -> Any:
         # TODO: compress using hiding type
-        return [self.type, self.item.id if self.item else None, self.count]
+        return [self.type.serialize(), self.item.id if self.item else None, self.count]
 
     @classmethod
     def deserialize(cls, data: Any, *args: Any, **kwargs: Any) -> Slot:
-        type = data[0]
+        type = SlotType.deserialize(data[0])
         item_id = data[1]
         count = data[2]
         item = BESTIARY.get_entity_by_id(item_id, Item) if item_id else None

@@ -28,9 +28,9 @@ class Entity(Nameable, Savable):
     queue_actions: list[SkillState] = field(factory=lambda: [])
 
     def serialize(self) -> Any:
-        part_data = {k.value: v.serialize() for k, v in self.parts.items()}
-        scale_data = {k.value: v.serialize() for k, v in self.scales.items()}
-        attr_data = {k.value: v.serialize() for k, v in self.attributes.items()}
+        part_data = {k.serialize(): v.serialize() for k, v in self.parts.items()}
+        scale_data = {k.serialize(): v.serialize() for k, v in self.scales.items()}
+        attr_data = {k.serialize(): v.serialize() for k, v in self.attributes.items()}
         return {
             # TODO: id and name serialization
             "id": self.id,
@@ -51,9 +51,9 @@ class Entity(Nameable, Savable):
         instance.skills = SkillTree.deserialize(data["skills"])
         instance.inventory = Inventory.deserialize(data["inventory"])
         instance.effects = [EffectState.deserialize(effect) for effect in data["effects"]]
-        instance._parts = {Body(k): Scale.deserialize(v) for k, v in data["parts"].items()}
-        instance._scales = {EntityScales(k): Scale.deserialize(v) for k, v in data["scales"].items()}
-        instance._attributes = {Attribute(k): Scale.deserialize(v) for k, v in data["attributes"].items()}
+        instance._parts = {Body.deserialize(k): Scale.deserialize(v) for k, v in data["parts"].items()}
+        instance._scales = {EntityScales.deserialize(k): Scale.deserialize(v) for k, v in data["scales"].items()}
+        instance._attributes = {Attribute.deserialize(k): Scale.deserialize(v) for k, v in data["attributes"].items()}
         return instance
 
     def __attrs_post_init__(self) -> None:
