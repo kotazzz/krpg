@@ -187,8 +187,9 @@ class Game(Savable):
         self._post_init()
 
     def serialize(self) -> dict[str, Any]:
-        data = {
+        data: dict[str, Any] = {
             "world": self.world.serialize(),
+            "npc_manager": self.npc_manager.serialize(),
             "quest_manager": self.quest_manager.serialize(),
             "executer": self.executer.serialize(),
             "player": self.player.serialize(),
@@ -204,6 +205,7 @@ class Game(Savable):
         self._pre_init()
 
         self.world = World.deserialize(data.get("world", {}))
+        self.npc_manager = NpcManager.deserialize(data.get("npc_manager", {}))
         self.quest_manager = QuestManager.deserialize(data.get("quest_manager", {}))
         self.executer = Executer.deserialize(data.get("executer", {}), self)
         self.player = Player.deserialize(data.get("player", {}))

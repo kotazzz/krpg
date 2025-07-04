@@ -10,6 +10,7 @@ from krpg.bestiary import BESTIARY
 from krpg.commands import command
 from krpg.components import component
 from krpg.events_middleware import GameEvent
+from krpg.saves import Savable
 from krpg.utils import Nameable
 
 if TYPE_CHECKING:
@@ -58,10 +59,20 @@ class TalkAction(ActionManager):
 
 
 @attr.s(auto_attribs=True)
-class NpcState:
+class NpcState(Savable):
     npc: Npc
     known: bool = False
     stage: int = 0
+
+    def serialize(self) -> Any:
+        return {"npc": self.npc.id, "known": self.known, "stage": self.stage}
+
+    @classmethod
+    def deserialize(cls, data: Any, *args: Any, **kwargs: Any) -> NpcState:
+        npc = BESTIARY.strict_get_entity_by_id(data["npc"], Npc)
+        if not npc:
+            raise ValueError(f"Unknown NPC ID: {data['npc']}")
+        return cls(npc=npc, known=data["known"], stage=data["stage"])
 
     @property
     def actions(self) -> list[Action]:
@@ -96,8 +107,17 @@ class Npc(Nameable):
 
 
 @attr.s(auto_attribs=True)
-class NpcManager:
+class NpcManager(Savable):
     npcs: dict[str, NpcState] = attr.ib(factory=lambda: {})
+
+    def serialize(self) -> Any:
+        return [npc_state.serialize() for npc_state in self.npcs.values()]
+
+    @classmethod
+    def deserialize(cls, data: Any, *args: Any, **kwargs: Any) -> NpcManager:
+        instance = cls()
+        instance.npcs = {npc.id: NpcState.deserialize(npc) for npc in data}
+        return instance
 
     def __attrs_post_init__(self):
         all_npcs = BESTIARY.get_all(Npc)
