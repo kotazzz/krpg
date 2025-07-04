@@ -7,8 +7,8 @@ import attr
 from krpg.actions import Action, ActionCategory
 from krpg.commands import command
 from krpg.events_middleware import GameEvent
-from krpg.engine.npc import Npc
 from krpg.parser import Command, Section
+from krpg.saves import Savable
 from krpg.utils import Nameable
 
 if TYPE_CHECKING:
@@ -55,9 +55,9 @@ class ScenarioRun(GameEvent):
 
 
 @command
-def run_scenario(scenario: NamedScript) -> Generator[ScenarioRun, Any, None]:
+def run_scenario(executer: Executer, scenario: NamedScript) -> Generator[ScenarioRun, Any, None]:
     yield ScenarioRun(scenario)
-    scenario.script.run()
+    scenario.script.run(executer)
 
 
 def executer_command(name: str) -> Callable[[ExecuterCommandCallback], ExecuterCommand]:
@@ -134,7 +134,7 @@ class Base(Extension):
             if id == "you":
                 name = f"[white b]{game.player.entity.name}[/][cyan]"
             else:
-                npc = game.bestiary.get_entity_by_id(id, Npc)
+                npc = game.npc_manager.npcs[id]
                 assert npc, f"Where is {id} npc?"
                 name = npc.display
             game.console.print(f"{name}[green]:[/] {speech}")
@@ -180,18 +180,17 @@ class Ctx:
 
 @attr.s(auto_attribs=True)
 class Script:
-    executer: Executer
     section: Section
     position = 0
     env: Enviroment = {}
 
-    def run(self) -> None | int:
+    def run(self, executer: Executer) -> None | int:
         self.position = 0
         while True:
             if self.position >= len(self.section.children):
                 break
             command = self.section.children[self.position]
-            returned = self.executer.execute(command, self.env)
+            returned = executer.execute(command, self.env)
             self.position += 1
             if returned is not None:
                 return returned
@@ -203,14 +202,55 @@ class NamedScript(Nameable):
 
     @property
     def as_action(self) -> Action:
-        return Action(self.name, self.description, ActionCategory.ACTION, lambda g: self.script.run())  #
+        return Action(self.name, self.description, ActionCategory.ACTION, lambda g: self.script.run(g.executer))  #
 
 
-class Executer:
+def generate_named_script(
+    section: Section,
+    force_id: str | None = None,
+    force_name: str | None = None,
+    force_description: str | None = None,
+) -> NamedScript:
+    match section.name, section.args:
+        case None, _:
+            raise ValueError("Scenario name is required")
+        case id, []:
+            id = force_id or id
+            name = force_name or id
+            description = force_description or id
+        case id, [name]:
+            id = force_id or id
+            name = force_name or name
+            description = force_description or name
+        case id, [name, description]:
+            id = force_id or id
+            name = force_name or name
+            description = force_description or description
+        case _:
+            raise Exception("Invalid scenario definition")
+
+    return NamedScript(
+        id=id,
+        name=name,
+        description=description,
+        script=Script(section),
+    )
+
+
+class Executer(Savable):
     def __init__(self, game: Game) -> None:
         self.game = game
         self.extensions: list[Extension] = [Base()]
         self.env: Enviroment = {}
+
+    def serialize(self) -> dict[str, Any]:
+        return self.env
+
+    @classmethod
+    def deserialize(cls, data: dict[str, Any], game: Game) -> Savable:
+        self = cls(game)
+        self.env = data
+        return self
 
     def process_text(self, text: str) -> str:
         t = self.evaluate(f"f'''{text}'''")
@@ -243,40 +283,8 @@ class Executer:
         raise ValueError(f"Command {command.name} not found")
 
     def run(self, section: Section) -> None | int:
-        script = Script(self, section)
-        return script.run()
-
-    def create_scenario(
-        self,
-        section: Section,
-        force_id: str | None = None,
-        force_name: str | None = None,
-        force_description: str | None = None,
-    ) -> NamedScript:
-        match section.name, section.args:
-            case None, _:
-                raise ValueError("Scenario name is required")
-            case id, []:
-                id = force_id or id
-                name = force_name or id
-                description = force_description or id
-            case id, [name]:
-                id = force_id or id
-                name = force_name or name
-                description = force_description or name
-            case id, [name, description]:
-                id = force_id or id
-                name = force_name or name
-                description = force_description or description
-            case _:
-                raise Exception("Invalid scenario definition")
-
-        return NamedScript(
-            id=id,
-            name=name,
-            description=description,
-            script=Script(self, section),
-        )
+        script = Script(section)
+        return script.run(self)
 
     def __str__(self) -> str:
         return "<Executer>"

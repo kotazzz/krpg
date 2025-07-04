@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from krpg.actions import ActionCategory, ActionManager, action
 from krpg.components import component
@@ -7,6 +7,7 @@ from krpg.console.entities import render_entity, render_item
 from krpg.console.world import render_location_info
 from krpg.entity.entity import Entity
 from krpg.entity.inventory import Slot, drop, equip, pickup
+from krpg.saves import Savable
 
 
 if TYPE_CHECKING:
@@ -98,6 +99,13 @@ class Actions(ActionManager):
             loc.items.remove(slot)  # TODO: move logic to inventory
 
 
-class Player:
+class Player(Savable):
     def __init__(self) -> None:
         self.entity = Entity("player", "Игрок")
+
+    def serialize(self) -> dict[str, Any]:
+        return {}
+
+    @classmethod
+    def deserialize(cls, data: dict[str, Any]) -> Savable:
+        return cls()

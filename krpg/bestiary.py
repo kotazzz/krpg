@@ -22,3 +22,9 @@ class Bestiary:
 
         assert isinstance(obj, expected)
         return obj
+
+    def get_all[T](self, expected: type[T]) -> list[T]:
+        return [obj for obj in self.data if isinstance(obj, expected)]
+
+
+BESTIARY = Bestiary()

@@ -5,6 +5,7 @@ from typing import Any, Generator, Self
 import attr
 from attr import field
 
+from krpg.bestiary import BESTIARY
 from krpg.commands import command
 from krpg.components import component
 from krpg.engine.executer import Ctx, Extension, executer_command
@@ -73,7 +74,7 @@ class InventoryCommands(Extension):
     @executer_command("pickup")
     @staticmethod
     def pickup(ctx: Ctx, item_id: str):
-        item = ctx.game.bestiary.get_entity_by_id(item_id, Item)
+        item = BESTIARY.get_entity_by_id(item_id, Item)
         if not item:
             raise ValueError(f"Item with ID {item_id} not found")
         remain = ctx.game.commands.execute(pickup(ctx.game.player.entity.inventory, item, 1))  # TODO: property inventory to player

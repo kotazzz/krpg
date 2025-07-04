@@ -20,14 +20,16 @@ from krpg.data.consts import ABOUT, LOGO_GAME, __version__
 from krpg.actions import Action, ActionCategory, ActionManager, ActionState, action
 from krpg.engine.clock import Clock
 from krpg.engine.enums import GameState
+from krpg.engine.npc import NpcManager
 from krpg.engine.player import Player
 from krpg.engine.quests import QuestManager
 from krpg.engine.random import RandomManager
 from krpg.engine.world import World
-from krpg.entity.bestiary import Bestiary
-from krpg.engine.executer import Executer
+from krpg.bestiary import BESTIARY
+from krpg.engine.executer import Executer, NamedScript, run_scenario
 from krpg.events import Event, EventHandler, listener
 from krpg.events_middleware import GameEvent, GameMiddleware
+from krpg.saves import Savable
 
 
 @attr.s(auto_attribs=True)
@@ -111,9 +113,20 @@ class GameBase:
             )
         )
 
+    def load_bestiary(self, reset: bool = True):  # TODO: is reset really needed?
+        if not reset and not BESTIARY.data:
+            build(bestiary=BESTIARY, console=self.console)
+        else:
+            BESTIARY.data.clear()
+            build(bestiary=BESTIARY, console=self.console)
+
     def main(self) -> None:
+        self.load_bestiary(False)
+
         options: dict[str, Callable[..., Any]] = {
             "Начать новую игру": self.new_game,
+            "Загрузить сохранение": self.load_game,
+            "Перезапустить сценарий": self.load_bestiary,
             "Выйти": exit,
         }
         self.show_logo()
@@ -127,43 +140,83 @@ class GameBase:
         self.state = GameState.INIT
         game_loop = Game(self)
         self.state = GameState.PLAY
+        self.handle_loop(game_loop)
+
+    def load_game(self) -> None:
+        self.state = GameState.INIT
+        self.console.print("Загрузка игры...")
+        game_loop = Game.deserialize({}, self)
+        self.state = GameState.PLAY
+        self.handle_loop(game_loop)
+
+    def handle_loop(self, loop: Game) -> None:
+        # TODO: Add graceful exit
         try:
-            game_loop.play()
+            loop.play()
         except (KeyboardInterrupt, EOFError):
             self.console.print("Игра завершена")
             self.state = GameState.MENU
 
 
-class Game:
-    def __init__(self, game: GameBase) -> None:
-        self._game = game
+class Game(Savable):
+    def _pre_init(self) -> None:
         self.console.log.debug("[green b]Loading game")
         self.console.history.clear()
-
         self.actions = RootActionManager()
-
         self.events = EventHandler()
         self.events.middlewares.append(GameMiddleware(self))
         self.commands = CommandManager(self.events)
 
-        self.bestiary = Bestiary()
+    def __init__(self, game: GameBase) -> None:
+        self._game = game
+        self._pre_init()
         self.world = World()
+        self.npc_manager = NpcManager()
         self.quest_manager = QuestManager()
         self.executer = Executer(self)
         self.player = Player()
         self.clock = Clock()
         self.random = RandomManager()
+        self._post_init()
 
+    def serialize(self) -> dict[str, Any]:
+        data = {
+            "world": self.world.serialize(),
+            "quest_manager": self.quest_manager.serialize(),
+            "executer": self.executer.serialize(),
+            "player": self.player.serialize(),
+            "clock": self.clock.serialize(),
+            "random": self.random.serialize(),
+        }
+        return data
+
+    @classmethod
+    def deserialize(cls, data: dict[str, Any], game: GameBase) -> Game:
+        self = cls.__new__(cls)
+        self._game = game
+        self._pre_init()
+
+        self.world = World.deserialize(data.get("world", {}))
+        self.quest_manager = QuestManager.deserialize(data.get("quest_manager", {}))
+        self.executer = Executer.deserialize(data.get("executer", {}), self)
+        self.player = Player.deserialize(data.get("player", {}))
+        self.clock = Clock.deserialize(data.get("clock", {}))
+        self.random = RandomManager.deserialize(data.get("random", {}))
+        return self
+
+    def _post_init(self) -> None:
         @listener(Event)
         def debug_event(event: Event):
             self.console.log.debug(f"Event: {event}")
 
         self.events.subscribe(debug_event)
-
         for component in registry.components:
             self.register(component)
-
-        build(self)
+        init = BESTIARY.get_entity_by_id("init", NamedScript)
+        if init:
+            self.commands.execute(run_scenario(self.executer, init))
+        else:
+            self.console.log.debug("Init script not found")
 
     def set_state(self, state: GameState):
         self._game.state = state
