@@ -23,6 +23,12 @@ class Bestiary:
         assert isinstance(obj, expected)
         return obj
 
+    def strict_get_entity_by_id[T](self, entity_id: str, expected: type[T]) -> T:
+        obj = self.get_entity_by_id(entity_id, expected)
+        if not obj:
+            raise ValueError(f"Entity {entity_id} not found")
+        return obj
+
     def get_all[T](self, expected: type[T]) -> list[T]:
         return [obj for obj in self.data if isinstance(obj, expected)]
 

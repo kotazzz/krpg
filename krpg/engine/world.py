@@ -141,12 +141,31 @@ def unlock(loc: LocationState) -> Generator[UnlockEvent, Any, None]:
 
 
 @attr.s(auto_attribs=True)
-class LocationState:
+class LocationState(Savable):
     location: Location = attr.ib(repr=lambda loc: loc.id)
     is_locked: bool = False
     stage: int = 0
     items: list[Slot] = attr.ib(factory=lambda: [], repr=lambda x: str(len(x)))
     npcs: list[Npc] = attr.ib(factory=lambda: [], repr=lambda x: str(len(x)))
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "location": self.location.id,
+            "is_locked": self.is_locked,
+            "stage": self.stage,
+            "items": [item.serialize() for item in self.items],
+            "npcs": [npc.id for npc in self.npcs],
+        }
+
+    @classmethod
+    def deserialize(cls, data: Any, *args: Any, **kwargs: Any) -> LocationState:
+        location = BESTIARY.strict_get_entity_by_id(data["location"], Location)
+        is_locked = data["is_locked"]
+        stage = data["stage"]
+        items = [Slot.deserialize(item) for item in data["items"]]
+        npcs = [BESTIARY.strict_get_entity_by_id(npc_id, Npc) for npc_id in data["npcs"]]
+        # TODO: Use strict_get_entity_by_id in more places
+        return cls(location=location, is_locked=is_locked, stage=stage, items=items, npcs=npcs)
 
     @property
     def actions(self) -> list[Action]:
@@ -195,7 +214,7 @@ class World(Savable):
         self.current_location = start_location_state
 
     def serialize(self) -> dict[str, Any]:
-        return {}
+        return {"locations": [loc.serialize() for loc in self.locations], "current_location": self.current_location.location.id}
 
     @classmethod
     def deserialize(cls, data: dict[str, Any]) -> Savable:

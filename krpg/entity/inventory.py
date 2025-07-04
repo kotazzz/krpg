@@ -13,6 +13,7 @@ from krpg.entity.effects import Effect, EffectState
 from krpg.entity.enums import ItemTag, SlotType
 from krpg.entity.skills import SkillState, SkillTree
 from krpg.events_middleware import GameEvent
+from krpg.saves import Savable
 from krpg.utils import DEFAULT_DESCRIPTION, Nameable
 
 
@@ -85,10 +86,22 @@ class InventoryCommands(Extension):
 
 
 @attr.s(auto_attribs=True)
-class Slot:
+class Slot(Savable):
     type: SlotType = SlotType.ITEM
     item: Item | None = attr.field(default=None, repr=lambda x: x and repr(x.id))
     count: int = 0
+
+    def serialize(self) -> Any:
+        # TODO: compress using hiding type
+        return [self.type, self.item.id if self.item else None, self.count]
+
+    @classmethod
+    def deserialize(cls, data: Any, *args: Any, **kwargs: Any) -> Slot:
+        type = data[0]
+        item_id = data[1]
+        count = data[2]
+        item = BESTIARY.get_entity_by_id(item_id, Item) if item_id else None
+        return cls(type=type, item=item, count=count)
 
     def fill(self, item: Item, count: int) -> int:
         if not self.item:
