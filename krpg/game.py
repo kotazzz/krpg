@@ -5,6 +5,7 @@ import logging
 import sys
 from itertools import groupby
 from typing import Any, Callable, Generator
+import zlib
 
 import attr
 from rich.align import Align
@@ -14,7 +15,7 @@ from rich.text import Text
 
 from krpg.components import registry, Component
 from krpg.commands import CommandManager, command
-from krpg.encoder import create_save
+from krpg.encoder import create_save, load_save
 from krpg.engine.builder import build
 from krpg.console import KrpgConsole
 from krpg.data.consts import ABOUT, LOGO_GAME, __version__
@@ -156,9 +157,24 @@ class GameBase:
     def load_game(self) -> None:
         self.state = GameState.INIT
         self.console.print("Загрузка игры...")
-        game_loop = Game.deserialize({}, self)
-        self.state = GameState.PLAY
-        self.handle_loop(game_loop)
+        try:
+            save_data = self.console.session.prompt("Введите данные для загрузки: ")
+            if not save_data:
+                self.console.print("[red]Ошибка: ввод пуст[/]")
+                return
+            cleaned = save_data.strip().replace("\n", "").replace(" ", "")
+
+            data = load_save(cleaned)
+        except ValueError:
+            self.console.print("[red]Ошибка: данные невалидны[/]")
+        except zlib.error:
+            self.console.print("[red]Ошибка: данные сжаты неверно[/]")
+        except KeyboardInterrupt:
+            self.console.print("[red]Ошибка: загрузка прервана[/]")
+        else:
+            game_loop = Game.deserialize(data, self)
+            self.state = GameState.PLAY
+            self.handle_loop(game_loop)
 
     def handle_loop(self, loop: Game) -> None:
         # TODO: Add graceful exit
@@ -191,6 +207,11 @@ class Game(Savable):
         self.clock = Clock()
         self.random = RandomManager()
         self._post_init()
+        init = BESTIARY.get_entity_by_id("init", NamedScript)
+        if init:
+            self.commands.execute(run_scenario(self.executer, init))
+        else:
+            self.console.log.debug("Init script not found")
 
     def serialize(self) -> dict[str, Any]:
         # TODO: Use component to find all root items
@@ -218,6 +239,7 @@ class Game(Savable):
         self.player = Player.deserialize(data.get("player", {}))
         self.clock = Clock.deserialize(data.get("clock", {}))
         self.random = RandomManager.deserialize(data.get("random", {}))
+        self._post_init()
         return self
 
     def _post_init(self) -> None:
@@ -228,11 +250,6 @@ class Game(Savable):
         self.events.subscribe(debug_event)
         for component in registry.components:
             self.register(component)
-        init = BESTIARY.get_entity_by_id("init", NamedScript)
-        if init:
-            self.commands.execute(run_scenario(self.executer, init))
-        else:
-            self.console.log.debug("Init script not found")
 
     def set_state(self, state: GameState):
         self._game.state = state

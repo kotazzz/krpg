@@ -15,12 +15,12 @@ class Scale(Nameable, Savable):
     _value: float = 0.0
 
     def serialize(self) -> Any:
-        return [self.id, self.name, self.base_max_value, self.bonus, self._value]
+        return [self.id, self.name, self.base_max_value, self.bonus]
 
     @classmethod
     def deserialize(cls, data: Any, *args: Any, **kwargs: Any) -> Scale:
         # TODO: Saving name and id is not good
-        return cls(id=data[0], name=data[1], base_max_value=data[2], bonus=data[3], _value=data[4])
+        return cls(id=data[0], name=data[1], base_max_value=data[2], bonus=data[3])
 
     @property
     def value(self) -> float:

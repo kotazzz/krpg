@@ -164,17 +164,17 @@ class Reward:
 
 @attr.s(auto_attribs=True)
 class Objective(ABC, Savable):
-    description: str  # FIXME: is not loadable
+    description: str
 
     def serialize(self) -> Any:
-        return get_objective_name(self)
+        return get_objective_name(self), self.__dict__
 
     @classmethod
     def deserialize(cls, data: Any) -> Objective:
-        rcls = objectives_names.get(data["type"])
+        rcls = objectives_names.get(data[0])
         if not rcls:
-            raise ValueError(f"Unknown objective type {data['type']}")
-        return rcls.deserialize(data)
+            raise ValueError(f"Unknown objective type {data[0]}")
+        return rcls(**data[1])
 
     @abstractmethod
     def check(self, event: Event, state: StatusType, completed: bool) -> StateUpdate[StatusType]:

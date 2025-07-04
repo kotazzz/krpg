@@ -116,7 +116,7 @@ class NpcManager(Savable):
     @classmethod
     def deserialize(cls, data: Any, *args: Any, **kwargs: Any) -> NpcManager:
         instance = cls()
-        instance.npcs = {npc.id: NpcState.deserialize(npc) for npc in data}
+        instance.npcs = {npc["npc"]: NpcState.deserialize(npc) for npc in data}
         return instance
 
     def __attrs_post_init__(self):
