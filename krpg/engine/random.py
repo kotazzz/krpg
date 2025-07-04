@@ -5,14 +5,27 @@ import itertools
 import math
 import random
 import time
-from typing import Optional, List
+from typing import Any, Optional, List
+
+from krpg.saves import Savable
 
 
-class RandomManager:
+class RandomManager(Savable):
     def __init__(self):
         self.seed = int(time.time() * 1e6)
         self.rnd = random.Random(self.seed)
         self.state = 0
+
+    def serialize(self) -> dict[str, Any]:
+        return {"seed": self.seed, "state": self.state}
+
+    @classmethod
+    def deserialize(cls, data: dict[str, Any]) -> RandomManager:
+        self = cls()
+        self.seed = data["seed"]
+        self.state = data["state"]
+        self.rnd = random.Random(self.seed)
+        return self
 
     def set_seed(self, seed: int):
         self.seed = seed
