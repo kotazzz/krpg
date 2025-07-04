@@ -11,7 +11,7 @@ from krpg.bestiary import BESTIARY
 from krpg.commands import command
 from krpg.components import component
 from krpg.engine.executer import Ctx, Extension, NamedScript, executer_command
-from krpg.engine.npc import Npc, NpcState
+from krpg.engine.npc import Npc
 from krpg.entity.inventory import Slot
 from krpg.events_middleware import GameEvent
 from krpg.parser import Command
@@ -86,13 +86,13 @@ class NpcUtils(Extension):  # TODO: move to npc
         npc = ctx.game.npc_manager.npcs[npc_id]
         assert npc, f"Where is {npc_id}"
         for loc in game.world.locations:
-            if npc in loc.npcs:
-                loc.npcs.remove(npc)
+            if npc.npc in loc.npcs:
+                loc.npcs.remove(npc.npc)
                 break
         # TODO: Move locations to bestiary?
         loc = game.world.get_location_by_id(loc_id)
         assert loc, f"Where is {loc_id}"
-        loc.npcs.append(npc)
+        loc.npcs.append(npc.npc)
 
     @executer_command("unlock")
     @staticmethod
@@ -146,7 +146,7 @@ class LocationState:
     is_locked: bool = False
     stage: int = 0
     items: list[Slot] = attr.ib(factory=lambda: [], repr=lambda x: str(len(x)))
-    npcs: list[NpcState] = attr.ib(factory=lambda: [], repr=lambda x: str(len(x)))
+    npcs: list[Npc] = attr.ib(factory=lambda: [], repr=lambda x: str(len(x)))
 
     @property
     def actions(self) -> list[Action]:
@@ -157,7 +157,7 @@ class LocationState:
     @classmethod
     def from_location(cls, location: Location) -> LocationState:
         self = cls(location=location)
-        self.npcs = [NpcState.from_npc(npc) for npc in location.init_npcs]
+        self.npcs = location.init_npcs
         # TODO: Optimize copying?
         self.items = [Slot(slot.type, slot.item, slot.count) for slot in location.init_items]
         self.is_locked = location.locked

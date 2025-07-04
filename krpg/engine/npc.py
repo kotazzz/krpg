@@ -44,7 +44,8 @@ class TalkAction(ActionManager):
     @action("talk", "Поговорить", ActionCategory.GAME)
     @staticmethod
     def action_talk(game: Game) -> None:
-        npcs = game.world.current_location.npcs
+        npc_list = game.world.current_location.npcs
+        npcs = game.npc_manager.get_states(npc_list)
         if not npcs:
             game.console.print("[red]Нет собеседника")
             return
@@ -102,3 +103,12 @@ class NpcManager:
         all_npcs = BESTIARY.get_all(Npc)
         for npc in all_npcs:
             self.npcs[npc.id] = NpcState.from_npc(npc)
+
+    def get_states(self, npcs: list[Npc]) -> list[NpcState]:
+        states: list[NpcState] = []
+        for npc in npcs:
+            if npc.id in self.npcs:
+                states.append(self.npcs[npc.id])
+            else:
+                raise ValueError(f"NPC {npc.id} not found")
+        return states
