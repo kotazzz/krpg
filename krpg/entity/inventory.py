@@ -144,8 +144,17 @@ class Slot(Savable):
 
 
 @attr.s(auto_attribs=True)
-class Inventory:
+class Inventory(Savable):
     slots: list[Slot] = field(factory=lambda: [])
+
+    def serialize(self) -> Any:
+        return [slot.serialize() for slot in self.slots]
+
+    @classmethod
+    def deserialize(cls, data: Any, *args: Any, **kwargs: Any) -> Inventory:
+        instance = cls.__new__(cls)
+        instance.slots = [Slot.deserialize(slot_data) for slot_data in data]
+        return instance
 
     @classmethod
     def basic(cls) -> Self:

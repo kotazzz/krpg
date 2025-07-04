@@ -6,14 +6,26 @@ from typing import Any, Callable, TypeVar
 import attr
 from attr import field
 
+from krpg.bestiary import BESTIARY
 from krpg.entity.enums import Attribute, Body, EntityScales, ModifierType, TargetType
+from krpg.saves import Savable
 from krpg.utils import DEFAULT_DESCRIPTION, Nameable
 
 
 @attr.s(auto_attribs=True)
-class EffectState:
+class EffectState(Savable):
     effect: Effect
     time: int
+
+    def serialize(self) -> Any:
+        return [self.effect.id, self.time]
+
+    @classmethod
+    def deserialize(cls, data: Any, *args: Any, **kwargs: Any) -> EffectState:
+        instance = cls.__new__(cls)
+        instance.effect = BESTIARY.strict_get_entity_by_id(data[0], Effect)
+        instance.time = data[1]
+        return instance
 
 
 @attr.s(auto_attribs=True)

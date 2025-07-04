@@ -1,16 +1,26 @@
+from __future__ import annotations
 from typing import Any, Literal, Self
 
 import attr
 from attr import field
 
+from krpg.saves import Savable
 from krpg.utils import Nameable
 
 
 @attr.s(auto_attribs=True)
-class Scale(Nameable):
+class Scale(Nameable, Savable):
     base_max_value: float = field(default=0.0, repr=lambda x: repr("inf" if x == -1 else x))
     bonus: float = 0.0
     _value: float = 0.0
+
+    def serialize(self) -> Any:
+        return [self.id, self.name, self.base_max_value, self.bonus, self._value]
+
+    @classmethod
+    def deserialize(cls, data: Any, *args: Any, **kwargs: Any) -> Scale:
+        # TODO: Saving name and id is not good
+        return cls(id=data[0], name=data[1], base_max_value=data[2], bonus=data[3], _value=data[4])
 
     @property
     def value(self) -> float:

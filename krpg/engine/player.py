@@ -104,8 +104,10 @@ class Player(Savable):
         self.entity = Entity("player", "Игрок")
 
     def serialize(self) -> dict[str, Any]:
-        return {}
+        return self.entity.serialize()
 
     @classmethod
     def deserialize(cls, data: dict[str, Any]) -> Savable:
-        return cls()
+        self = cls.__new__(cls)  # TODO: check if __new__ everywhere
+        self.entity = Entity.deserialize(data["entity"])
+        return self
