@@ -117,7 +117,7 @@ class Clock(Savable):
 
     @classmethod
     def deserialize(cls, data: dict[str, Any]) -> Clock:
-        self = cls()
+        self = cls.__new__(cls)
         self.global_minutes = data["global_minutes"]
         return self
 

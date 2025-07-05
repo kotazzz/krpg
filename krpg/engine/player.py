@@ -108,6 +108,6 @@ class Player(Savable):
 
     @classmethod
     def deserialize(cls, data: dict[str, Any]) -> Player:
-        self = cls.__new__(cls)  # TODO: check if __new__ everywhere
+        self = cls.__new__(cls)
         self.entity = Entity.deserialize(data)
         return self

@@ -115,9 +115,9 @@ class NpcManager(Savable):
 
     @classmethod
     def deserialize(cls, data: Any, *args: Any, **kwargs: Any) -> NpcManager:
-        instance = cls()
-        instance.npcs = {npc["npc"]: NpcState.deserialize(npc) for npc in data}
-        return instance
+        self = cls.__new__(cls)
+        self.npcs = {npc["npc"]: NpcState.deserialize(npc) for npc in data}
+        return self
 
     def __attrs_post_init__(self):
         all_npcs = BESTIARY.get_all(Npc)

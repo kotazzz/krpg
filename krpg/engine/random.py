@@ -21,7 +21,7 @@ class RandomManager(Savable):
 
     @classmethod
     def deserialize(cls, data: dict[str, Any]) -> RandomManager:
-        self = cls()
+        self = cls.__new__(cls)
         self.seed = data["seed"]
         self.state = data["state"]
         self.rnd = random.Random(self.seed)

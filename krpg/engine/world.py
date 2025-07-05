@@ -63,7 +63,6 @@ class WorldActions(ActionManager):
         game.console.print("Доступные локации:")
         for i, loc in enumerate(avail, 1):
             game.console.print(f"{i}. {loc.location.name}")
-        # TODO: questionary
         select = game.console.select("Выберите локацию: ", {loc.location.name: loc for loc in avail}, True)
         if select:
             game.commands.execute(move(game.world, select))
@@ -218,7 +217,7 @@ class World(Savable):
 
     @classmethod
     def deserialize(cls, data: dict[str, Any]) -> World:
-        instance = cls()
+        instance = cls.__new__(cls)
         instance.locations = [LocationState.deserialize(loc) for loc in data["locations"]]
         loc = instance.get_location_by_id(data["current_location"])
         if not loc:

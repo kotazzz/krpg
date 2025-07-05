@@ -315,7 +315,7 @@ class QuestManager(Savable):
 
     @classmethod
     def deserialize(cls, data: dict[str, Any]) -> QuestManager:
-        self = cls()
+        self = cls.__new__(cls)
         self.quests = [QuestState.deserialize(q) for q in data["quests"]]
         return self
 
