@@ -14,10 +14,18 @@ from questionary.prompts.common import FormattedText
 def rich_to_pt_ansi(*args: str, console: Optional[Console] = None, **kwargs: Any) -> ANSI:
     kwargs["end"] = kwargs.get("end", "")
     console = console or Console(markup=True)
-    console = Console()
     with console.capture() as c:
         console.print(*args, **kwargs)
     return ANSI(c.get())
+
+
+def _rich_to_prompt_toolkit(str: str, console: Optional[Console] = None) -> FormattedText:
+    console = console or Console(markup=True)
+    with console.capture() as capture:
+        console.print(f"[green]{str}[/]", end="")
+    str_output = capture.get()
+    result: FormattedText = to_formatted_text(ANSI(str_output))  # type: ignore
+    return result
 
 
 DEFAULT_LEVEL = 1000
@@ -136,15 +144,8 @@ class KrpgConsole:
             if check(item):
                 return transformer(item)
 
-    def _rich_to_prompt_toolkit(self, str: str) -> FormattedText:  # TODO: extract to global
-        with self.console.capture() as capture:
-            self.console.print(f"[green]{str}[/]", end="")
-        str_output = capture.get()
-        result: FormattedText = to_formatted_text(ANSI(str_output))  # type: ignore
-        return result
-
     def interactive_select[T](self, title: str, options: dict[str, T]) -> T | None:
-        choices = [questionary.Choice(self._rich_to_prompt_toolkit(k), value=v) for k, v in options.items()]
+        choices = [questionary.Choice(_rich_to_prompt_toolkit(k, self.console), value=v) for k, v in options.items()]
         # formatted_title = self._rich_to_prompt_toolkit(title) # Не работает
         s = questionary.Style(
             [
@@ -154,7 +155,7 @@ class KrpgConsole:
         return questionary.select(title, choices, qmark="", instruction=" ", style=s).ask()
 
     def interactive_multiple[T](self, title: str, options: dict[str, T], min: int = 0, max: int = 9) -> list[T] | None:
-        choices = [questionary.Choice(self._rich_to_prompt_toolkit(k), value=v) for k, v in options.items()]
+        choices = [questionary.Choice(_rich_to_prompt_toolkit(k, self.console), value=v) for k, v in options.items()]
         s = questionary.Style(
             [
                 ("question", "red bold"),
