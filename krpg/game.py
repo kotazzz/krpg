@@ -210,14 +210,14 @@ class Game(Savable):
         self.world = World()
         self.npc_manager = NpcManager()
         self.quest_manager = QuestManager()
-        self.executer = Executer(self)
+        self.executer = Executer()
         self.player = Player()
         self.clock = Clock()
         self.random = RandomManager()
         self._post_init()
         init = BESTIARY.get_entity_by_id("init", NamedScript)
         if init:
-            self.commands.execute(run_scenario(self.executer, init))
+            self.commands.execute(run_scenario(self.executer, init, self))
         else:
             self.console.log.debug("Init script not found")
 
@@ -232,16 +232,8 @@ class Game(Savable):
         self = cls.__new__(cls)
         self._game = game
         self._pre_init()
-
-        # for name, item in self._savables:
-        #     setattr(self, name, item.deserialize(data.get(name, {})))
-        self.world = World.deserialize(data.get("world", {}))
-        self.npc_manager = NpcManager.deserialize(data.get("npc_manager", {}))
-        self.quest_manager = QuestManager.deserialize(data.get("quest_manager", {}))
-        self.executer = Executer.deserialize(data.get("executer", {}), self)
-        self.player = Player.deserialize(data.get("player", {}))
-        self.clock = Clock.deserialize(data.get("clock", {}))
-        self.random = RandomManager.deserialize(data.get("random", {}))
+        for name, item in self._savables:
+            setattr(self, name, item.deserialize(data.get(name, {})))
         self._post_init()
         return self
 

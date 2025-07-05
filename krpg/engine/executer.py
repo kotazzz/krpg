@@ -55,9 +55,9 @@ class ScenarioRun(GameEvent):
 
 
 @command
-def run_scenario(executer: Executer, scenario: NamedScript) -> Generator[ScenarioRun, Any, None]:
+def run_scenario(executer: Executer, scenario: NamedScript, game: Game) -> Generator[ScenarioRun, Any, None]:
     yield ScenarioRun(scenario)
-    scenario.script.run(executer)
+    scenario.script.run(executer, game)
 
 
 def executer_command(name: str) -> Callable[[ExecuterCommandCallback], ExecuterCommand]:
@@ -109,7 +109,7 @@ class Base(Extension):
     def builtin_print(ctx: Ctx, *args: str) -> None:
         game = ctx.game
         text = " ".join(args)
-        game.console.print("[blue]" + game.executer.process_text(text))
+        game.console.print("[blue]" + game.executer.process_text(text, {"game": game}))
 
     @executer_command("$")
     @staticmethod
@@ -122,7 +122,7 @@ class Base(Extension):
     @staticmethod
     def builtin_set(ctx: Ctx, name: str, expr: str) -> None:
         game = ctx.game
-        game.executer.env[name] = ctx.executer.evaluate(expr)  # noqa
+        game.executer.env[name] = ctx.executer.evaluate(expr, {"game": game})  # noqa
 
     @executer_command("say")
     @staticmethod
@@ -140,14 +140,14 @@ class Base(Extension):
             game.console.print(f"{name}[green]:[/] {speech}")
         else:
             speech = " ".join(args)
-            game.console.print("[green]" + game.executer.process_text(speech))
+            game.console.print("[green]" + game.executer.process_text(speech, {"game": game}))
 
     @executer_command("if")
     @staticmethod
     def builtin_if(ctx: Ctx, expr: str, children: list[Command | Section]) -> None | int:
-        res = ctx.executer.evaluate(expr)
+        res = ctx.executer.evaluate(expr, {"game": ctx.game})
         if res:
-            return ctx.executer.run(Section(children=children))
+            return ctx.executer.run(Section(children=children), ctx.game)
 
     @executer_command("return")
     @staticmethod
@@ -167,7 +167,7 @@ class Base(Extension):
         parsed, _ = predicates[name].parse(*args)  # TODO: move logic out
         if not predicates[name].eval(ctx.game, *parsed):
             if children:
-                ctx.executer.run(Section(children=children))
+                ctx.executer.run(Section(children=children), ctx.game)
             return 0
 
 
@@ -184,13 +184,13 @@ class Script:
     position = 0
     env: Enviroment = {}
 
-    def run(self, executer: Executer) -> None | int:
+    def run(self, executer: Executer, game: Game) -> None | int:
         self.position = 0
         while True:
             if self.position >= len(self.section.children):
                 break
             command = self.section.children[self.position]
-            returned = executer.execute(command, self.env)
+            returned = executer.execute(command, self.env, game=game)
             self.position += 1
             if returned is not None:
                 return returned
@@ -202,7 +202,7 @@ class NamedScript(Nameable):
 
     @property
     def as_action(self) -> Action:
-        return Action(self.name, self.description, ActionCategory.ACTION, lambda g: self.script.run(g.executer))  #
+        return Action(self.name, self.description, ActionCategory.ACTION, lambda g: self.script.run(g.executer, g))  #
 
 
 def generate_named_script(
@@ -238,8 +238,7 @@ def generate_named_script(
 
 
 class Executer(Savable):
-    def __init__(self, game: Game) -> None:
-        self.game = game
+    def __init__(self) -> None:
         self.extensions: list[Extension] = [Base()]
         self.env: Enviroment = {}
 
@@ -253,18 +252,18 @@ class Executer(Savable):
         return self.env
 
     @classmethod
-    def deserialize(cls, data: dict[str, Any], game: Game) -> Executer:
-        self = cls(game)
+    def deserialize(cls, data: dict[str, Any]) -> Executer:
+        self = cls.__new__(cls)
         self.env = data
         return self
 
-    def process_text(self, text: str) -> str:
-        t = self.evaluate(f"f'''{text}'''")
+    def process_text(self, text: str, additional: dict[str, Any]) -> str:
+        t = self.evaluate(f"f'''{text}'''", additional)
         assert isinstance(t, str)
         return t  # noqa
 
-    def evaluate(self, text: str) -> Any:
-        env = self.env | {"game": self.game, "env": self.env}
+    def evaluate(self, text: str, additional: dict[str, Any] | None = None) -> Any:
+        env = self.env | {"env": self.env} | (additional or {})
         # Scenario allowed to use python code
         return eval(text, env)  # noqa
 
@@ -277,8 +276,7 @@ class Executer(Savable):
                 commands[name] = cmd
         return commands
 
-    def execute(self, command: Command | Section, locals: Enviroment) -> None | int:
-        game = self.game
+    def execute(self, command: Command | Section, locals: Enviroment, game: Game) -> None | int:
         ctx = Ctx(game, self, locals)
         cmds = self.get_commands()
         if command.name in cmds:
@@ -288,9 +286,9 @@ class Executer(Savable):
                 return cmds[command.name].callback(ctx, *command.args)
         raise ValueError(f"Command {command.name} not found")
 
-    def run(self, section: Section) -> None | int:
+    def run(self, section: Section, game: Game) -> None | int:
         script = Script(section)
-        return script.run(self)
+        return script.run(self, game)
 
     def __str__(self) -> str:
         return "<Executer>"

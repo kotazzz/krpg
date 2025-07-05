@@ -108,7 +108,7 @@ class NpcUtils(Extension):  # TODO: move to npc
         completer: dict[str, int] = {}
         for opt in children:
             k, v = opt.args
-            v = ctx.executer.process_text(v)
+            v = ctx.executer.process_text(v, {"game": ctx.game})
             completer[v] = int(k)
         res = ctx.game.console.multiple(title, completer, minv, maxv)
         ctx.executer.env[var_name] = res

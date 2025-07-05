@@ -456,7 +456,7 @@ class ScriptReward(Reward):
     def run(self, game: Game) -> Command[...]:
         sc = BESTIARY.get_entity_by_id(self.scenario_id, NamedScript)
         assert sc, f"{self.scenario_id} doesnt exist"
-        return run_scenario(game.executer, sc)
+        return run_scenario(game.executer, sc, game)
 
 
 @reward("INTRODUCE")
