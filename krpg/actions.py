@@ -48,17 +48,6 @@ def action(
     return decorator
 
 
-# TODO: Unused code
-def merge_actions(*managers: ActionManager) -> dict[str, Action]:
-    actions: dict[str, Action] = {}
-    for manager in managers:
-        for act in manager.actions:
-            if act.name in actions:
-                raise ValueError(f"Action with name {act.name} already exists")
-            actions[act.name] = act
-    return actions
-
-
 class ActionManager:
     def __init__(self) -> None:
         self.submanagers: list[ActionManager] = []
@@ -76,13 +65,9 @@ class ActionManager:
     @property
     def actions(self) -> list[Action]:
         actions = self._actions.copy()
-        actions.extend(self.extract())  # TODO: Unused code
         for manager in self.submanagers:
             actions.extend(manager.actions)
         return actions
-
-    def extract(self) -> list[Action]:
-        return []
 
     def __repr__(self) -> str:
         return f"<ActionManager act={len(self.actions)}>"

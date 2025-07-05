@@ -125,15 +125,13 @@ class GameBase:
             )
         )
 
-    def load_bestiary(self, reset: bool = True):  # TODO: is reset really needed?
-        if not reset and not BESTIARY.data:
-            build(bestiary=BESTIARY, console=self.console)
-        else:
-            BESTIARY.data.clear()
-            build(bestiary=BESTIARY, console=self.console)
+    def load_bestiary(self):
+        BESTIARY.data.clear()
+        build(bestiary=BESTIARY, console=self.console)
 
     def main(self) -> None:
-        self.load_bestiary(False)
+        if not BESTIARY.data:
+            self.load_bestiary()
 
         options: dict[str, Callable[..., Any]] = {
             "Начать новую игру": self.new_game,
@@ -263,7 +261,6 @@ class Game(Savable):
         return self._game.console
 
     def register(self, component: Component) -> None:
-        # TODO: rewrite to match?
         if isinstance(component, type):
             item = component()
             if isinstance(item, ActionManager):

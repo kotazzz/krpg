@@ -31,7 +31,7 @@ MINUTES_PER_DAY = 24 * 60
 @command
 def wait(clock: Clock, minutes: int) -> Generator[TimepassEvent | NewdayEvent, Any, None]:
     assert minutes > 0, "Must be greater than zero"
-    assert minutes < MINUTES_PER_DAY, "Cant skip more, than 1 day"  # TODO: ???
+    assert minutes < MINUTES_PER_DAY, "Cant skip more, than 1 day"
     day = clock.days
     clock.global_minutes += minutes
     yield TimepassEvent(minutes)
@@ -43,7 +43,7 @@ def wait(clock: Clock, minutes: int) -> Generator[TimepassEvent | NewdayEvent, A
 def wait_until(clock: Clock, hours: int, minutes: int) -> Generator[TimepassEvent | NewdayEvent, Any, None]:
     total = hours * 60 + minutes
     assert total > 0, "Must be greater than zero"
-    assert total < MINUTES_PER_DAY, "Cant skip more, than 1 day"  # TODO: ???
+    assert total < MINUTES_PER_DAY, "Cant skip more, than 1 day"
     target_minutes = (hours * 60 + minutes) - clock.today_minutes
 
     day = clock.days
