@@ -8,19 +8,23 @@ if TYPE_CHECKING:
 
 
 type Component = type[ActionManager] | type[Extension] | Listener
+type RegisteredComponent = ActionManager | Extension | Listener
 
 
 class ComponentRegistry:
     def __init__(self) -> None:
-        self.components: list[Component] = []
+        self.components: dict[type[RegisteredComponent], list[RegisteredComponent]] = {}
 
-    def register(self, component: Component) -> None:
-        self.components.append(component)
+    def register(self, component: RegisteredComponent) -> None:
+        self.components.setdefault(type(component), []).append(component)
 
 
 registry = ComponentRegistry()
 
 
-def component(cls: Component) -> Component:
-    registry.register(cls)
-    return cls
+def component(item: Component) -> Component:
+    if isinstance(item, type):
+        registry.register(item())
+    else:
+        registry.register(item)
+    return item

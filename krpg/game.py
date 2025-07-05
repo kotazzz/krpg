@@ -13,7 +13,7 @@ from rich.console import Group
 from rich.panel import Panel
 from rich.text import Text
 
-from krpg.components import registry, Component
+from krpg.components import RegisteredComponent, registry
 from krpg.commands import CommandManager, command
 from krpg.encoder import create_save, load_save
 from krpg.engine.builder import build
@@ -28,7 +28,7 @@ from krpg.engine.quests import QuestManager
 from krpg.engine.random import RandomManager
 from krpg.engine.world import World
 from krpg.bestiary import BESTIARY
-from krpg.engine.executer import Executer, NamedScript, run_scenario
+from krpg.engine.executer import Executer, Extension, NamedScript, run_scenario
 from krpg.events import Event, EventHandler, listener
 from krpg.events_middleware import GameEvent, GameMiddleware
 from krpg.saves import Savable
@@ -194,6 +194,16 @@ class Game(Savable):
         self.events.middlewares.append(GameMiddleware(self))
         self.commands = CommandManager(self.events)
 
+        self._savables: list[tuple[str, type[Savable]]] = [
+            ("world", World),
+            ("npc_manager", NpcManager),
+            ("quest_manager", QuestManager),
+            ("executer", Executer),
+            ("player", Player),
+            ("clock", Clock),
+            ("random", RandomManager),
+        ]
+
     def __init__(self, game: GameBase) -> None:
         self._game = game
         self._pre_init()
@@ -212,16 +222,9 @@ class Game(Savable):
             self.console.log.debug("Init script not found")
 
     def serialize(self) -> dict[str, Any]:
-        # TODO: Use component to find all root items
-        data: dict[str, Any] = {
-            "world": self.world.serialize(),
-            "npc_manager": self.npc_manager.serialize(),
-            "quest_manager": self.quest_manager.serialize(),
-            "executer": self.executer.serialize(),
-            "player": self.player.serialize(),
-            "clock": self.clock.serialize(),
-            "random": self.random.serialize(),
-        }
+        data: dict[str, Any] = {}
+        for name, _ in self._savables:
+            data[name] = getattr(self, name).serialize()
         return data
 
     @classmethod
@@ -230,6 +233,8 @@ class Game(Savable):
         self._game = game
         self._pre_init()
 
+        # for name, item in self._savables:
+        #     setattr(self, name, item.deserialize(data.get(name, {})))
         self.world = World.deserialize(data.get("world", {}))
         self.npc_manager = NpcManager.deserialize(data.get("npc_manager", {}))
         self.quest_manager = QuestManager.deserialize(data.get("quest_manager", {}))
@@ -246,8 +251,9 @@ class Game(Savable):
             self.console.log.debug(f"Event: {event}")
 
         self.events.subscribe(debug_event)
-        for component in registry.components:
-            self.register(component)
+        for component in registry.components.values():
+            for item in component:
+                self.register(item)
 
     def set_state(self, state: GameState):
         self._game.state = state
@@ -260,15 +266,14 @@ class Game(Savable):
     def console(self) -> KrpgConsole:
         return self._game.console
 
-    def register(self, component: Component) -> None:
-        if isinstance(component, type):
-            item = component()
-            if isinstance(item, ActionManager):
-                self.actions.submanagers.append(item)
-                self.console.log.debug(f"Added action manager {item}")
-            else:
-                self.executer.extensions.append(item)
-                self.console.log.debug(f"Added extension {item}")
+    def register(self, component: RegisteredComponent) -> None:
+        if isinstance(component, ActionManager):
+            self.actions.submanagers.append(component)
+            self.console.log.debug(f"Added action manager {component}")
+        elif isinstance(component, Extension):
+            self.executer.extensions.append(component)
+            self.console.log.debug(f"Added extension {component}")
+        # elif isinstance(component, Listener):
         else:
             self.events.subscribe(component)
             self.console.log.debug(f"Added event subscribe {component}")
