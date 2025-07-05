@@ -163,7 +163,6 @@ class LocationState(Savable):
         stage = data["stage"]
         items = [Slot.deserialize(item) for item in data["items"]]
         npcs = [BESTIARY.strict_get_entity_by_id(npc_id, Npc) for npc_id in data["npcs"]]
-        # TODO: Use strict_get_entity_by_id in more places
         return cls(location=location, is_locked=is_locked, stage=stage, items=items, npcs=npcs)
 
     @property

@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal, Self
 
 import attr
-from attr import field
 
 from krpg.entity.effects import EffectState, EntityModifier, ItemModifier
 from krpg.entity.enums import Attribute, Body, EntityScales, ItemTag, TargetType
@@ -20,12 +19,12 @@ if TYPE_CHECKING:
 @attr.s(auto_attribs=True)
 class Entity(Nameable, Savable):
     skills: SkillTree = SkillTree()
-    inventory: Inventory = field(factory=Inventory.basic)  # TODO: Field -> attrib
-    effects: list[EffectState] = field(factory=lambda: [])
-    _parts: dict[Body, Scale] = field(factory=lambda: {}, init=False)
-    _scales: dict[EntityScales, Scale] = field(factory=lambda: {}, init=False)
-    _attributes: dict[Attribute, Scale] = field(factory=lambda: {}, init=False)
-    queue_actions: list[SkillState] = field(factory=lambda: [])
+    inventory: Inventory = attr.ib(factory=Inventory.basic)
+    effects: list[EffectState] = attr.ib(factory=lambda: [])
+    _parts: dict[Body, Scale] = attr.ib(factory=lambda: {}, init=False)
+    _scales: dict[EntityScales, Scale] = attr.ib(factory=lambda: {}, init=False)
+    _attributes: dict[Attribute, Scale] = attr.ib(factory=lambda: {}, init=False)
+    queue_actions: list[SkillState] = attr.ib(factory=lambda: [])
 
     def serialize(self) -> Any:
         part_data = {k.serialize(): v.serialize() for k, v in self.parts.items()}
