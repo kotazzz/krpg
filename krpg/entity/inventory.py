@@ -92,16 +92,33 @@ class Slot(Savable):
     count: int = 0
 
     def serialize(self) -> Any:
-        # TODO: compress using hiding type
-        return [self.type.serialize(), self.item.id if self.item else None, self.count]
+        type_data = self.type.serialize() if self.type != SlotType.ITEM else None
+        item_data = self.item.id if self.item else None
+        result: list[Any] = []
+        if type_data:
+            result.append(type_data)
+        if item_data:
+            result.append(item_data)
+            result.append(self.count)
+        return result
 
     @classmethod
     def deserialize(cls, data: Any, *args: Any, **kwargs: Any) -> Slot:
-        type = SlotType.deserialize(data[0])
-        item_id = data[1]
-        count = data[2]
-        item = BESTIARY.get_entity_by_id(item_id, Item) if item_id else None
-        return cls(type=type, item=item, count=count)
+        match data:
+            case [type_data, item_data, count]:
+                type = SlotType.deserialize(type_data)
+                item = BESTIARY.get_entity_by_id(item_data, Item) if item_data else None
+                return cls(type=type, item=item, count=count)
+            case [item_data, count]:
+                item = BESTIARY.get_entity_by_id(item_data, Item) if item_data else None
+                return cls(item=item, count=count)
+            case [type_data]:
+                type = SlotType.deserialize(type_data)
+                return cls(type=type)
+            case []:
+                return cls(type=SlotType.ITEM)
+            case _:
+                raise ValueError(f"Invalid slot data: {data}")
 
     def fill(self, item: Item, count: int) -> int:
         if not self.item:
