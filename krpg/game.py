@@ -127,7 +127,7 @@ class GameBase:
 
     def load_bestiary(self):
         BESTIARY.data.clear()
-        build(bestiary=BESTIARY, console=self.console)
+        build(console=self.console)
 
     def main(self) -> None:
         if not BESTIARY.data:

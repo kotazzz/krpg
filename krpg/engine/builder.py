@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Callable
 
 from krpg import ROOT_DIR
-from krpg.bestiary import Bestiary
+from krpg.bestiary import BESTIARY
 from krpg.console import KrpgConsole
 from krpg.engine.executer import NamedScript, generate_named_script
 from krpg.engine.npc import Npc
@@ -20,32 +20,31 @@ BASE_FOLDER = "content"
 
 
 def wrap_log[T](
-    bestiary: Bestiary,
     console: KrpgConsole,
     section: Section,
     name: str,
-    func: Callable[[Bestiary, KrpgConsole, Section], T],
+    func: Callable[[KrpgConsole, Section], T],
     indent: int = 0,
 ) -> T:
     console.log.debug(f"[Builder] {'  ' * indent}Building {name}")
-    return func(bestiary, console, section)
+    return func(console, section)
 
 
-def build_scenario(bestiary: Bestiary, console: KrpgConsole, section: Section):
-    bestiary.add(
+def build_scenario(console: KrpgConsole, section: Section):
+    BESTIARY.add(
         generate_named_script(section),
     )
 
 
-def build_scenarios(bestiary: Bestiary, console: KrpgConsole, section: Section) -> None:
+def build_scenarios(console: KrpgConsole, section: Section) -> None:
     for scenario in section.all(command=False):
         assert isinstance(scenario, Section)
         if not scenario.name:
             raise ValueError
-        wrap_log(bestiary, console, scenario, scenario.name, build_scenario, 1)
+        wrap_log(console, scenario, scenario.name, build_scenario, 1)
 
 
-def build_item(bestiary: Bestiary, console: KrpgConsole, section: Section) -> None:
+def build_item(console: KrpgConsole, section: Section) -> None:
     assert len(section.content) == 3, f"Expected 3 arguments, got {len(section.content)}"
     id, name, description = section.content
     item = Item(id=id, name=name, description=description)
@@ -61,17 +60,17 @@ def build_item(bestiary: Bestiary, console: KrpgConsole, section: Section) -> No
         # TODO: Add more properties
         else:
             raise ValueError(f"Unknown property {prop.name}")
-    bestiary.add(item)
+    BESTIARY.add(item)
 
 
-def build_items(bestiary: Bestiary, console: KrpgConsole, section: Section) -> None:
+def build_items(console: KrpgConsole, section: Section) -> None:
     for item in section.all(command=False):
         assert isinstance(item, Section)
         assert item.name, "Item id is required"
-        wrap_log(bestiary, console, item, item.name, build_item, 1)
+        wrap_log(console, item, item.name, build_item, 1)
 
 
-def create_stage(bestiary: Bestiary, console: KrpgConsole, section: Section) -> list[NamedScript]:
+def create_stage(console: KrpgConsole, section: Section) -> list[NamedScript]:
     stage_actions: list[NamedScript] = []
     for action in section.all():
         assert isinstance(action, Section)
@@ -80,31 +79,31 @@ def create_stage(bestiary: Bestiary, console: KrpgConsole, section: Section) -> 
     return stage_actions
 
 
-def build_npc(bestiary: Bestiary, console: KrpgConsole, section: Section) -> None:
+def build_npc(console: KrpgConsole, section: Section) -> None:
     assert len(section.content) == 3, f"Expected 3 arguments, got {len(section.content)}"
     id, name, description = section.content
     npc = Npc(id=id, name=name, description=description)
     for i, stage in enumerate(section.all()):
         assert isinstance(stage, Section)
-        stage_actions = wrap_log(bestiary, console, stage, str(i), create_stage, 2)
+        stage_actions = wrap_log(console, stage, str(i), create_stage, 2)
         npc.stages.append(stage_actions)
-    bestiary.add(npc)
+    BESTIARY.add(npc)
 
 
-def build_npcs(bestiary: Bestiary, console: KrpgConsole, section: Section) -> None:
+def build_npcs(console: KrpgConsole, section: Section) -> None:
     for npc in section.all(command=False):
         assert isinstance(npc, Section)
         assert npc.name, "NPC id is required"
-        wrap_log(bestiary, console, npc, npc.name, build_npc, 1)
+        wrap_log(console, npc, npc.name, build_npc, 1)
 
 
-def build_location(bestiary: Bestiary, console: KrpgConsole, section: Section) -> None:
+def build_location(console: KrpgConsole, section: Section) -> None:
     assert len(section.content) == 3, f"Expected 3 arguments, got {len(section.content)}"
     id, name, description = section.content
     location = Location(id=id, name=name, description=description)
     for i, stage in enumerate(section.all(command=False)):
         assert isinstance(stage, Section)
-        stage_actions = wrap_log(bestiary, console, stage, str(i), create_stage, 2)
+        stage_actions = wrap_log(console, stage, str(i), create_stage, 2)
         location.stages.append(stage_actions)
 
     for item_data in section.all("item"):
@@ -113,7 +112,7 @@ def build_location(bestiary: Bestiary, console: KrpgConsole, section: Section) -
             2,
         ), f"Expected 1 or 2 arguments, got {len(item_data.args)}"
         id = item_data.args[0]
-        item = bestiary.get_entity_by_id(id, Item)
+        item = BESTIARY.get_entity_by_id(id, Item)
         assert item is not None, f"Item {id} not found"
         if len(item_data.args) == 2:
             assert item_data.args[1].isdigit(), f"Expected digit, got {item_data.args[1]}"
@@ -123,38 +122,38 @@ def build_location(bestiary: Bestiary, console: KrpgConsole, section: Section) -
     for npc_data in section.all("npc"):
         assert len(npc_data.args) == 1, "Syntax: npc [id]"
         npc_id = npc_data.args[0]
-        npc = bestiary.get_entity_by_id(npc_id, Npc)
+        npc = BESTIARY.get_entity_by_id(npc_id, Npc)
         assert npc
         location.init_npcs.append(npc)
 
-    bestiary.add(location)
+    BESTIARY.add(location)
 
 
-def build_locations(bestiary: Bestiary, console: KrpgConsole, section: Section) -> None:
+def build_locations(console: KrpgConsole, section: Section) -> None:
     for location in section.all(command=False):
         assert isinstance(location, Section)
         assert location.name, "Location id is required"
-        wrap_log(bestiary, console, location, location.name, build_location, 1)
+        wrap_log(console, location, location.name, build_location, 1)
 
     for command in section.all(section=False):
         if command.name == "start":
-            loc = bestiary.get_entity_by_id(command.args[0], Location)
+            loc = BESTIARY.get_entity_by_id(command.args[0], Location)
             assert loc is not None, f"Location {command.args[0]} not found"
             loc.is_start = True
         elif command.name == "link":
-            loc = bestiary.get_entity_by_id(command.args[0], Location)
+            loc = BESTIARY.get_entity_by_id(command.args[0], Location)
             assert loc is not None, f"Location {command.args[0]} not found"
-            loc2 = bestiary.get_entity_by_id(command.args[1], Location)
+            loc2 = BESTIARY.get_entity_by_id(command.args[1], Location)
             assert loc2 is not None, f"Location {command.args[1]} not found"
             loc.connections.append(loc2)
             loc2.connections.append(loc)
         elif command.name == "lock":
-            loc = bestiary.get_entity_by_id(command.args[0], Location)
+            loc = BESTIARY.get_entity_by_id(command.args[0], Location)
             assert loc is not None, f"Location {command.args[0]} not found"
             loc.locked = True
 
 
-def create_quest_stage(bestiary: Bestiary, console: KrpgConsole, section: Section) -> Stage:
+def create_quest_stage(console: KrpgConsole, section: Section) -> Stage:
     assert len(section.content) == 1, f"Expected 1 argument, got {len(section.content)}"
     stage_description = section.content[0]
 
@@ -175,26 +174,26 @@ def create_quest_stage(bestiary: Bestiary, console: KrpgConsole, section: Sectio
     return stage
 
 
-def build_quest(bestiary: Bestiary, console: KrpgConsole, section: Section) -> None:
+def build_quest(console: KrpgConsole, section: Section) -> None:
     assert len(section.content) == 3, f"Expected 3 arguments, got {len(section.content)}"
     id, name, description = section.content
     quest = Quest(id=id, name=name, description=description)
     for stage in section.all():
         assert isinstance(stage, Section)
-        quest_stage = create_quest_stage(bestiary, console, stage)
+        quest_stage = create_quest_stage(console, stage)
         quest.stages.append(quest_stage)
-    bestiary.add(quest)
+    BESTIARY.add(quest)
 
 
-def build_quests(bestiary: Bestiary, console: KrpgConsole, section: Section) -> None:
+def build_quests(console: KrpgConsole, section: Section) -> None:
     for quest in section.all(command=False):
         assert isinstance(quest, Section)
         assert quest.name, "Quest id is required"
-        wrap_log(bestiary, console, quest, quest.name, build_quest, 1)
+        wrap_log(console, quest, quest.name, build_quest, 1)
 
 
 # TODO: bestiary to BESTIARY
-def build(bestiary: Bestiary, console: KrpgConsole) -> None:
+def build(console: KrpgConsole) -> None:
     if __package__ is None:
         raise ValueError("Package is not set")
     path = f"{ROOT_DIR}/{BASE_FOLDER}/{MAIN_FILE}"
@@ -212,11 +211,11 @@ def build(bestiary: Bestiary, console: KrpgConsole) -> None:
         section = main_scenario.get(name)
         if section:
             assert isinstance(section, Section)
-            wrap_log(bestiary, console, section, name, step)
+            wrap_log(console, section, name, step)
 
     init = main_scenario.get("init")
     if not init:
         raise ValueError("No init section found")
     assert isinstance(init, Section)
     init_script = generate_named_script(init)
-    bestiary.add(init_script)
+    BESTIARY.add(init_script)
