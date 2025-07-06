@@ -39,7 +39,7 @@ class RewardEvent(GameEvent):
 
 @attr.s(auto_attribs=True)
 class UnfreezeEvent(GameEvent):
-    quest: Quest
+    quest: QuestState
 
 
 @command
@@ -56,8 +56,8 @@ def run_reward(game: Game, reward: Reward) -> Generator[RewardEvent, Any, None]:
 
 
 @command
-def unfreeze_quest(quest: Quest) -> Generator[UnfreezeEvent, Any, None]:
-    yield UnfreezeEvent(quest)
+def unfreeze_quest(state: QuestState) -> Generator[UnfreezeEvent, Any, None]:
+    yield UnfreezeEvent(state)
 
 
 @component
@@ -77,10 +77,11 @@ class QuestCommandsExtension(Extension):
     def complete(ctx: Ctx, *args: str) -> None:
         assert len(args) == 1, f"Expected 1 argument, got {len(args)}"
         quest_id = args[0]
-        quest = BESTIARY.get_entity_by_id(quest_id, Quest)
-        assert quest, f"Quest {quest_id} not found"
+        quest = BESTIARY.strict_get_entity_by_id(quest_id, Quest)
+        state = ctx.game.quest_manager.get_state(quest)
+        assert state, f"Quest {quest_id} not found in quest manager"
         g = ctx.game
-        g.commands.execute(unfreeze_quest(quest))
+        g.commands.execute(unfreeze_quest(state))
 
 
 @add_predicate
@@ -180,7 +181,7 @@ class Objective(ABC, Serializable):
     def check(self, event: Event, state: StatusType, completed: bool) -> StateUpdate[StatusType]:
         raise NotImplementedError
 
-    def create(self, state: StatusType[QuestState]) -> ObjectiveStatus:
+    def create(self, state: StatusType[str]) -> ObjectiveStatus:
         return ObjectiveStatus(self, state=state)
 
     def status(self, status: StatusType) -> str | None:
@@ -201,9 +202,7 @@ class ObjectiveStatus(Serializable):
     completed: bool = False
 
     def serialize(self) -> dict[str, Any]:
-        data: dict[str, Any] = {"objective": self.objective.serialize(), "completed": self.completed}
-        if not isinstance(self.state, QuestState):
-            data["state"] = self.state
+        data: dict[str, Any] = {"objective": self.objective.serialize(), "completed": self.completed, "state": self.state}
         return data
 
     @classmethod
@@ -213,9 +212,6 @@ class ObjectiveStatus(Serializable):
         if state is not None:
             self.state = state
         return self
-
-    def __attrs_post_init__(self):
-        self.completed = False
 
     def check(self, event: Event) -> None:
         res = self.objective.check(event, self.state, self.completed)
@@ -242,9 +238,7 @@ class Quest(Nameable, Serializable):
 
     @classmethod
     def deserialize(cls, data: str) -> Quest:
-        q = BESTIARY.get_entity_by_id(data, Quest)
-        if not q:
-            raise ValueError(f"Quest {data} not found")
+        q = BESTIARY.strict_get_entity_by_id(data, Quest)
         return q
 
 
@@ -286,7 +280,7 @@ class QuestState(Serializable):
     def next_stage(self) -> None:
         if self.stage_index + 1 < len(self.quest.stages):
             self.stage_index += 1
-            self.objectives = [o.create(self) for o in self.stage_data.objectives]
+            self.objectives = [o.create(self.quest.id) for o in self.stage_data.objectives]
 
     def check_stage(self, event: Event) -> None:
         if self.ignore_events:
@@ -303,7 +297,8 @@ class QuestState(Serializable):
             self.ignore_events = False
 
     def __attrs_post_init__(self) -> None:
-        self.next_stage()
+        if self.stage_index == -1:
+            self.next_stage()
 
 
 @attr.s(auto_attribs=True)
@@ -432,9 +427,9 @@ class TalkObjective(Objective):
 @objective("FREEZE")
 @attr.s(auto_attribs=True)
 class FreezeObjective(Objective):
-    def check(self, event: Event, state: QuestState, completed: bool) -> StateUpdate[None]:
+    def check(self, event: Event, state: str, completed: bool) -> StateUpdate[None]:
         if isinstance(event, UnfreezeEvent):
-            return event.quest.id == state.quest.id
+            return state == event.quest.quest.id
 
 
 @reward("UNLOCK")

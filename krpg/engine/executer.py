@@ -229,7 +229,6 @@ class NamedScript(Nameable):
             else:
                 raise ValueError(f"Unknown predicate type: {type}")
             data = data[consumed:]
-        print(f"Script {self.name} visibility: {is_visible}, unlocked: {is_unlocked}")
         return ActionState.decide(is_visible, is_unlocked)
 
     @property
@@ -292,6 +291,7 @@ class Executer(Serializable):
     @classmethod
     def deserialize(cls, data: dict[str, Any]) -> Executer:
         self = cls.__new__(cls)
+        self.extensions = [Base()]
         self.env = data
         return self
 
