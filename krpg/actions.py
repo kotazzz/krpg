@@ -24,6 +24,14 @@ class ActionState(Enum):
     LOCKED = "Заблокировано"
     HIDDEN = "Скрыто"
 
+    @classmethod
+    def decide(cls, is_visible: bool, is_unlocked: bool) -> ActionState:
+        if not is_visible:
+            return cls.HIDDEN
+        if not is_unlocked:
+            return cls.LOCKED
+        return cls.ACTIVE
+
 
 type ActionCallback = Callable[[Game], Any]
 

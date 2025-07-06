@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Callable, Generator, Protocol
 
 import attr
 
-from krpg.actions import Action, ActionCategory
+from krpg.actions import Action, ActionCategory, ActionState
 from krpg.commands import command
 from krpg.events_middleware import GameEvent
 from krpg.parser import Command, Section
@@ -47,6 +47,20 @@ def add_predicate(obj: type[Predicate]) -> Predicate:
     item = obj()
     predicates[item.name] = item
     return item
+
+
+def parse_predicate(name: str, *args: str) -> tuple[tuple[str], int]:
+    if name in predicates:
+        return predicates[name].parse(*args)
+    raise ValueError(f"Unknown predicate: {name}")
+
+
+def run_predicate(game: Game, name: str, *args: str) -> tuple[bool, int]:
+    if name in predicates:
+        parsed_args, consumed = predicates[name].parse(*args)
+        result = predicates[name].eval(game, *parsed_args)
+        return result, consumed
+    raise ValueError(f"Unknown predicate: {name}")
 
 
 @attr.s(auto_attribs=True)
@@ -162,13 +176,15 @@ class Base(Extension):
         *args: str,
         children: list[Command | Section] | None = None,
     ) -> None | int:
+        game = ctx.game
         if name not in predicates:
             raise ValueError(f"Unknown require predicate: {name}")
-        parsed, _ = predicates[name].parse(*args)  # TODO: move logic out
-        if not predicates[name].eval(ctx.game, *parsed):
+        res, _ = run_predicate(game, name, *args)
+        if not res:
             if children:
-                ctx.executer.run(Section(children=children), ctx.game)
+                ctx.executer.run(Section(children=children), game)
             return 0
+        return None
 
 
 @attr.s(auto_attribs=True)
@@ -200,9 +216,31 @@ class Script:
 class NamedScript(Nameable):
     script: Script = attr.ib(default=None)
 
+    def _run_predicates(self, game: Game, *args: str) -> ActionState:
+        data = list(args)
+        is_visible = True
+        is_unlocked = True
+        while data:
+            type = data.pop(0)
+            if type == "show_if":
+                is_visible, consumed = run_predicate(game, *data)
+            elif type == "unlock_if":
+                is_unlocked, consumed = run_predicate(game, *data)
+            else:
+                raise ValueError(f"Unknown predicate type: {type}")
+            data = data[consumed:]
+        print(f"Script {self.name} visibility: {is_visible}, unlocked: {is_unlocked}")
+        return ActionState.decide(is_visible, is_unlocked)
+
     @property
     def as_action(self) -> Action:
-        return Action(self.name, self.description, ActionCategory.ACTION, lambda g: self.script.run(g.executer, g))  #
+        return Action(
+            self.name,
+            self.description,
+            ActionCategory.ACTION,
+            lambda g: self.script.run(g.executer, g),
+            lambda g: self._run_predicates(g, *self.script.section.content[3:]),
+        )
 
 
 def generate_named_script(
