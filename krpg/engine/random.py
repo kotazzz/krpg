@@ -7,10 +7,10 @@ import random
 import time
 from typing import Any, Optional, List
 
-from krpg.saves import Savable
+from krpg.saves import Serializable
 
 
-class RandomManager(Savable):
+class RandomManager(Serializable):
     def __init__(self):
         self.seed = int(time.time() * 1e6)
         self.rnd = random.Random(self.seed)

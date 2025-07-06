@@ -8,12 +8,12 @@ from attr import field
 
 from krpg.bestiary import BESTIARY
 from krpg.entity.enums import Attribute, Body, EntityScales, ModifierType, TargetType
-from krpg.saves import Savable
+from krpg.saves import Serializable
 from krpg.utils import DEFAULT_DESCRIPTION, Nameable
 
 
 @attr.s(auto_attribs=True)
-class EffectState(Savable):
+class EffectState(Serializable):
     effect: Effect
     time: int
 

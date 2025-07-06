@@ -13,7 +13,7 @@ from krpg.entity.effects import Effect, EffectState
 from krpg.entity.enums import ItemTag, SlotType
 from krpg.entity.skills import SkillState, SkillTree
 from krpg.events_middleware import GameEvent
-from krpg.saves import Savable
+from krpg.saves import Serializable
 from krpg.utils import DEFAULT_DESCRIPTION, Nameable
 
 
@@ -86,7 +86,7 @@ class InventoryCommands(Extension):
 
 
 @attr.s(auto_attribs=True)
-class Slot(Savable):
+class Slot(Serializable):
     type: SlotType = SlotType.ITEM
     item: Item | None = attr.field(default=None, repr=lambda x: x and repr(x.id))
     count: int = 0
@@ -161,7 +161,7 @@ class Slot(Savable):
 
 
 @attr.s(auto_attribs=True)
-class Inventory(Savable):
+class Inventory(Serializable):
     slots: list[Slot] = field(factory=lambda: [])
 
     def serialize(self) -> Any:

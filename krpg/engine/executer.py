@@ -8,7 +8,7 @@ from krpg.actions import Action, ActionCategory
 from krpg.commands import command
 from krpg.events_middleware import GameEvent
 from krpg.parser import Command, Section
-from krpg.saves import Savable
+from krpg.saves import Serializable
 from krpg.utils import Nameable
 
 if TYPE_CHECKING:
@@ -237,7 +237,7 @@ def generate_named_script(
     )
 
 
-class Executer(Savable):
+class Executer(Serializable):
     def __init__(self) -> None:
         self.extensions: list[Extension] = [Base()]
         self.env: Enviroment = {}

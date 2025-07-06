@@ -15,7 +15,7 @@ from krpg.engine.npc import Npc
 from krpg.entity.inventory import Slot
 from krpg.events_middleware import GameEvent
 from krpg.parser import Command
-from krpg.saves import Savable
+from krpg.saves import Serializable
 from krpg.utils import Nameable
 
 if TYPE_CHECKING:
@@ -140,7 +140,7 @@ def unlock(loc: LocationState) -> Generator[UnlockEvent, Any, None]:
 
 
 @attr.s(auto_attribs=True)
-class LocationState(Savable):
+class LocationState(Serializable):
     location: Location = attr.ib(repr=lambda loc: loc.id)
     is_locked: bool = False
     stage: int = 0
@@ -192,7 +192,7 @@ class Location(Nameable):
 
 
 @attr.s(auto_attribs=True)
-class World(Savable):
+class World(Serializable):
     locations: list[LocationState] = attr.ib(factory=lambda: [], repr=lambda x: str(len(x)))
     current_location: LocationState = attr.ib(init=False, repr=lambda x: repr(x.id) if x else "None")
 

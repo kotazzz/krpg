@@ -10,7 +10,7 @@ from krpg.bestiary import BESTIARY
 from krpg.commands import command
 from krpg.components import component
 from krpg.events_middleware import GameEvent
-from krpg.saves import Savable
+from krpg.saves import Serializable
 from krpg.utils import Nameable
 
 if TYPE_CHECKING:
@@ -59,7 +59,7 @@ class TalkAction(ActionManager):
 
 
 @attr.s(auto_attribs=True)
-class NpcState(Savable):
+class NpcState(Serializable):
     npc: Npc
     known: bool = False
     stage: int = 0
@@ -107,7 +107,7 @@ class Npc(Nameable):
 
 
 @attr.s(auto_attribs=True)
-class NpcManager(Savable):
+class NpcManager(Serializable):
     npcs: dict[str, NpcState] = attr.ib(factory=lambda: {})
 
     def serialize(self) -> Any:

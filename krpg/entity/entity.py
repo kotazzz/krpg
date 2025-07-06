@@ -9,7 +9,7 @@ from krpg.entity.enums import Attribute, Body, EntityScales, ItemTag, TargetType
 from krpg.entity.inventory import Inventory, Item
 from krpg.entity.scale import Scale
 from krpg.entity.skills import SkillState, SkillTree
-from krpg.saves import Savable
+from krpg.saves import Serializable
 from krpg.utils import Nameable
 
 if TYPE_CHECKING:
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 @attr.s(auto_attribs=True)
-class Entity(Nameable, Savable):
+class Entity(Nameable, Serializable):
     skills: SkillTree = SkillTree()
     inventory: Inventory = attr.ib(factory=Inventory.basic)
     effects: list[EffectState] = attr.ib(factory=lambda: [])

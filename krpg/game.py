@@ -31,7 +31,7 @@ from krpg.bestiary import BESTIARY
 from krpg.engine.executer import Executer, Extension, NamedScript, run_scenario
 from krpg.events import Event, EventHandler, listener
 from krpg.events_middleware import GameEvent, GameMiddleware
-from krpg.saves import Savable
+from krpg.saves import Serializable
 
 
 @attr.s(auto_attribs=True)
@@ -180,12 +180,12 @@ class GameBase:
             loop.play()
         except (KeyboardInterrupt, EOFError):
             self.console.print("Игра завершена")
-            self.console.print("[red]История команд: ", self.console.history)
+            self.console.print(f"[green]История команд: [red]{' '.join(self.console.get_history())}")
             self.console.print("[red]Ваше сохранение: ", create_save(loop.serialize()))
             self.state = GameState.MENU
 
 
-class Game(Savable):
+class Game(Serializable):
     def _pre_init(self) -> None:
         self.console.log.debug("[green b]Loading game")
         self.console.history.clear()
@@ -194,7 +194,7 @@ class Game(Savable):
         self.events.middlewares.append(GameMiddleware(self))
         self.commands = CommandManager(self.events)
 
-        self._savables: list[tuple[str, type[Savable]]] = [
+        self._savables: list[tuple[str, type[Serializable]]] = [
             ("world", World),
             ("npc_manager", NpcManager),
             ("quest_manager", QuestManager),

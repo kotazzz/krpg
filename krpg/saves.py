@@ -4,7 +4,7 @@ from typing import Any, Protocol, Self, runtime_checkable
 
 
 @runtime_checkable
-class Savable(Protocol):
+class Serializable(Protocol):
     def serialize(self) -> Any: ...
 
     @classmethod

@@ -4,12 +4,12 @@ from typing import Any, Literal, Self
 import attr
 from attr import field
 
-from krpg.saves import Savable
+from krpg.saves import Serializable
 from krpg.utils import Nameable
 
 
 @attr.s(auto_attribs=True)
-class Scale(Nameable, Savable):
+class Scale(Nameable, Serializable):
     base_max_value: float = field(default=0.0, repr=lambda x: repr("inf" if x == -1 else x))
     bonus: float = 0.0
     _value: float = 0.0

@@ -16,7 +16,7 @@ from krpg.engine.world import MoveEvent, unlock
 from krpg.entity.inventory import EquipEvent, PickupEvent, UnequipEvent
 from krpg.events import Event, listener
 from krpg.events_middleware import GameEvent, HasGame
-from krpg.saves import Savable
+from krpg.saves import Serializable
 from krpg.utils import Nameable
 
 if TYPE_CHECKING:
@@ -163,7 +163,7 @@ class Reward:
 
 
 @attr.s(auto_attribs=True)
-class Objective(ABC, Savable):
+class Objective(ABC, Serializable):
     description: str
 
     def serialize(self) -> Any:
@@ -195,7 +195,7 @@ class Stage:
 
 
 @attr.s(auto_attribs=True)
-class ObjectiveStatus(Savable):
+class ObjectiveStatus(Serializable):
     objective: Objective
     state: StatusType | None = None
     completed: bool = False
@@ -234,7 +234,7 @@ class ObjectiveStatus(Savable):
 
 
 @attr.s(auto_attribs=True)
-class Quest(Nameable, Savable):
+class Quest(Nameable, Serializable):
     stages: list[Stage] = attr.ib(factory=lambda: [], repr=False)
 
     def serialize(self) -> str:
@@ -249,7 +249,7 @@ class Quest(Nameable, Savable):
 
 
 @attr.s(auto_attribs=True)
-class QuestState(Savable):
+class QuestState(Serializable):
     quest: Quest
     stage_index: int = -1
     objectives: list[ObjectiveStatus] = attr.ib(factory=lambda: [])
@@ -307,7 +307,7 @@ class QuestState(Savable):
 
 
 @attr.s(auto_attribs=True)
-class QuestManager(Savable):
+class QuestManager(Serializable):
     quests: list[QuestState] = attr.ib(factory=lambda: [])
 
     def serialize(self) -> dict[str, Any]:

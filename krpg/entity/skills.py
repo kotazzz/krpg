@@ -7,7 +7,7 @@ from attr import field
 
 from krpg.bestiary import BESTIARY
 from krpg.entity.enums import TargetType
-from krpg.saves import Savable
+from krpg.saves import Serializable
 from krpg.utils import DEFAULT_DESCRIPTION, Nameable, get_by_id
 
 if TYPE_CHECKING:
@@ -44,7 +44,7 @@ class Skill(Nameable):
 
 
 @attr.s(auto_attribs=True)
-class SkillState(Savable):
+class SkillState(Serializable):
     skill: Skill = field(repr=lambda x: repr(x.id))
     cooldown: int = 0
     use_slot: Slot | None = None
@@ -74,7 +74,7 @@ class SkillState(Savable):
 
 
 @attr.s(auto_attribs=True)
-class SkillTree(Savable):
+class SkillTree(Serializable):
     skills: list[Skill] = field(factory=list[Skill])
     learned: list[SkillState] = field(factory=list[SkillState])
     points: int = 0
