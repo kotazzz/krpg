@@ -18,7 +18,7 @@ from krpg.commands import CommandManager, command
 from krpg.encoder import create_save, load_save
 from krpg.engine.builder import build
 from krpg.console import KrpgConsole
-from krpg.data.consts import ABOUT, LOGO_GAME, __version__
+from krpg.data.consts import ABOUT, AUTHOR, LOGO_GAME, __version__
 from krpg.actions import Action, ActionCategory, ActionManager, ActionState, action
 from krpg.engine.clock import Clock
 from krpg.engine.enums import GameState
@@ -26,22 +26,18 @@ from krpg.engine.npc import NpcManager
 from krpg.engine.player import Player
 from krpg.engine.quests import QuestManager
 from krpg.engine.random import RandomManager
+from krpg.engine.stats import ActionExecuted, Stats
 from krpg.engine.world import World
 from krpg.bestiary import BESTIARY
 from krpg.engine.executer import Executer, Extension, NamedScript, run_scenario
 from krpg.events import Event, EventHandler, listener
-from krpg.events_middleware import GameEvent, GameMiddleware
+from krpg.events_middleware import GameMiddleware
 from krpg.saves import Serializable
 
 
 @attr.s(auto_attribs=True)
 class StateChange(Event):
     new_state: GameState
-
-
-@attr.s(auto_attribs=True)
-class ActionExecuted(GameEvent):
-    action: Action
 
 
 @command
@@ -74,6 +70,16 @@ class RootActionManager(ActionManager):
             game.console.print(f"[b red]{cat}")
             for cmd in cmds:
                 game.console.print(f" [green]{cmd.name}[/] - {cmd.description}")
+
+    @action("info", "Информация об игре", ActionCategory.GAME)
+    @staticmethod
+    def action_info(game: Game) -> None:
+        game.console.print(
+            "[green]Информация об игре:[/]\n"
+            f"Версия: [yellow]{__version__}[/]\n"
+            f"Автор: [yellow]{AUTHOR}[/]\n"
+            f"Python: [yellow]{'.'.join(map(str, sys.version_info[:3]))}[/]"
+        )
 
     @action("debug", "Исполнение команды", ActionCategory.DEBUG)
     @staticmethod
@@ -202,6 +208,7 @@ class Game(Serializable):
             ("player", Player),
             ("clock", Clock),
             ("random", RandomManager),
+            ("stats", Stats),
         ]
 
     def __init__(self, game: GameBase) -> None:
@@ -214,6 +221,7 @@ class Game(Serializable):
         self.player = Player()
         self.clock = Clock()
         self.random = RandomManager()
+        self.stats = Stats()
         self._post_init()
         init = BESTIARY.get_entity_by_id("init", NamedScript)
         if init:
@@ -295,6 +303,7 @@ class Game(Serializable):
         state = action.check(self)
         if state == ActionState.ACTIVE:
             action.callback(self)
+            self.events.publish(ActionExecuted(action))
             return action
         elif state == ActionState.LOCKED:
             self.console.print("Действие заблокировано")

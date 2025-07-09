@@ -33,6 +33,11 @@ class StartQuest(GameEvent):
 
 
 @attr.s(auto_attribs=True)
+class EndQuest(GameEvent):
+    quest: QuestState
+
+
+@attr.s(auto_attribs=True)
 class RewardEvent(GameEvent):
     reward: Reward
 
@@ -53,6 +58,14 @@ def run_reward(game: Game, reward: Reward) -> Generator[RewardEvent, Any, None]:
     cmd = reward.run(game)
     yield RewardEvent(reward)
     game.commands.execute(cmd)
+
+
+@command
+def end_quest(state: QuestState) -> Generator[EndQuest, Any, None]:
+    yield EndQuest(state)
+    state.stage_index = -1
+    state.objectives.clear()
+    state.ignore_events = True
 
 
 @command
@@ -293,6 +306,7 @@ class QuestState(Serializable):
             self.ignore_events = True
             for r in self.stage_data.rewards:
                 event.game.commands.execute(run_reward(event.game, r))
+            event.game.commands.execute(end_quest(self))
             self.next_stage()
             self.ignore_events = False
 
